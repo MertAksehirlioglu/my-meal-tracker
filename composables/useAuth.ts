@@ -37,6 +37,23 @@ export function useAuth() {
     return { error: error.value }
   }
 
+  // Update Profile
+  const updateProfile = async (profile: { name?: string }) => {
+    loading.value = true
+    error.value = null
+    const { error: updateError } = await supabase.auth.updateUser({ data: profile })
+    if (updateError) error.value = updateError.message
+    loading.value = false
+    return { error: error.value }
+  }
+
+  // Reset Error
+  const resetError = () => {
+    error.value = null
+  }
+
+  const isAuthenticated = computed(() => !!user.value)
+
   return {
     user: computed(() => user.value),
     loading,
@@ -44,5 +61,8 @@ export function useAuth() {
     login,
     register,
     logout,
+    updateProfile,
+    resetError,
+    isAuthenticated,
   }
-} 
+}

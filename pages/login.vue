@@ -12,6 +12,7 @@
       <v-form @submit.prevent="onSubmit" ref="formRef" v-model="formValid">
         <v-text-field 
           v-model="email" 
+          @input="resetError" 
           label="Email" 
           type="email" 
           required 
@@ -21,6 +22,7 @@
         />
         <v-text-field 
           v-model="password" 
+          @input="resetError" 
           label="Password" 
           type="password" 
           required 
@@ -60,6 +62,10 @@ const formValid = ref(false)
 const formRef = ref()
 const router = useRouter()
 const { login, loading, error } = useAuth()
+
+const resetError = () => {
+  if (error.value) error.value = null
+}
 
 async function onSubmit() {
   if (!formRef.value?.validate()) return

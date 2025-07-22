@@ -3,22 +3,22 @@
 ---
 
 ## 🟦 User Authentication & Authorization
-- [ ] [P1] Integrate Supabase Auth with Nuxt
-  - [ ] Add login, registration, and password reset flows
-    - [ ] User can register with email/password
-    - [ ] Error shown for duplicate email
-    - [ ] Redirect to dashboard on success
-  - [ ] Implement protected routes/pages
-  - [ ] Add user profile and settings page
+- [x] [P1] Integrate Supabase Auth with Nuxt
+  - [x] Add login, registration, and password reset flows
+    - [x] User can register with email/password
+    - [x] Error shown for duplicate email
+    - [x] Redirect to dashboard on success
+  - [x] Implement protected routes/pages
+  - [x] Add user profile and settings page
   - [ ] Write unit tests for auth flows
 
 ---
 
 ## 🟩 Image Storage Setup
-- [ ] [P1] Set up Supabase Storage for meal images
-  - [ ] Allow users to upload meal photos
+- [x] [P1] Set up Supabase Storage for meal images
+  - [x] Allow users to upload meal photos
   - [ ] Display uploaded images in meal logs
-  - [ ] Handle image deletion and cleanup
+  - [x] Handle image deletion and cleanup
   - [ ] Manual test: Upload and delete image from mobile device
 
 ---

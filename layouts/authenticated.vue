@@ -41,7 +41,10 @@
               </v-list-item>
               <v-divider></v-divider>
               <v-list-item @click="logout">
-                <v-list-item-title class="text-error">Logout</v-list-item-title>
+                <v-list-item-title class="text-error">
+                  <v-progress-circular v-if="loading" indeterminate color="error" size="20" class="mr-2" />
+                  Logout
+                </v-list-item-title>
               </v-list-item>
             </v-list>
           </v-menu>
@@ -59,9 +62,16 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useAuth } from '~/composables/useAuth'
+import { onMounted } from 'vue'
 
 const router = useRouter()
-const { logout: authLogout } = useAuth()
+const { logout: authLogout, loading, isAuthenticated } = useAuth()
+
+onMounted(() => {
+  if (!isAuthenticated.value) {
+    router.push('/login')
+  }
+})
 
 const goToHome = () => {
   router.push('/home')
@@ -79,4 +89,4 @@ const logout = async () => {
   await authLogout()
   router.push('/login')
 }
-</script> 
+</script>

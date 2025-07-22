@@ -38,14 +38,14 @@ const formValid = ref(false)
 const formRef = ref()
 const success = ref(false)
 const router = useRouter()
-const { register, loading, error } = useAuth()
+const { register, updateProfile, loading, error } = useAuth()
 
 async function onSubmit() {
   if (!formRef.value?.validate()) return
   success.value = false
-  // Note: useAuth's register does not take name, so only email/password are sent
   const { error: regError } = await register(email.value, password.value)
   if (!regError) {
+    await updateProfile({ name: name.value }) // Update profile with name
     success.value = true
     setTimeout(() => {
       success.value = false
@@ -60,4 +60,4 @@ async function onSubmit() {
 function goToLogin() {
   router.push('/login')
 }
-</script> 
+</script>
