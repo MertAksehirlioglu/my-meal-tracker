@@ -1,0 +1,313 @@
+<template>
+  <v-container class="fill-height pa-4" style="max-width: 800px;">
+    <!-- Header -->
+    <div class="d-flex align-center mb-6">
+      <h1 class="text-h5 font-weight-bold">Profile</h1>
+    </div>
+
+    <v-form @submit.prevent="saveProfile" ref="formRef" v-model="formValid">
+      <!-- Personal Information -->
+      <v-card class="mb-6" elevation="2" rounded="lg">
+        <v-card-title class="text-h6 font-weight-bold">Personal Information</v-card-title>
+        <v-card-text>
+          <v-text-field
+            v-model="profile.name"
+            label="Full Name"
+            variant="outlined"
+            class="mb-3"
+            :rules="[v => !!v || 'Name is required']"
+            required
+          />
+          
+          <v-text-field
+            v-model="profile.email"
+            label="Email"
+            variant="outlined"
+            class="mb-3"
+            type="email"
+            disabled
+            hint="Email cannot be changed"
+          />
+          
+          <v-row>
+            <v-col cols="6">
+              <v-text-field
+                v-model.number="profile.height"
+                label="Height (cm)"
+                variant="outlined"
+                type="number"
+                min="100"
+                max="250"
+                :rules="[v => !v || (v >= 100 && v <= 250) || 'Height must be between 100-250 cm']"
+              />
+            </v-col>
+            <v-col cols="6">
+              <v-text-field
+                v-model.number="profile.weight"
+                label="Weight (kg)"
+                variant="outlined"
+                type="number"
+                min="30"
+                max="300"
+                :rules="[v => !v || (v >= 30 && v <= 300) || 'Weight must be between 30-300 kg']"
+              />
+            </v-col>
+          </v-row>
+          
+          <v-text-field
+            v-model.number="profile.age"
+            label="Age"
+            variant="outlined"
+            class="mb-3"
+            type="number"
+            min="13"
+            max="120"
+            :rules="[v => !v || (v >= 13 && v <= 120) || 'Age must be between 13-120']"
+          />
+        </v-card-text>
+      </v-card>
+
+      <!-- Activity & Goals -->
+      <v-card class="mb-6" elevation="2" rounded="lg">
+        <v-card-title class="text-h6 font-weight-bold">Activity & Goals</v-card-title>
+        <v-card-text>
+          <v-select
+            v-model="profile.activity_level"
+            label="Activity Level"
+            variant="outlined"
+            class="mb-3"
+            :items="activityLevels"
+            item-title="label"
+            item-value="value"
+            :rules="[v => !!v || 'Activity level is required']"
+            required
+          />
+          
+          <v-select
+            v-model="profile.goal"
+            label="Fitness Goal"
+            variant="outlined"
+            class="mb-3"
+            :items="goals"
+            item-title="label"
+            item-value="value"
+            :rules="[v => !!v || 'Fitness goal is required']"
+            required
+          />
+          
+          <v-text-field
+            v-model.number="profile.daily_calorie_target"
+            label="Daily Calorie Target"
+            variant="outlined"
+            type="number"
+            min="1200"
+            max="5000"
+            hint="Recommended: 1200-5000 calories"
+            :rules="[v => !v || (v >= 1200 && v <= 5000) || 'Calorie target must be between 1200-5000']"
+          />
+        </v-card-text>
+      </v-card>
+
+      <!-- Avatar -->
+      <v-card class="mb-6" elevation="2" rounded="lg">
+        <v-card-title class="text-h6 font-weight-bold">Profile Picture</v-card-title>
+        <v-card-text>
+          <div class="d-flex align-center">
+            <v-avatar size="80" class="mr-4">
+              <v-img
+                v-if="profile.avatar_url"
+                :src="profile.avatar_url"
+                alt="Profile Picture"
+              />
+              <v-icon v-else size="40" color="grey">mdi-account</v-icon>
+            </v-avatar>
+            <div>
+              <v-btn
+                @click="uploadAvatar"
+                color="primary"
+                variant="outlined"
+                class="mb-2"
+              >
+                <v-icon left>mdi-camera</v-icon>
+                Upload Photo
+              </v-btn>
+              <div class="text-caption text-grey">
+                Upload a profile picture to personalize your experience
+              </div>
+            </div>
+          </div>
+        </v-card-text>
+      </v-card>
+
+      <!-- Save Button -->
+      <v-btn
+        :disabled="!formValid || loading"
+        color="primary"
+        size="large"
+        block
+        type="submit"
+        class="mb-4"
+      >
+        <v-progress-circular v-if="loading" indeterminate color="white" size="20" class="mr-2" />
+        Save Changes
+      </v-btn>
+
+      <!-- Success/Error Messages -->
+      <v-alert v-if="success" type="success" class="mb-4">
+        Profile updated successfully!
+      </v-alert>
+      
+      <v-alert v-if="error" type="error" class="mb-4">
+        {{ error }}
+      </v-alert>
+    </v-form>
+
+    <!-- Hidden file input for avatar upload -->
+    <input
+      ref="fileInput"
+      type="file"
+      accept="image/*"
+      style="display: none"
+      @change="handleAvatarUpload"
+    />
+  </v-container>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuth } from '~/composables/useAuth'
+import type { User, UpdateUser } from '~/server/database/schemas'
+
+// Page meta
+definePageMeta({
+  middleware: 'auth' as any,
+  layout: 'authenticated'
+})
+
+const router = useRouter()
+const { user } = useAuth()
+
+// Form refs
+const formRef = ref()
+const formValid = ref(false)
+const fileInput = ref<HTMLInputElement>()
+
+// Reactive data
+const profile = ref<UpdateUser>({
+  name: '',
+  email: '',
+  height: undefined,
+  weight: undefined,
+  age: undefined,
+  activity_level: undefined,
+  goal: undefined,
+  daily_calorie_target: undefined,
+  avatar_url: undefined
+})
+
+const loading = ref(false)
+const success = ref(false)
+const error = ref('')
+
+// Options
+const activityLevels = [
+  { label: 'Sedentary (little or no exercise)', value: 'sedentary' },
+  { label: 'Light (light exercise/sports 1-3 days/week)', value: 'light' },
+  { label: 'Moderate (moderate exercise/sports 3-5 days/week)', value: 'moderate' },
+  { label: 'Active (hard exercise/sports 6-7 days a week)', value: 'active' },
+  { label: 'Very Active (very hard exercise, physical job)', value: 'very_active' }
+]
+
+const goals = [
+  { label: 'Lose Weight', value: 'lose' },
+  { label: 'Maintain Weight', value: 'maintain' },
+  { label: 'Gain Weight', value: 'gain' }
+]
+
+// Methods
+const loadProfile = async () => {
+  if (!user.value) return
+  
+  try {
+    // Load user profile data
+    const response = await $fetch(`/api/users/${user.value.id}`) as any
+    if (response.success && response.data) {
+      profile.value = { ...response.data }
+    }
+  } catch (err) {
+    console.error('Error loading profile:', err)
+    error.value = 'Failed to load profile data'
+  }
+}
+
+const saveProfile = async () => {
+  if (!user.value?.id) return
+  
+  loading.value = true
+  error.value = ''
+  success.value = false
+  
+  try {
+    const response = await $fetch(`/api/users/${user.value.id}`, {
+      method: 'PUT',
+      body: profile.value
+    }) as any
+    
+    if (response.success) {
+      success.value = true
+      // Update the user in auth store
+      // You might want to refresh the user data here
+    } else {
+      error.value = response.message || 'Failed to update profile'
+    }
+  } catch (err) {
+    console.error('Error saving profile:', err)
+    error.value = 'Failed to save profile'
+  } finally {
+    loading.value = false
+  }
+}
+
+const uploadAvatar = () => {
+  fileInput.value?.click()
+}
+
+const handleAvatarUpload = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  
+  if (!file || !user.value?.id) return
+  
+  try {
+    loading.value = true
+    
+    // Create FormData for file upload
+    const formData = new FormData()
+    formData.append('avatar', file)
+    
+    const response = await $fetch(`/api/users/${user.value.id}/avatar`, {
+      method: 'POST',
+      body: formData
+    }) as any
+    
+    if (response.success) {
+      profile.value.avatar_url = response.data.avatar_url
+      success.value = true
+    } else {
+      error.value = response.message || 'Failed to upload avatar'
+    }
+  } catch (err) {
+    console.error('Error uploading avatar:', err)
+    error.value = 'Failed to upload avatar'
+  } finally {
+    loading.value = false
+    // Reset file input
+    if (target) target.value = ''
+  }
+}
+
+onMounted(() => {
+  loadProfile()
+})
+</script> 
