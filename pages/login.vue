@@ -4,11 +4,13 @@
       src="/logo.png"
       alt="MealSnap Logo"
       class="mb-4"
-      style="max-width: 64px; max-height: 64px; border-radius: 12px; box-shadow: 0 2px 8px rgba(67,160,71,0.15);"
+      style="max-width: 64px; max-height: 64px; border-radius: 12px;"
     />
-    <h1 class="font-weight-bold mb-6" style="color: #43A047; letter-spacing: 1px;">MealSnap</h1>
-    <v-card class="pa-6 mx-auto" max-width="400" elevation="8" style="border-radius: 18px;">
-      <h2 class="font-weight-bold mb-4" style="color: #43A047;">Login to MealSnap</h2>
+    <h1 class="font-weight-bold mb-6" style="letter-spacing: 1px; ">MealSnap</h1>
+    <v-card class="pa-6 " max-width="400" elevation="8" style="border-radius: 18px;">
+      <v-card-title class="font-weight-bold text-center" >
+        Login to MealSnap
+      </v-card-title>
       <v-form @submit.prevent="onSubmit" ref="formRef" v-model="formValid">
         <v-text-field 
           v-model="email" 
@@ -16,7 +18,6 @@
           label="Email" 
           type="email" 
           required 
-          class="mb-3" 
           color="primary"
           :rules="[v => !!v || 'Email is required', v => /.+@.+\..+/.test(v) || 'Email must be valid']"
         />
@@ -26,10 +27,15 @@
           label="Password" 
           type="password" 
           required 
-          class="mb-4" 
           color="primary"
           :rules="[v => !!v || 'Password is required']"
         />
+        <div 
+          class="mb-4 text-left text-primary" style="cursor: pointer; margin-top: -18px;"
+          @click="goToForgotPassword"
+        >
+          Forgot Password?
+        </div>
         <v-btn 
           :disabled="!formValid || loading" 
           color="primary" 
@@ -40,13 +46,20 @@
           <v-progress-circular v-if="loading" indeterminate color="white" size="20" class="mr-2" />
           Login
         </v-btn>
+        <v-divider class="my-4"></v-divider>
+        <div class="mb-4 text-center ">
+          New here? Create an account to get started!
+        </div>
+        <v-btn 
+          color="primary" 
+          block 
+          size="large" 
+          @click="goToSignup"
+        >
+          Sign Up Now
+        </v-btn>
         <v-alert v-if="error" type="error" class="mt-2">{{ error }}</v-alert>
       </v-form>
-      <v-divider class="my-4" />
-      <div class="text-center">
-        <span class="text-grey-darken-1">Don't have an account?</span>
-        <v-btn variant="text" color="primary" @click="goToSignup" class="ml-1">Sign Up</v-btn>
-      </div>
     </v-card>
   </v-container>
 </template>
@@ -79,5 +92,9 @@ async function onSubmit() {
 
 function goToSignup() {
   router.push('/signup')
+}
+
+function goToForgotPassword() {
+  router.push('/forgot-password')
 }
 </script>
