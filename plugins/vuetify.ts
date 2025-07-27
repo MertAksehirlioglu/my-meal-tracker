@@ -10,19 +10,20 @@ import '@mdi/font/css/materialdesignicons.css'
 const customTheme = {
   dark: false,
   colors: {
-    primary: '#43A047',        // Primary Green
-    secondary: '#FFB300',      // Accent Orange
-    background: '#F9FBE7',     // Background Light
-    surface: '#FFFFFF',        // Default surface
-    error: '#E53935',          // Error Red
-    info: '#43A047',           // Use primary for info
-    success: '#43A047',        // Use primary for success
-    warning: '#FFB300',        // Accent Orange
-    onPrimary: '#FFFFFF',      // Text on primary
-    onSecondary: '#FFFFFF',    // Text on secondary
-    onBackground: '#757575',   // Neutral Gray for text
-    onSurface: '#757575',      // Neutral Gray for text
-    onError: '#FFFFFF',        // Text on error
+    primary: '#00796b', // Teal - Main brand color
+    secondary: '#004d40', // Dark Teal - Complementary color
+    accent: '#e0f2f1', // Light Teal - Highlights and accents
+    background: '#f1f8e9', // Light Green - App background
+    surface: '#ffffff', // White - Card and container backgrounds
+    error: '#d32f2f', // Red - Error messages
+    info: '#0288d1', // Blue - Informational messages
+    success: '#388e3c', // Green - Success messages
+    warning: '#fbc02d', // Yellow - Warnings
+    onPrimary: '#ffffff', // White - Text on primary color
+    onSecondary: '#ffffff', // White - Text on secondary color
+    onBackground: '#37474f', // Dark Gray - Text on background
+    onSurface: '#37474f', // Dark Gray - Text on surface
+    onError: '#ffffff', // White - Text on error color
   },
 }
 

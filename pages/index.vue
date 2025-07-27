@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-app-bar app color="white" flat class="d-flex align-center px-4">
+    <v-app-bar app flat class="d-flex align-center px-4" color="primary">
       <img
         src="/logo.png"
         alt="MealSnap Logo"
@@ -73,9 +73,9 @@
       <v-btn color="primary" variant="outlined" size="large" @click="goToContactPage">Contact Form / Email</v-btn>
     </v-container>
     <!-- Get Started Section -->
-    <v-footer id="get-started" class="py-6 d-flex flex-column align-center">
+    <v-footer id="get-started" class="py-6 d-flex flex-column align-center" color="secondary">
       <h2 class="font-weight-bold mb-2">Ready to Start?</h2>
-      <v-btn color="primary" size="x-large" @click="goToSignupPage">Sign Up Free</v-btn>
+      <v-btn variant="outlined" size="x-large" @click="goToSignupPage">Sign Up Free</v-btn>
     </v-footer>
   </v-app>
 </template>
