@@ -1,20 +1,25 @@
 <template>
-  <v-container class="fill-height pa-4" style="max-width: 1200px;">
+  <v-container class="fill-height pa-4" style="max-width: 1200px">
     <v-row justify="center">
       <v-col cols="12" lg="10" xl="8">
         <!-- Today's Progress Card -->
         <v-card class="mb-6" elevation="2" rounded="lg">
           <v-card-title class="d-flex align-center justify-space-between">
             <span class="text-h6 font-weight-bold">Today's Progress</span>
-            <v-chip color="primary" size="small">{{ formatDate(today) }}</v-chip>
+            <v-chip color="primary" size="small">{{
+              formatDate(today)
+            }}</v-chip>
           </v-card-title>
-          
+
           <v-card-text>
             <!-- Summary Stats -->
             <v-row class="mb-6">
               <v-col cols="6" sm="3">
                 <div class="text-center">
-                  <div class="text-h4 font-weight-bold" :class="getCalorieColorClass()">
+                  <div
+                    class="text-h4 font-weight-bold"
+                    :class="getCalorieColorClass()"
+                  >
                     {{ todayProgress?.total_calories || 0 }}
                   </div>
                   <div class="text-caption text-grey">Calories</div>
@@ -23,10 +28,13 @@
                   </div>
                 </div>
               </v-col>
-              
+
               <v-col cols="6" sm="3">
                 <div class="text-center">
-                  <div class="text-h4 font-weight-bold" :class="getProteinColorClass()">
+                  <div
+                    class="text-h4 font-weight-bold"
+                    :class="getProteinColorClass()"
+                  >
                     {{ todayProgress?.total_protein || 0 }}g
                   </div>
                   <div class="text-caption text-grey">Protein</div>
@@ -35,10 +43,13 @@
                   </div>
                 </div>
               </v-col>
-              
+
               <v-col cols="6" sm="3">
                 <div class="text-center">
-                  <div class="text-h4 font-weight-bold" :class="getFatColorClass()">
+                  <div
+                    class="text-h4 font-weight-bold"
+                    :class="getFatColorClass()"
+                  >
                     {{ todayProgress?.total_fat || 0 }}g
                   </div>
                   <div class="text-caption text-grey">Fat</div>
@@ -47,10 +58,13 @@
                   </div>
                 </div>
               </v-col>
-              
+
               <v-col cols="6" sm="3">
                 <div class="text-center">
-                  <div class="text-h4 font-weight-bold" :class="getCarbColorClass()">
+                  <div
+                    class="text-h4 font-weight-bold"
+                    :class="getCarbColorClass()"
+                  >
                     {{ todayProgress?.total_carbs || 0 }}g
                   </div>
                   <div class="text-caption text-grey">Carbs</div>
@@ -68,15 +82,26 @@
                   <div class="text-center">
                     <div class="text-caption mb-2">Calories</div>
                     <div class="position-relative d-inline-block">
-                      <canvas ref="calorieChart" width="120" height="120"></canvas>
-                      <div class="position-absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
-                        <div class="text-body-1 font-weight-bold" :class="getCalorieColorClass()">
+                      <canvas ref="calorieChart" width="120" height="120" />
+                      <div
+                        class="position-absolute"
+                        style="
+                          top: 50%;
+                          left: 50%;
+                          transform: translate(-50%, -50%);
+                        "
+                      >
+                        <div
+                          class="text-body-1 font-weight-bold"
+                          :class="getCalorieColorClass()"
+                        >
                           {{ Math.round(calorieProgress) }}%
                         </div>
                       </div>
                     </div>
                     <div class="text-caption mt-2">
-                      {{ todayProgress?.total_calories || 0 }} / {{ userGoals.target_calories || 2000 }}
+                      {{ todayProgress?.total_calories || 0 }} /
+                      {{ userGoals.target_calories || 2000 }}
                     </div>
                   </div>
                 </v-col>
@@ -85,15 +110,26 @@
                   <div class="text-center">
                     <div class="text-caption mb-2">Protein</div>
                     <div class="position-relative d-inline-block">
-                      <canvas ref="proteinChart" width="120" height="120"></canvas>
-                      <div class="position-absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
-                        <div class="text-body-1 font-weight-bold" :class="getProteinColorClass()">
+                      <canvas ref="proteinChart" width="120" height="120" />
+                      <div
+                        class="position-absolute"
+                        style="
+                          top: 50%;
+                          left: 50%;
+                          transform: translate(-50%, -50%);
+                        "
+                      >
+                        <div
+                          class="text-body-1 font-weight-bold"
+                          :class="getProteinColorClass()"
+                        >
                           {{ Math.round(proteinProgress) }}%
                         </div>
                       </div>
                     </div>
                     <div class="text-caption mt-2">
-                      {{ todayProgress?.total_protein || 0 }}g / {{ userGoals.target_protein || 150 }}g
+                      {{ todayProgress?.total_protein || 0 }}g /
+                      {{ userGoals.target_protein || 150 }}g
                     </div>
                   </div>
                 </v-col>
@@ -102,15 +138,26 @@
                   <div class="text-center">
                     <div class="text-caption mb-2">Carbs</div>
                     <div class="position-relative d-inline-block">
-                      <canvas ref="carbChart" width="120" height="120"></canvas>
-                      <div class="position-absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
-                        <div class="text-body-1 font-weight-bold" :class="getCarbColorClass()">
+                      <canvas ref="carbChart" width="120" height="120" />
+                      <div
+                        class="position-absolute"
+                        style="
+                          top: 50%;
+                          left: 50%;
+                          transform: translate(-50%, -50%);
+                        "
+                      >
+                        <div
+                          class="text-body-1 font-weight-bold"
+                          :class="getCarbColorClass()"
+                        >
                           {{ Math.round(carbProgress) }}%
                         </div>
                       </div>
                     </div>
                     <div class="text-caption mt-2">
-                      {{ todayProgress?.total_carbs || 0 }}g / {{ userGoals.target_carbs || 250 }}g
+                      {{ todayProgress?.total_carbs || 0 }}g /
+                      {{ userGoals.target_carbs || 250 }}g
                     </div>
                   </div>
                 </v-col>
@@ -119,15 +166,26 @@
                   <div class="text-center">
                     <div class="text-caption mb-2">Fat</div>
                     <div class="position-relative d-inline-block">
-                      <canvas ref="fatChart" width="120" height="120"></canvas>
-                      <div class="position-absolute" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
-                        <div class="text-body-1 font-weight-bold" :class="getFatColorClass()">
+                      <canvas ref="fatChart" width="120" height="120" />
+                      <div
+                        class="position-absolute"
+                        style="
+                          top: 50%;
+                          left: 50%;
+                          transform: translate(-50%, -50%);
+                        "
+                      >
+                        <div
+                          class="text-body-1 font-weight-bold"
+                          :class="getFatColorClass()"
+                        >
                           {{ Math.round(fatProgress) }}%
                         </div>
                       </div>
                     </div>
                     <div class="text-caption mt-2">
-                      {{ todayProgress?.total_fat || 0 }}g / {{ userGoals.target_fat || 65 }}g
+                      {{ todayProgress?.total_fat || 0 }}g /
+                      {{ userGoals.target_fat || 65 }}g
                     </div>
                   </div>
                 </v-col>
@@ -138,14 +196,17 @@
             <v-row class="mt-4">
               <v-col class="text-center">
                 <div class="d-flex align-center justify-center">
-                  <v-icon 
-                    :color="getOverallStatusColor()" 
+                  <v-icon
+                    :color="getOverallStatusColor()"
                     class="mr-2"
                     size="20"
                   >
                     {{ getOverallStatusIcon() }}
                   </v-icon>
-                  <span class="text-caption" :class="getOverallStatusColorClass()">
+                  <span
+                    class="text-caption"
+                    :class="getOverallStatusColorClass()"
+                  >
                     {{ getOverallStatusText() }}
                   </span>
                 </div>
@@ -162,39 +223,47 @@
               {{ todayMeals.length }} meals
             </v-chip>
           </v-card-title>
-          
+
           <v-card-text>
             <div v-if="todayMeals.length === 0" class="text-center py-8">
-              <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-food</v-icon>
+              <v-icon size="64" color="grey-lighten-1" class="mb-4"
+                >mdi-food</v-icon
+              >
               <p class="text-grey">No meals logged today</p>
-              <v-btn @click="goToSnap" color="primary" class="mt-2">Add Your First Meal</v-btn>
+              <v-btn color="primary" class="mt-2" @click="goToSnap"
+                >Add Your First Meal</v-btn
+              >
             </div>
-            
+
             <div v-else>
               <v-list>
                 <v-list-item
                   v-for="meal in todayMeals"
                   :key="meal.id"
                   class="mb-2"
-                  style="background-color: #f5f5f5; border-radius: 8px;"
+                  style="background-color: #f5f5f5; border-radius: 8px"
                 >
-                  <template v-slot:prepend>
+                  <template #prepend>
                     <v-icon :color="getMealTypeColor(meal.meal_type)" size="24">
                       {{ getMealTypeIcon(meal.meal_type) }}
                     </v-icon>
                   </template>
-                  
+
                   <v-list-item-title class="font-weight-medium">
                     {{ meal.name }}
                   </v-list-item-title>
                   <v-list-item-subtitle class="text-caption text-grey">
                     {{ formatTime(meal.consumed_at) }}
                   </v-list-item-subtitle>
-                  
-                  <template v-slot:append>
+
+                  <template #append>
                     <div class="text-right">
-                      <div class="font-weight-medium">{{ meal.total_calories }} cal</div>
-                      <div class="text-caption text-grey">{{ meal.total_protein }}g protein</div>
+                      <div class="font-weight-medium">
+                        {{ meal.total_calories }} cal
+                      </div>
+                      <div class="text-caption text-grey">
+                        {{ meal.total_protein }}g protein
+                      </div>
                     </div>
                   </template>
                 </v-list-item>
@@ -207,12 +276,12 @@
 
     <!-- Floating Action Button -->
     <v-btn
-      @click="goToSnap"
       color="primary"
       size="x-large"
       icon
       class="floating-action-btn"
       elevation="8"
+      @click="goToSnap"
     >
       <v-icon size="32">mdi-camera</v-icon>
     </v-btn>
@@ -222,12 +291,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import type { User, Meal, UserGoal, UserProgress } from '~/server/database/schemas'
+import type { Meal, UserGoal, UserProgress } from '~/server/database/schemas'
 
 // Page meta
 definePageMeta({
-  middleware: 'auth' as any,
-  layout: 'authenticated'
+  middleware: 'auth' as never,
+  layout: 'authenticated',
 })
 
 const router = useRouter()
@@ -247,35 +316,51 @@ const fatChart = ref<HTMLCanvasElement>()
 // Computed
 const today = computed(() => new Date())
 const calorieProgress = computed(() => {
-  if (!userGoals.value?.target_calories || !todayProgress.value?.total_calories) return 0
-  return Math.min((todayProgress.value.total_calories / userGoals.value.target_calories) * 100, 100)
+  if (!userGoals.value?.target_calories || !todayProgress.value?.total_calories)
+    return 0
+  return Math.min(
+    (todayProgress.value.total_calories / userGoals.value.target_calories) *
+      100,
+    100
+  )
 })
 const proteinProgress = computed(() => {
-  if (!userGoals.value?.target_protein || !todayProgress.value?.total_protein) return 0
-  return Math.min((todayProgress.value.total_protein / userGoals.value.target_protein) * 100, 100)
+  if (!userGoals.value?.target_protein || !todayProgress.value?.total_protein)
+    return 0
+  return Math.min(
+    (todayProgress.value.total_protein / userGoals.value.target_protein) * 100,
+    100
+  )
 })
 const carbProgress = computed(() => {
-  if (!userGoals.value?.target_carbs || !todayProgress.value?.total_carbs) return 0
-  return Math.min((todayProgress.value.total_carbs / userGoals.value.target_carbs) * 100, 100)
+  if (!userGoals.value?.target_carbs || !todayProgress.value?.total_carbs)
+    return 0
+  return Math.min(
+    (todayProgress.value.total_carbs / userGoals.value.target_carbs) * 100,
+    100
+  )
 })
 const fatProgress = computed(() => {
   if (!userGoals.value?.target_fat || !todayProgress.value?.total_fat) return 0
-  return Math.min((todayProgress.value.total_fat / userGoals.value.target_fat) * 100, 100)
+  return Math.min(
+    (todayProgress.value.total_fat / userGoals.value.target_fat) * 100,
+    100
+  )
 })
 
 // Methods
 const formatDate = (date: Date) => {
-  return date.toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    month: 'short', 
-    day: 'numeric' 
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
   })
 }
 
 const formatTime = (dateString: string) => {
-  return new Date(dateString).toLocaleTimeString('en-US', { 
-    hour: 'numeric', 
-    minute: '2-digit' 
+  return new Date(dateString).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
   })
 }
 
@@ -284,7 +369,7 @@ const getMealTypeColor = (mealType: string) => {
     breakfast: 'orange',
     lunch: 'green',
     dinner: 'purple',
-    snack: 'blue'
+    snack: 'blue',
   }
   return colors[mealType as keyof typeof colors] || 'grey'
 }
@@ -294,7 +379,7 @@ const getMealTypeIcon = (mealType: string) => {
     breakfast: 'mdi-sunrise',
     lunch: 'mdi-sunny',
     dinner: 'mdi-moon-waning-crescent',
-    snack: 'mdi-food-apple'
+    snack: 'mdi-food-apple',
   }
   return icons[mealType as keyof typeof icons] || 'mdi-food'
 }
@@ -334,7 +419,12 @@ const getFatColorClass = () => {
 
 // Overall status methods
 const getOverallStatusColor = () => {
-  const avgProgress = (calorieProgress.value + proteinProgress.value + carbProgress.value + fatProgress.value) / 4
+  const avgProgress =
+    (calorieProgress.value +
+      proteinProgress.value +
+      carbProgress.value +
+      fatProgress.value) /
+    4
   if (avgProgress >= 100) return 'error'
   if (avgProgress >= 80) return 'warning'
   if (avgProgress >= 60) return 'success'
@@ -342,7 +432,12 @@ const getOverallStatusColor = () => {
 }
 
 const getOverallStatusColorClass = () => {
-  const avgProgress = (calorieProgress.value + proteinProgress.value + carbProgress.value + fatProgress.value) / 4
+  const avgProgress =
+    (calorieProgress.value +
+      proteinProgress.value +
+      carbProgress.value +
+      fatProgress.value) /
+    4
   if (avgProgress >= 100) return 'text-error'
   if (avgProgress >= 80) return 'text-warning'
   if (avgProgress >= 60) return 'text-success'
@@ -350,7 +445,12 @@ const getOverallStatusColorClass = () => {
 }
 
 const getOverallStatusIcon = () => {
-  const avgProgress = (calorieProgress.value + proteinProgress.value + carbProgress.value + fatProgress.value) / 4
+  const avgProgress =
+    (calorieProgress.value +
+      proteinProgress.value +
+      carbProgress.value +
+      fatProgress.value) /
+    4
   if (avgProgress >= 100) return 'mdi-check-circle'
   if (avgProgress >= 80) return 'mdi-alert-circle'
   if (avgProgress >= 60) return 'mdi-progress-clock'
@@ -358,7 +458,12 @@ const getOverallStatusIcon = () => {
 }
 
 const getOverallStatusText = () => {
-  const avgProgress = (calorieProgress.value + proteinProgress.value + carbProgress.value + fatProgress.value) / 4
+  const avgProgress =
+    (calorieProgress.value +
+      proteinProgress.value +
+      carbProgress.value +
+      fatProgress.value) /
+    4
   if (avgProgress >= 100) return 'Goals exceeded!'
   if (avgProgress >= 80) return 'Almost there!'
   if (avgProgress >= 60) return 'Good progress'
@@ -366,7 +471,11 @@ const getOverallStatusText = () => {
 }
 
 // Chart drawing methods
-const drawPieChart = (canvas: HTMLCanvasElement, percentage: number, color: string) => {
+const drawPieChart = (
+  canvas: HTMLCanvasElement,
+  percentage: number,
+  color: string
+) => {
   const ctx = canvas.getContext('2d')
   if (!ctx) return
 
@@ -397,30 +506,50 @@ const drawPieChart = (canvas: HTMLCanvasElement, percentage: number, color: stri
 
 const updateCharts = () => {
   if (calorieChart.value) {
-    const color = calorieProgress.value >= 100 ? '#f44336' : 
-                  calorieProgress.value >= 80 ? '#ff9800' : 
-                  calorieProgress.value >= 60 ? '#2196f3' : '#9e9e9e'
+    const color =
+      calorieProgress.value >= 100
+        ? '#f44336'
+        : calorieProgress.value >= 80
+          ? '#ff9800'
+          : calorieProgress.value >= 60
+            ? '#2196f3'
+            : '#9e9e9e'
     drawPieChart(calorieChart.value, calorieProgress.value, color)
   }
-  
+
   if (proteinChart.value) {
-    const color = proteinProgress.value >= 100 ? '#f44336' : 
-                  proteinProgress.value >= 80 ? '#ff9800' : 
-                  proteinProgress.value >= 60 ? '#4caf50' : '#9e9e9e'
+    const color =
+      proteinProgress.value >= 100
+        ? '#f44336'
+        : proteinProgress.value >= 80
+          ? '#ff9800'
+          : proteinProgress.value >= 60
+            ? '#4caf50'
+            : '#9e9e9e'
     drawPieChart(proteinChart.value, proteinProgress.value, color)
   }
-  
+
   if (carbChart.value) {
-    const color = carbProgress.value >= 100 ? '#f44336' : 
-                  carbProgress.value >= 80 ? '#ff9800' : 
-                  carbProgress.value >= 60 ? '#ff9800' : '#9e9e9e'
+    const color =
+      carbProgress.value >= 100
+        ? '#f44336'
+        : carbProgress.value >= 80
+          ? '#ff9800'
+          : carbProgress.value >= 60
+            ? '#ff9800'
+            : '#9e9e9e'
     drawPieChart(carbChart.value, carbProgress.value, color)
   }
-  
+
   if (fatChart.value) {
-    const color = fatProgress.value >= 100 ? '#f44336' : 
-                  fatProgress.value >= 80 ? '#ff9800' : 
-                  fatProgress.value >= 60 ? '#00bcd4' : '#9e9e9e'
+    const color =
+      fatProgress.value >= 100
+        ? '#f44336'
+        : fatProgress.value >= 80
+          ? '#ff9800'
+          : fatProgress.value >= 60
+            ? '#00bcd4'
+            : '#9e9e9e'
     drawPieChart(fatChart.value, fatProgress.value, color)
   }
 }
@@ -434,17 +563,23 @@ const loadDashboardData = async () => {
   loading.value = true
   try {
     // Load today's meals
-    const mealsResponse = await $fetch('/api/meals/today') as any
+    const mealsResponse = (await fetch('/api/meals/today').then((r) =>
+      r.json()
+    )) as { data?: Meal[] }
     todayMeals.value = mealsResponse?.data || []
-    
+
     // Load user goals
-    const goalsResponse = await $fetch('/api/goals/active') as any
-    userGoals.value = goalsResponse?.data
-    
+    const goalsResponse = (await fetch('/api/goals/active').then((r) =>
+      r.json()
+    )) as { data?: UserGoal }
+    userGoals.value = goalsResponse?.data || null
+
     // Load today's progress
-    const progressResponse = await $fetch('/api/progress/today') as any
-    todayProgress.value = progressResponse?.data
-    
+    const progressResponse = (await fetch('/api/progress/today').then((r) =>
+      r.json()
+    )) as { data?: UserProgress }
+    todayProgress.value = progressResponse?.data || null
+
     // Update charts after data is loaded
     nextTick(() => {
       updateCharts()

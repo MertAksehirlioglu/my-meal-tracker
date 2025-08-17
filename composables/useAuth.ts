@@ -11,7 +11,10 @@ export function useAuth() {
   const login = async (email: string, password: string) => {
     loading.value = true
     error.value = null
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
     if (authError) error.value = authError.message
     loading.value = false
     return { user: user.value, error: error.value }
@@ -41,7 +44,9 @@ export function useAuth() {
   const updateProfile = async (profile: { name?: string }) => {
     loading.value = true
     error.value = null
-    const { error: updateError } = await supabase.auth.updateUser({ data: profile })
+    const { error: updateError } = await supabase.auth.updateUser({
+      data: profile,
+    })
     if (updateError) error.value = updateError.message
     loading.value = false
     return { error: error.value }

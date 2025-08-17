@@ -98,7 +98,7 @@ export const TABLES = {
   FOOD_ITEMS: 'food_items',
   FOOD_DATABASE: 'food_database',
   USER_GOALS: 'user_goals',
-  USER_PROGRESS: 'user_progress'
+  USER_PROGRESS: 'user_progress',
 } as const
 
 // Row Level Security (RLS) policies
@@ -110,7 +110,7 @@ export const RLS_POLICIES = {
   USER_GOALS_OWN_DATA: 'user_goals_own_data',
   USER_PROGRESS_OWN_DATA: 'user_progress_own_data',
   // Food database is public for all users
-  FOOD_DATABASE_PUBLIC: 'food_database_public'
+  FOOD_DATABASE_PUBLIC: 'food_database_public',
 } as const
 
 // Helper types for API responses
@@ -132,7 +132,10 @@ export interface PaginatedResponse<T> {
 export type CreateUser = Omit<User, 'id' | 'created_at' | 'updated_at'>
 export type CreateMeal = Omit<Meal, 'id' | 'created_at' | 'updated_at'>
 export type CreateFoodItem = Omit<FoodItem, 'id' | 'created_at'>
-export type CreateFoodDatabase = Omit<FoodDatabase, 'id' | 'created_at' | 'updated_at'>
+export type CreateFoodDatabase = Omit<
+  FoodDatabase,
+  'id' | 'created_at' | 'updated_at'
+>
 export type CreateUserGoal = Omit<UserGoal, 'id' | 'created_at' | 'updated_at'>
 export type CreateUserProgress = Omit<UserProgress, 'id' | 'created_at'>
 
@@ -140,6 +143,12 @@ export type CreateUserProgress = Omit<UserProgress, 'id' | 'created_at'>
 export type UpdateUser = Partial<Omit<User, 'id' | 'created_at' | 'updated_at'>>
 export type UpdateMeal = Partial<Omit<Meal, 'id' | 'created_at' | 'updated_at'>>
 export type UpdateFoodItem = Partial<Omit<FoodItem, 'id' | 'created_at'>>
-export type UpdateFoodDatabase = Partial<Omit<FoodDatabase, 'id' | 'created_at' | 'updated_at'>>
-export type UpdateUserGoal = Partial<Omit<UserGoal, 'id' | 'created_at' | 'updated_at'>>
-export type UpdateUserProgress = Partial<Omit<UserProgress, 'id' | 'created_at'>> 
+export type UpdateFoodDatabase = Partial<
+  Omit<FoodDatabase, 'id' | 'created_at' | 'updated_at'>
+>
+export type UpdateUserGoal = Partial<
+  Omit<UserGoal, 'id' | 'created_at' | 'updated_at'>
+>
+export type UpdateUserProgress = Partial<
+  Omit<UserProgress, 'id' | 'created_at'>
+>

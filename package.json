@@ -7,20 +7,39 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "typecheck": "npx nuxi typecheck",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run typecheck && npm run lint && npm run format:check"
   },
   "dependencies": {
+    "@huggingface/inference": "^4.6.1",
     "@mdi/font": "^7.4.47",
     "@nuxtjs/supabase": "^1.5.3",
+    "@tensorflow-models/coco-ssd": "^2.2.3",
+    "@tensorflow-models/mobilenet": "^2.1.1",
+    "@tensorflow/tfjs": "^4.22.0",
     "eslint": "^9.30.1",
     "nuxt": "^3.17.6",
+    "openai": "^5.12.2",
     "prettier": "^3.6.2",
     "vue": "^3.5.17",
     "vue-router": "^4.5.1",
     "vuetify": "^3.9.0"
   },
   "devDependencies": {
+    "@nuxt/eslint": "^1.8.0",
+    "@nuxt/eslint-config": "^1.8.0",
     "@types/eslint": "^9.6.1",
-    "@types/prettier": "^2.7.3"
+    "@types/prettier": "^2.7.3",
+    "@typescript-eslint/eslint-plugin": "^8.39.1",
+    "@typescript-eslint/parser": "^8.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-define-config": "^2.1.0",
+    "eslint-plugin-prettier": "^5.5.4",
+    "vue-eslint-parser": "^10.2.0"
   }
 }

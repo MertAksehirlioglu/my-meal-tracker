@@ -1,5 +1,5 @@
 <template>
-  <v-container class="fill-height pa-4" style="max-width: 800px;">
+  <v-container class="fill-height pa-4" style="max-width: 800px">
     <v-row justify="center">
       <v-col cols="12" md="8">
         <v-card elevation="2" rounded="lg">
@@ -7,7 +7,7 @@
             <v-icon class="mr-2">mdi-food</v-icon>
             Manual Meal Entry
           </v-card-title>
-          
+
           <v-card-text>
             <v-form ref="form" v-model="valid" @submit.prevent="saveMeal">
               <!-- Basic Information -->
@@ -56,9 +56,9 @@
               </v-row>
 
               <!-- Nutrition Information -->
-              <v-divider class="my-4"></v-divider>
+              <v-divider class="my-4" />
               <h3 class="text-h6 mb-4">Nutrition Information</h3>
-              
+
               <v-row>
                 <v-col cols="12" sm="6" md="3">
                   <v-text-field
@@ -170,10 +170,10 @@
                   <v-btn
                     color="primary"
                     size="large"
-                    @click="saveMeal"
                     :loading="loading"
                     :disabled="!valid"
                     block
+                    @click="saveMeal"
                   >
                     <v-icon left>mdi-content-save</v-icon>
                     Save Meal
@@ -192,12 +192,11 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '~/composables/useAuth'
-import type { Meal } from '~/server/database/schemas'
 
 // Page meta
 definePageMeta({
-  middleware: 'auth' as any,
-  layout: 'authenticated'
+  middleware: 'auth' as never,
+  layout: 'authenticated',
 })
 
 const router = useRouter()
@@ -222,7 +221,7 @@ const mealData = reactive({
   sugar: null as number | null,
   sodium: null as number | null,
   cholesterol: null as number | null,
-  notes: ''
+  notes: '',
 })
 
 // Meal types
@@ -230,17 +229,17 @@ const mealTypes = [
   { title: 'Breakfast', value: 'breakfast' },
   { title: 'Lunch', value: 'lunch' },
   { title: 'Dinner', value: 'dinner' },
-  { title: 'Snack', value: 'snack' }
+  { title: 'Snack', value: 'snack' },
 ]
 
 // Validation rules
 const rules = {
-  required: (value: any) => !!value || 'This field is required',
-  positive: (value: any) => {
+  required: (value: unknown) => !!value || 'This field is required',
+  positive: (value: unknown) => {
     if (value === null || value === undefined || value === '') return true
     const numValue = Number(value)
-    return !isNaN(numValue) && numValue >= 0 || 'Value must be positive'
-  }
+    return (!isNaN(numValue) && numValue >= 0) || 'Value must be positive'
+  },
 }
 
 // Methods
@@ -259,13 +258,14 @@ const saveMeal = async () => {
       sugar: mealData.sugar || null,
       sodium: mealData.sodium || null,
       cholesterol: mealData.cholesterol || null,
-      notes: mealData.notes || null
+      notes: mealData.notes || null,
     }
 
-    const response = await $fetch('/api/meals', {
+    const response = (await fetch('/api/meals', {
       method: 'POST',
-      body: mealPayload
-    }) as any
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(mealPayload),
+    }).then((r) => r.json())) as { success: boolean; message?: string }
 
     if (response.success) {
       // Show success message and redirect
@@ -281,4 +281,4 @@ const saveMeal = async () => {
     loading.value = false
   }
 }
-</script> 
+</script>

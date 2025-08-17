@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
     if (!user?.id) {
       throw createError({
         statusCode: 401,
-        statusMessage: 'Unauthorized'
+        statusMessage: 'Unauthorized',
       })
     }
 
@@ -25,30 +25,30 @@ export default defineEventHandler(async (event) => {
       .eq('is_active', true)
       .single()
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+    if (error && error.code !== 'PGRST116') {
+      // PGRST116 is "not found"
       console.error('Database error:', error)
       throw createError({
         statusCode: 500,
-        statusMessage: 'Failed to fetch goals'
+        statusMessage: 'Failed to fetch goals',
       })
     }
 
     return {
       success: true,
       data: data as UserGoal | null,
-      message: 'Goals fetched successfully'
+      message: 'Goals fetched successfully',
     }
-
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching goals:', error)
-    
-    if (error.statusCode) {
+
+    if ((error as { statusCode?: number })?.statusCode) {
       throw error
     }
 
     throw createError({
       statusCode: 500,
-      statusMessage: 'Internal server error'
+      statusMessage: 'Internal server error',
     })
   }
-}) 
+})

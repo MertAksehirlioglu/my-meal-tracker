@@ -1,5 +1,5 @@
 <template>
-  <v-container class="fill-height pa-4" style="max-width: 800px;">
+  <v-container class="fill-height pa-4" style="max-width: 800px">
     <!-- Header -->
     <div class="d-flex align-center mb-6">
       <h1 class="text-h5 font-weight-bold">Goals</h1>
@@ -7,46 +7,63 @@
 
     <!-- Current Active Goal -->
     <v-card v-if="activeGoal" class="mb-6" elevation="2" rounded="lg">
-      <v-card-title class="text-h6 font-weight-bold d-flex align-center justify-space-between">
+      <v-card-title
+        class="text-h6 font-weight-bold d-flex align-center justify-space-between"
+      >
         Current Goal
         <v-chip color="success" size="small">Active</v-chip>
       </v-card-title>
       <v-card-text>
-        <div class="d-grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));">
+        <div
+          class="d-grid gap-3"
+          style="grid-template-columns: repeat(auto-fit, minmax(120px, 1fr))"
+        >
           <div v-if="activeGoal.target_weight" class="text-center">
-            <div class="text-h6 font-weight-bold text-primary">{{ activeGoal.target_weight }}kg</div>
+            <div class="text-h6 font-weight-bold text-primary">
+              {{ activeGoal.target_weight }}kg
+            </div>
             <div class="text-caption text-grey">Target Weight</div>
           </div>
           <div v-if="activeGoal.target_calories" class="text-center">
-            <div class="text-h6 font-weight-bold text-success">{{ activeGoal.target_calories }} cal</div>
+            <div class="text-h6 font-weight-bold text-success">
+              {{ activeGoal.target_calories }} cal
+            </div>
             <div class="text-caption text-grey">Daily Calories</div>
           </div>
           <div v-if="activeGoal.target_protein" class="text-center">
-            <div class="text-h6 font-weight-bold text-warning">{{ activeGoal.target_protein }}g</div>
+            <div class="text-h6 font-weight-bold text-warning">
+              {{ activeGoal.target_protein }}g
+            </div>
             <div class="text-caption text-grey">Protein</div>
           </div>
           <div v-if="activeGoal.target_carbs" class="text-center">
-            <div class="text-h6 font-weight-bold text-info">{{ activeGoal.target_carbs }}g</div>
+            <div class="text-h6 font-weight-bold text-info">
+              {{ activeGoal.target_carbs }}g
+            </div>
             <div class="text-caption text-grey">Carbs</div>
           </div>
         </div>
-        
-        <v-divider class="my-4"></v-divider>
-        
+
+        <v-divider class="my-4" />
+
         <div class="d-flex justify-space-between align-center">
           <div>
             <div class="text-caption text-grey">Started</div>
-            <div class="font-weight-medium">{{ formatDate(activeGoal.start_date) }}</div>
+            <div class="font-weight-medium">
+              {{ formatDate(activeGoal.start_date) }}
+            </div>
           </div>
           <div v-if="activeGoal.end_date">
             <div class="text-caption text-grey">End Date</div>
-            <div class="font-weight-medium">{{ formatDate(activeGoal.end_date) }}</div>
+            <div class="font-weight-medium">
+              {{ formatDate(activeGoal.end_date) }}
+            </div>
           </div>
           <v-btn
-            @click="editGoal(activeGoal)"
             color="primary"
             variant="outlined"
             size="small"
+            @click="editGoal(activeGoal)"
           >
             Edit Goal
           </v-btn>
@@ -57,11 +74,11 @@
     <!-- Create New Goal Button -->
     <v-btn
       v-if="!activeGoal"
-      @click="showGoalDialog = true"
       color="primary"
       size="large"
       block
       class="mb-6"
+      @click="showGoalDialog = true"
     >
       <v-icon left>mdi-plus</v-icon>
       Create New Goal
@@ -72,11 +89,15 @@
       <v-card-title class="text-h6 font-weight-bold">Goal History</v-card-title>
       <v-card-text>
         <div v-if="goalHistory.length === 0" class="text-center py-8">
-          <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-target</v-icon>
+          <v-icon size="64" color="grey-lighten-1" class="mb-4"
+            >mdi-target</v-icon
+          >
           <p class="text-grey">No goals created yet</p>
-          <v-btn @click="showGoalDialog = true" color="primary" class="mt-2">Create Your First Goal</v-btn>
+          <v-btn color="primary" class="mt-2" @click="showGoalDialog = true"
+            >Create Your First Goal</v-btn
+          >
         </div>
-        
+
         <div v-else class="space-y-3">
           <div
             v-for="goal in goalHistory"
@@ -87,15 +108,26 @@
             <div class="flex-grow-1">
               <div class="d-flex align-center mb-1">
                 <span class="font-weight-medium">{{ getGoalTitle(goal) }}</span>
-                <v-chip v-if="goal.is_active" color="success" size="x-small" class="ml-2">Active</v-chip>
+                <v-chip
+                  v-if="goal.is_active"
+                  color="success"
+                  size="x-small"
+                  class="ml-2"
+                  >Active</v-chip
+                >
               </div>
               <div class="text-caption text-grey">
-                {{ formatDate(goal.start_date) }} - {{ goal.end_date ? formatDate(goal.end_date) : 'Ongoing' }}
+                {{ formatDate(goal.start_date) }} -
+                {{ goal.end_date ? formatDate(goal.end_date) : 'Ongoing' }}
               </div>
             </div>
             <div class="text-right">
-              <div v-if="goal.target_calories" class="font-weight-medium">{{ goal.target_calories }} cal</div>
-              <div v-if="goal.target_weight" class="text-caption text-grey">{{ goal.target_weight }}kg</div>
+              <div v-if="goal.target_calories" class="font-weight-medium">
+                {{ goal.target_calories }} cal
+              </div>
+              <div v-if="goal.target_weight" class="text-caption text-grey">
+                {{ goal.target_weight }}kg
+              </div>
             </div>
           </div>
         </div>
@@ -108,8 +140,12 @@
         <v-card-title class="text-h6 font-weight-bold">
           {{ editingGoal ? 'Edit Goal' : 'Create New Goal' }}
         </v-card-title>
-        
-        <v-form @submit.prevent="saveGoal" ref="goalFormRef" v-model="goalFormValid">
+
+        <v-form
+          ref="goalFormRef"
+          v-model="goalFormValid"
+          @submit.prevent="saveGoal"
+        >
           <v-card-text>
             <v-text-field
               v-model.number="goalForm.target_weight"
@@ -119,9 +155,14 @@
               min="30"
               max="300"
               class="mb-3"
-              :rules="[v => !v || (v >= 30 && v <= 300) || 'Weight must be between 30-300 kg']"
+              :rules="[
+                (v) =>
+                  !v ||
+                  (v >= 30 && v <= 300) ||
+                  'Weight must be between 30-300 kg',
+              ]"
             />
-            
+
             <v-text-field
               v-model.number="goalForm.target_calories"
               label="Daily Calorie Target"
@@ -130,9 +171,14 @@
               min="1200"
               max="5000"
               class="mb-3"
-              :rules="[v => !v || (v >= 1200 && v <= 5000) || 'Calories must be between 1200-5000']"
+              :rules="[
+                (v) =>
+                  !v ||
+                  (v >= 1200 && v <= 5000) ||
+                  'Calories must be between 1200-5000',
+              ]"
             />
-            
+
             <v-row>
               <v-col cols="6">
                 <v-text-field
@@ -143,7 +189,12 @@
                   min="0"
                   max="500"
                   class="mb-3"
-                  :rules="[v => !v || (v >= 0 && v <= 500) || 'Protein must be between 0-500g']"
+                  :rules="[
+                    (v) =>
+                      !v ||
+                      (v >= 0 && v <= 500) ||
+                      'Protein must be between 0-500g',
+                  ]"
                 />
               </v-col>
               <v-col cols="6">
@@ -155,11 +206,16 @@
                   min="0"
                   max="1000"
                   class="mb-3"
-                  :rules="[v => !v || (v >= 0 && v <= 1000) || 'Carbs must be between 0-1000g']"
+                  :rules="[
+                    (v) =>
+                      !v ||
+                      (v >= 0 && v <= 1000) ||
+                      'Carbs must be between 0-1000g',
+                  ]"
                 />
               </v-col>
             </v-row>
-            
+
             <v-text-field
               v-model.number="goalForm.target_fat"
               label="Fat (g)"
@@ -168,9 +224,12 @@
               min="0"
               max="200"
               class="mb-3"
-              :rules="[v => !v || (v >= 0 && v <= 200) || 'Fat must be between 0-200g']"
+              :rules="[
+                (v) =>
+                  !v || (v >= 0 && v <= 200) || 'Fat must be between 0-200g',
+              ]"
             />
-            
+
             <v-row>
               <v-col cols="6">
                 <v-text-field
@@ -179,7 +238,7 @@
                   variant="outlined"
                   type="date"
                   class="mb-3"
-                  :rules="[v => !!v || 'Start date is required']"
+                  :rules="[(v) => !!v || 'Start date is required']"
                   required
                 />
               </v-col>
@@ -195,21 +254,21 @@
               </v-col>
             </v-row>
           </v-card-text>
-          
+
           <v-card-actions class="pa-4">
-            <v-spacer></v-spacer>
+            <v-spacer />
             <v-btn
-              @click="showGoalDialog = false"
               variant="outlined"
               class="mr-2"
+              @click="showGoalDialog = false"
             >
               Cancel
             </v-btn>
             <v-btn
-              @click="saveGoal"
               color="primary"
               :disabled="!goalFormValid || loading"
               :loading="loading"
+              @click="saveGoal"
             >
               {{ editingGoal ? 'Update' : 'Create' }}
             </v-btn>
@@ -222,7 +281,7 @@
     <v-alert v-if="success" type="success" class="mt-4">
       {{ success }}
     </v-alert>
-    
+
     <v-alert v-if="error" type="error" class="mt-4">
       {{ error }}
     </v-alert>
@@ -231,17 +290,17 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+// import { useRouter } from 'vue-router' // TODO: Use router when needed
 import { useAuth } from '~/composables/useAuth'
 import type { UserGoal, CreateUserGoal } from '~/server/database/schemas'
 
 // Page meta
 definePageMeta({
-  middleware: 'auth' as any,
-  layout: 'authenticated'
+  middleware: 'auth' as never,
+  layout: 'authenticated',
 })
 
-const router = useRouter()
+// const router = useRouter() // TODO: Use router when needed
 const { user } = useAuth()
 
 // Form refs
@@ -267,18 +326,22 @@ const goalForm = ref<CreateUserGoal>({
   target_fat: undefined,
   start_date: new Date().toISOString().split('T')[0],
   end_date: undefined,
-  is_active: true
+  is_active: true,
 })
 
 // Methods
 const loadGoals = async () => {
   if (!user.value?.id) return
-  
+
   try {
-    const response = await $fetch('/api/goals') as any
+    const response = (await fetch('/api/goals').then((r) => r.json())) as {
+      success: boolean
+      data?: UserGoal[]
+    }
     if (response.success) {
       goalHistory.value = response.data || []
-      activeGoal.value = goalHistory.value.find(goal => goal.is_active) || null
+      activeGoal.value =
+        goalHistory.value.find((goal) => goal.is_active) || null
     }
   } catch (err) {
     console.error('Error loading goals:', err)
@@ -297,39 +360,51 @@ const editGoal = (goal: UserGoal) => {
     target_fat: goal.target_fat,
     start_date: goal.start_date.split('T')[0],
     end_date: goal.end_date?.split('T')[0],
-    is_active: goal.is_active
+    is_active: goal.is_active,
   }
   showGoalDialog.value = true
 }
 
 const saveGoal = async () => {
   if (!goalFormRef.value?.validate() || !user.value?.id) return
-  
+
   loading.value = true
   error.value = ''
   success.value = ''
-  
+
   try {
     const payload = {
       ...goalForm.value,
-      user_id: user.value.id
+      user_id: user.value.id,
     }
-    
+
     let response
     if (editingGoal.value) {
-      response = await $fetch(`/api/goals/${editingGoal.value.id}`, {
-        method: 'PUT' as any,
-        body: payload
-      }) as any
+      response = (await fetch(`/api/goals/${editingGoal.value.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).then((r) => r.json())) as {
+        success: boolean
+        data?: UserGoal
+        message?: string
+      }
     } else {
-      response = await $fetch('/api/goals', {
-        method: 'POST' as any,
-        body: payload
-      }) as any
+      response = (await fetch('/api/goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).then((r) => r.json())) as {
+        success: boolean
+        data?: UserGoal
+        message?: string
+      }
     }
-    
+
     if (response.success) {
-      success.value = editingGoal.value ? 'Goal updated successfully!' : 'Goal created successfully!'
+      success.value = editingGoal.value
+        ? 'Goal updated successfully!'
+        : 'Goal created successfully!'
       showGoalDialog.value = false
       editingGoal.value = null
       resetGoalForm()
@@ -355,7 +430,7 @@ const resetGoalForm = () => {
     target_fat: undefined,
     start_date: new Date().toISOString().split('T')[0],
     end_date: undefined,
-    is_active: true
+    is_active: true,
   }
 }
 
@@ -363,7 +438,7 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
   })
 }
 
@@ -395,4 +470,4 @@ onMounted(() => {
 .gap-3 {
   gap: 12px;
 }
-</style> 
+</style>

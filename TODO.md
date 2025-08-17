@@ -3,6 +3,7 @@
 ---
 
 ## 🟦 User Authentication & Authorization
+
 - [x] [P1] Integrate Supabase Auth with Nuxt
   - [x] Add login, registration, and password reset flows
     - [x] User can register with email/password
@@ -15,6 +16,7 @@
 ---
 
 ## 🟩 Image Storage Setup
+
 - [x] [P1] Set up Supabase Storage for meal images
   - [x] Allow users to upload meal photos
   - [ ] Display uploaded images in meal logs
@@ -24,6 +26,7 @@
 ---
 
 ## 🟧 Meal Database Setup
+
 - [ ] [P1] Design PostgreSQL schema for meals & users
 - [ ] [P1] Connect Nuxt API routes to Supabase database
 - [ ] [P1] Implement CRUD operations for meals
@@ -33,6 +36,7 @@
 ---
 
 ## 🟨 Analysis Pipeline Setup
+
 - [ ] [P2] Integrate AI model or API for meal image analysis
   - [ ] Process uploaded images and return nutrition estimates
   - [ ] Store analysis results in the database
@@ -41,6 +45,7 @@
 ---
 
 ## UI Tasks
+
 - [ ] [P1] Main Page: Daily calorie intake display
   - [ ] Fetch user’s daily calorie goal from DB
   - [ ] Show progress bar for calories/macros
@@ -67,6 +72,7 @@
 ---
 
 ## Deployment & Monitoring
+
 - [ ] [P1] Set up Vercel/Netlify deployment
 - [ ] [P2] Integrate Sentry for error tracking
 - [ ] [P2] Add Google Analytics
@@ -74,19 +80,20 @@
 ---
 
 ## User Feedback Loop
+
 - [ ] [P2] Add feedback form/modal
 - [ ] [P2] Set up email notifications for new feedback
 
 ---
 
 ## 🧠 Future Improvements
+
 - [ ] Chart macros over time
 - [ ] Add push notifications/reminders
 - [ ] Mobile-first PWA setup
 
 ---
 
-*Add new tasks below as your project grows!*
-
+_Add new tasks below as your project grows!_
 
 ---

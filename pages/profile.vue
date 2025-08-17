@@ -1,24 +1,26 @@
 <template>
-  <v-container class="fill-height pa-4" style="max-width: 800px;">
+  <v-container class="fill-height pa-4" style="max-width: 800px">
     <!-- Header -->
     <div class="d-flex align-center mb-6">
       <h1 class="text-h5 font-weight-bold">Profile</h1>
     </div>
 
-    <v-form @submit.prevent="saveProfile" ref="formRef" v-model="formValid">
+    <v-form ref="formRef" v-model="formValid" @submit.prevent="saveProfile">
       <!-- Personal Information -->
       <v-card class="mb-6" elevation="2" rounded="lg">
-        <v-card-title class="text-h6 font-weight-bold">Personal Information</v-card-title>
+        <v-card-title class="text-h6 font-weight-bold"
+          >Personal Information</v-card-title
+        >
         <v-card-text>
           <v-text-field
             v-model="profile.name"
             label="Full Name"
             variant="outlined"
             class="mb-3"
-            :rules="[v => !!v || 'Name is required']"
+            :rules="[(v) => !!v || 'Name is required']"
             required
           />
-          
+
           <v-text-field
             v-model="profile.email"
             label="Email"
@@ -28,7 +30,7 @@
             disabled
             hint="Email cannot be changed"
           />
-          
+
           <v-row>
             <v-col cols="6">
               <v-text-field
@@ -38,7 +40,12 @@
                 type="number"
                 min="100"
                 max="250"
-                :rules="[v => !v || (v >= 100 && v <= 250) || 'Height must be between 100-250 cm']"
+                :rules="[
+                  (v) =>
+                    !v ||
+                    (v >= 100 && v <= 250) ||
+                    'Height must be between 100-250 cm',
+                ]"
               />
             </v-col>
             <v-col cols="6">
@@ -49,11 +56,16 @@
                 type="number"
                 min="30"
                 max="300"
-                :rules="[v => !v || (v >= 30 && v <= 300) || 'Weight must be between 30-300 kg']"
+                :rules="[
+                  (v) =>
+                    !v ||
+                    (v >= 30 && v <= 300) ||
+                    'Weight must be between 30-300 kg',
+                ]"
               />
             </v-col>
           </v-row>
-          
+
           <v-text-field
             v-model.number="profile.age"
             label="Age"
@@ -62,14 +74,19 @@
             type="number"
             min="13"
             max="120"
-            :rules="[v => !v || (v >= 13 && v <= 120) || 'Age must be between 13-120']"
+            :rules="[
+              (v) =>
+                !v || (v >= 13 && v <= 120) || 'Age must be between 13-120',
+            ]"
           />
         </v-card-text>
       </v-card>
 
       <!-- Activity & Goals -->
       <v-card class="mb-6" elevation="2" rounded="lg">
-        <v-card-title class="text-h6 font-weight-bold">Activity & Goals</v-card-title>
+        <v-card-title class="text-h6 font-weight-bold"
+          >Activity & Goals</v-card-title
+        >
         <v-card-text>
           <v-select
             v-model="profile.activity_level"
@@ -79,10 +96,10 @@
             :items="activityLevels"
             item-title="label"
             item-value="value"
-            :rules="[v => !!v || 'Activity level is required']"
+            :rules="[(v) => !!v || 'Activity level is required']"
             required
           />
-          
+
           <v-select
             v-model="profile.goal"
             label="Fitness Goal"
@@ -91,10 +108,10 @@
             :items="goals"
             item-title="label"
             item-value="value"
-            :rules="[v => !!v || 'Fitness goal is required']"
+            :rules="[(v) => !!v || 'Fitness goal is required']"
             required
           />
-          
+
           <v-text-field
             v-model.number="profile.daily_calorie_target"
             label="Daily Calorie Target"
@@ -103,14 +120,21 @@
             min="1200"
             max="5000"
             hint="Recommended: 1200-5000 calories"
-            :rules="[v => !v || (v >= 1200 && v <= 5000) || 'Calorie target must be between 1200-5000']"
+            :rules="[
+              (v) =>
+                !v ||
+                (v >= 1200 && v <= 5000) ||
+                'Calorie target must be between 1200-5000',
+            ]"
           />
         </v-card-text>
       </v-card>
 
       <!-- Avatar -->
       <v-card class="mb-6" elevation="2" rounded="lg">
-        <v-card-title class="text-h6 font-weight-bold">Profile Picture</v-card-title>
+        <v-card-title class="text-h6 font-weight-bold"
+          >Profile Picture</v-card-title
+        >
         <v-card-text>
           <div class="d-flex align-center">
             <v-avatar size="80" class="mr-4">
@@ -123,10 +147,10 @@
             </v-avatar>
             <div>
               <v-btn
-                @click="uploadAvatar"
                 color="primary"
                 variant="outlined"
                 class="mb-2"
+                @click="uploadAvatar"
               >
                 <v-icon left>mdi-camera</v-icon>
                 Upload Photo
@@ -148,7 +172,13 @@
         type="submit"
         class="mb-4"
       >
-        <v-progress-circular v-if="loading" indeterminate color="white" size="20" class="mr-2" />
+        <v-progress-circular
+          v-if="loading"
+          indeterminate
+          color="white"
+          size="20"
+          class="mr-2"
+        />
         Save Changes
       </v-btn>
 
@@ -156,7 +186,7 @@
       <v-alert v-if="success" type="success" class="mb-4">
         Profile updated successfully!
       </v-alert>
-      
+
       <v-alert v-if="error" type="error" class="mb-4">
         {{ error }}
       </v-alert>
@@ -175,17 +205,17 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+// import { useRouter } from 'vue-router' // TODO: Use router when needed
 import { useAuth } from '~/composables/useAuth'
-import type { User, UpdateUser } from '~/server/database/schemas'
+import type { UpdateUser } from '~/server/database/schemas'
 
 // Page meta
 definePageMeta({
-  middleware: 'auth' as any,
-  layout: 'authenticated'
+  middleware: 'auth' as never,
+  layout: 'authenticated',
 })
 
-const router = useRouter()
+// const router = useRouter() // TODO: Use router when needed
 const { user } = useAuth()
 
 // Form refs
@@ -203,7 +233,7 @@ const profile = ref<UpdateUser>({
   activity_level: undefined,
   goal: undefined,
   daily_calorie_target: undefined,
-  avatar_url: undefined
+  avatar_url: undefined,
 })
 
 const loading = ref(false)
@@ -214,24 +244,32 @@ const error = ref('')
 const activityLevels = [
   { label: 'Sedentary (little or no exercise)', value: 'sedentary' },
   { label: 'Light (light exercise/sports 1-3 days/week)', value: 'light' },
-  { label: 'Moderate (moderate exercise/sports 3-5 days/week)', value: 'moderate' },
+  {
+    label: 'Moderate (moderate exercise/sports 3-5 days/week)',
+    value: 'moderate',
+  },
   { label: 'Active (hard exercise/sports 6-7 days a week)', value: 'active' },
-  { label: 'Very Active (very hard exercise, physical job)', value: 'very_active' }
+  {
+    label: 'Very Active (very hard exercise, physical job)',
+    value: 'very_active',
+  },
 ]
 
 const goals = [
   { label: 'Lose Weight', value: 'lose' },
   { label: 'Maintain Weight', value: 'maintain' },
-  { label: 'Gain Weight', value: 'gain' }
+  { label: 'Gain Weight', value: 'gain' },
 ]
 
 // Methods
 const loadProfile = async () => {
   if (!user.value) return
-  
+
   try {
     // Load user profile data
-    const response = await $fetch(`/api/users/${user.value.id}`) as any
+    const response = (await fetch(`/api/users/${user.value.id}`).then((r) =>
+      r.json()
+    )) as { success: boolean; data?: UpdateUser }
     if (response.success && response.data) {
       profile.value = { ...response.data }
     }
@@ -243,17 +281,22 @@ const loadProfile = async () => {
 
 const saveProfile = async () => {
   if (!user.value?.id) return
-  
+
   loading.value = true
   error.value = ''
   success.value = false
-  
+
   try {
-    const response = await $fetch(`/api/users/${user.value.id}`, {
+    const response = (await fetch(`/api/users/${user.value.id}`, {
       method: 'PUT',
-      body: profile.value
-    }) as any
-    
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profile.value),
+    }).then((r) => r.json())) as {
+      success: boolean
+      data?: UpdateUser
+      message?: string
+    }
+
     if (response.success) {
       success.value = true
       // Update the user in auth store
@@ -276,22 +319,26 @@ const uploadAvatar = () => {
 const handleAvatarUpload = async (event: Event) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
-  
+
   if (!file || !user.value?.id) return
-  
+
   try {
     loading.value = true
-    
+
     // Create FormData for file upload
     const formData = new FormData()
     formData.append('avatar', file)
-    
-    const response = await $fetch(`/api/users/${user.value.id}/avatar`, {
+
+    const response = (await fetch(`/api/users/${user.value.id}/avatar`, {
       method: 'POST',
-      body: formData
-    }) as any
-    
-    if (response.success) {
+      body: formData,
+    }).then((r) => r.json())) as {
+      success: boolean
+      data?: { avatar_url: string }
+      message?: string
+    }
+
+    if (response.success && response.data) {
       profile.value.avatar_url = response.data.avatar_url
       success.value = true
     } else {
@@ -310,4 +357,4 @@ const handleAvatarUpload = async (event: Event) => {
 onMounted(() => {
   loadProfile()
 })
-</script> 
+</script>

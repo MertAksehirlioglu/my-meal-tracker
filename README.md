@@ -21,7 +21,7 @@ Built with Supabase, Vuetify, and love.
 - **Frontend**: Nuxt 3 + Vuetify 3
 - **Backend**: Nuxt Server API routes
 - **Auth & DB**: Supabase (PostgreSQL, Auth, Storage)
-- **AI Inference**: To be integrated (browser model or API)
+- **AI Inference**: Hugging Face Inference API with Food-101 model
 - **Dev Tools**: ESLint + Prettier
 
 ---
@@ -38,7 +38,7 @@ npm install
 
 # 3. Add environment variables
 cp .env.example .env
-# Fill in your Supabase keys
+# Fill in your Supabase and Hugging Face keys
 
 # 4. Start development server
 npm run dev
@@ -53,9 +53,40 @@ Create a `.env` file:
 ```env
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
+VITE_HUGGING_FACE_TOKEN=your-hf-token
+VITE_CONTACT_MAIL=your-email@example.com
 ```
 
-These are exposed as public runtime config in `nuxt.config.ts`.
+---
+
+## 🤖 AI Food Classification Setup
+
+This app uses Hugging Face Inference API for food classification. Follow these steps:
+
+### 1. Create Hugging Face Account
+
+- Sign up at [huggingface.co](https://huggingface.co)
+- Generate an API token in your account settings
+
+### 2. Understanding Inference Providers
+
+- Read the [Hugging Face Inference Providers documentation](https://huggingface.co/docs/inference-providers/index)
+- Learn about different hosting options and pricing
+- Free tier includes limited requests per month
+
+### 3. Model Information
+
+- Currently using: `nateraw/food` (Food-101 classification model)
+- Supports 101 different food categories
+- Returns confidence scores for predictions
+
+### 4. Add Your Token
+
+Add your Hugging Face token to the `.env` file:
+
+```env
+VITE_HUGGING_FACE_TOKEN=hf_your_token_here
+```
 
 ---
 

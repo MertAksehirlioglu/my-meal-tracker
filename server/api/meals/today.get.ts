@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
     if (!user?.id) {
       throw createError({
         statusCode: 401,
-        statusMessage: 'Unauthorized'
+        statusMessage: 'Unauthorized',
       })
     }
 
@@ -19,8 +19,19 @@ export default defineEventHandler(async (event) => {
 
     // Get today's date range
     const today = new Date()
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59)
+    const startOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    )
+    const endOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      23,
+      59,
+      59
+    )
 
     // Fetch today's meals
     const { data, error } = await supabase
@@ -35,26 +46,25 @@ export default defineEventHandler(async (event) => {
       console.error('Database error:', error)
       throw createError({
         statusCode: 500,
-        statusMessage: 'Failed to fetch meals'
+        statusMessage: 'Failed to fetch meals',
       })
     }
 
     return {
       success: true,
       data: data as Meal[],
-      message: 'Meals fetched successfully'
+      message: 'Meals fetched successfully',
     }
-
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching meals:', error)
-    
-    if (error.statusCode) {
+
+    if ((error as { statusCode?: number })?.statusCode) {
       throw error
     }
 
     throw createError({
       statusCode: 500,
-      statusMessage: 'Internal server error'
+      statusMessage: 'Internal server error',
     })
   }
-}) 
+})

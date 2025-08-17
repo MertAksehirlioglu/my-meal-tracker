@@ -1,86 +1,391 @@
 <template>
-  <v-container class="fill-height d-flex flex-column align-center justify-center">
-    <v-card class="pa-6 py-8 mx-auto" max-width="400" elevation="10" rounded="xl">
+  <v-container
+    class="fill-height d-flex flex-column align-center justify-center"
+  >
+    <!-- Camera/Photo Capture Phase -->
+    <v-card
+      v-if="!showAnalysis"
+      class="pa-6 py-8 mx-auto"
+      max-width="400"
+      elevation="10"
+      rounded="xl"
+    >
       <div class="d-flex flex-column align-center mb-4">
-        <img src="/logo.png" alt="MealSnap Logo" class="mb-2" style="max-width: 48px; max-height: 48px; border-radius: 8px;" />
+        <img
+          src="/logo.png"
+          alt="MealSnap Logo"
+          class="mb-2"
+          style="max-width: 48px; max-height: 48px; border-radius: 8px"
+        />
         <h2 class="font-weight-bold mb-2 text-primary">Snap a Meal Photo</h2>
-        <p class="mb-2 text-grey-darken-1 text-center">Point your camera at your meal and tap the button to take a photo.</p>
+        <p class="mb-2 text-grey-darken-1 text-center">
+          Point your camera at your meal and tap the button to take a photo.
+        </p>
       </div>
+
       <div class="d-flex flex-column align-center justify-center mb-4">
-        <video ref="videoRef" autoplay playsinline style="width: 100%; max-width: 320px; border-radius: 12px; background: #eee;" v-show="!photoData" />
-        <img v-if="photoData" :src="photoData" alt="Captured photo" style="width: 100%; max-width: 320px; border-radius: 12px;" />
+        <video
+          v-show="!photoData"
+          ref="videoRef"
+          autoplay
+          playsinline
+          style="
+            width: 100%;
+            max-width: 320px;
+            border-radius: 12px;
+            background: #eee;
+          "
+        />
+        <img
+          v-if="photoData"
+          :src="photoData"
+          alt="Captured photo"
+          style="width: 100%; max-width: 320px; border-radius: 12px"
+        />
       </div>
-      <v-btn v-if="!photoData" color="primary" block size="large" class="mb-2" @click="takePhoto" :disabled="!cameraReady">
+
+      <v-btn
+        v-if="!photoData"
+        color="primary"
+        block
+        size="large"
+        class="mb-2"
+        :disabled="!cameraReady"
+        @click="takePhoto"
+      >
         <v-icon left>mdi-camera</v-icon>
         Take Photo
       </v-btn>
-      <v-btn v-if="photoData" color="secondary" block size="large" class="mb-2" @click="retakePhoto">
-        <v-icon left>mdi-refresh</v-icon>
-        Retake
-      </v-btn>
-      <v-divider class="my-4"></v-divider>
-      <v-btn color="grey" variant="outlined" block size="large" @click="goToManualEntry">
+
+      <div v-if="photoData" class="d-flex flex-column gap-2 mb-4">
+        <v-btn
+          color="primary"
+          block
+          size="large"
+          :loading="analyzing || classificationLoading"
+          :disabled="analyzing || classificationLoading"
+          @click="analyzePhoto"
+        >
+          <v-icon left>mdi-robot</v-icon>
+          Analyze with AI
+        </v-btn>
+
+        <v-btn
+          color="secondary"
+          variant="outlined"
+          block
+          size="large"
+          :disabled="analyzing || classificationLoading"
+          @click="retakePhoto"
+        >
+          <v-icon left>mdi-refresh</v-icon>
+          Retake Photo
+        </v-btn>
+      </div>
+
+      <v-divider class="my-4" />
+
+      <v-btn
+        color="grey"
+        variant="outlined"
+        block
+        size="large"
+        @click="goToManualEntry"
+      >
         <v-icon left>mdi-pencil</v-icon>
         Add Manually
       </v-btn>
-      <v-alert v-if="error" type="error" class="mt-2">{{ error }}</v-alert>
+
+      <v-alert
+        v-if="error || analysisError || classificationError"
+        type="error"
+        class="mt-2"
+      >
+        {{ error || analysisError || classificationError || '' }}
+        <div class="mt-3">
+          <v-btn
+            color="white"
+            variant="outlined"
+            size="small"
+            @click="showManualEntry"
+          >
+            Enter Food Manually Instead
+          </v-btn>
+        </div>
+      </v-alert>
     </v-card>
+
+    <!-- Analysis Results and Review Phase -->
+    <div
+      v-if="showAnalysis && analysisResult"
+      class="w-100"
+      style="max-width: 800px"
+    >
+      <AnalyzedMealReview
+        :analysis-result="analysisResult"
+        :photo-url="photoData || undefined"
+        :loading="saving"
+        @save="(payload: unknown) => saveMeal(payload as CreateMeal)"
+        @cancel="goBackToCamera"
+      />
+    </div>
+
+    <!-- Loading Overlay -->
+    <v-overlay v-model="analyzing" class="d-flex align-center justify-center">
+      <v-card class="pa-6 text-center" elevation="8" rounded="lg">
+        <v-progress-circular
+          indeterminate
+          color="primary"
+          size="64"
+          class="mb-4"
+        />
+        <h3 class="text-h6 mb-2">Analyzing your meal...</h3>
+        <p class="text-grey-darken-1">
+          Our AI is identifying the food and estimating nutrition.
+        </p>
+      </v-card>
+    </v-overlay>
   </v-container>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
+import { useFoodAnalysis } from '@/composables/useFoodAnalysis'
+import { useStorage } from '@/composables/useStorage'
+import { useAuth } from '@/composables/useAuth'
+import AnalyzedMealReview from '@/components/AnalyzedMealReview.vue'
+import type { CreateMeal } from '~/server/database/schemas'
 
 // Page meta
 definePageMeta({
-  middleware: 'auth' as any,
-  layout: 'authenticated'
+  middleware: 'auth' as never,
+  layout: 'authenticated',
 })
 
 const router = useRouter()
+const { user } = useAuth()
+const {
+  analyzing,
+  analysisError,
+  analysisResult,
+  classificationLoading,
+  classificationError,
+  analyzeFood,
+  createManualAnalysis,
+  resetAnalysis,
+} = useFoodAnalysis()
+
+// Non-readonly reference for manual analysis result setting
+const _analysisResult = analysisResult as unknown
+const { uploadMealImage, compressImage } = useStorage()
+
+// Camera and photo state
 const videoRef = ref<HTMLVideoElement | null>(null)
 const stream = ref<MediaStream | null>(null)
 const photoData = ref<string | null>(null)
 const error = ref<string | null>(null)
 const cameraReady = ref(false)
 
-onMounted(async () => {
+// UI state
+const showAnalysis = ref(false)
+const saving = ref(false)
+
+const initCamera = async () => {
   try {
-    stream.value = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    stream.value = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: 'environment',
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      },
+    })
     if (videoRef.value && stream.value) {
       videoRef.value.srcObject = stream.value
       cameraReady.value = true
     }
-  } catch (e) {
+  } catch {
     error.value = 'Unable to access camera. Please allow camera permissions.'
   }
-})
+}
+
+onMounted(initCamera)
 
 onBeforeUnmount(() => {
   if (stream.value) {
-    stream.value.getTracks().forEach(track => track.stop())
+    stream.value.getTracks().forEach((track) => track.stop())
   }
 })
 
+// Convert data URL to File
+function dataURLtoFile(dataURL: string, filename: string): File {
+  const arr = dataURL.split(',')
+  const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/png'
+  const bstr = atob(arr[1])
+  let n = bstr.length
+  const u8arr = new Uint8Array(n)
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n)
+  }
+  return new File([u8arr], filename, { type: mime })
+}
+
 function takePhoto() {
   if (!videoRef.value) return
+
   const video = videoRef.value
   const canvas = document.createElement('canvas')
-  canvas.width = video.videoWidth
-  canvas.height = video.videoHeight
+
+  // Limit canvas size to reasonable dimensions
+  const maxWidth = 1280
+  const maxHeight = 720
+
+  let { videoWidth, videoHeight } = video
+
+  // Scale down if too large
+  if (videoWidth > maxWidth || videoHeight > maxHeight) {
+    const ratio = Math.min(maxWidth / videoWidth, maxHeight / videoHeight)
+    videoWidth *= ratio
+    videoHeight *= ratio
+  }
+
+  canvas.width = videoWidth
+  canvas.height = videoHeight
+
   const ctx = canvas.getContext('2d')
+
   if (ctx) {
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-    photoData.value = canvas.toDataURL('image/png')
+    ctx.drawImage(video, 0, 0, videoWidth, videoHeight)
+    photoData.value = canvas.toDataURL('image/jpeg', 0.8)
+  }
+}
+
+async function analyzePhoto() {
+  if (!photoData.value) return
+
+  try {
+    error.value = null
+    resetAnalysis()
+
+    // Convert photo data to File
+    const photoFile = dataURLtoFile(photoData.value, 'meal-photo.jpg')
+
+    // Analyze the food
+    await analyzeFood(photoFile)
+
+    // Show analysis results
+    showAnalysis.value = true
+
+    // Stop camera stream since we're moving to analysis phase
+    if (stream.value) {
+      stream.value.getTracks().forEach((track) => track.stop())
+    }
+  } catch (err) {
+    console.error('Analysis failed:', err)
+    error.value =
+      'Failed to analyze the photo. You can try again or add the meal manually.'
+  }
+}
+
+async function saveMeal(mealPayload: CreateMeal) {
+  if (!user.value?.id) return
+
+  try {
+    saving.value = true
+    let imageUrl = null
+
+    // Upload photo to storage if available
+    if (photoData.value) {
+      const photoFile = dataURLtoFile(photoData.value, 'meal-photo.jpg')
+
+      // Compress image before uploading
+      const compressedFile = await compressImage(photoFile, 800, 0.8)
+
+      const { error: uploadError, data: imagePath } = await uploadMealImage(
+        compressedFile,
+        user.value.id
+      )
+
+      if (!uploadError && imagePath) {
+        // Get the public URL for the uploaded image
+        const { data } = useSupabaseClient()
+          .storage.from(
+            process.env.SUPABASE_MEAL_IMAGES_BUCKET || 'meal-images'
+          )
+          .getPublicUrl(imagePath)
+
+        imageUrl = data.publicUrl
+      }
+    }
+
+    // Save meal with image URL
+    const response = (await fetch('/api/meals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...mealPayload,
+        image_url: imageUrl,
+      }),
+    }).then((r) => r.json())) as { success: boolean; message?: string }
+
+    if (response.success) {
+      // Navigate back to home with success
+      router.push('/home')
+    } else {
+      throw new Error(response.message || 'Failed to save meal')
+    }
+  } catch (err) {
+    console.error('Error saving meal:', err)
+    error.value = 'Failed to save meal. Please try again.'
+  } finally {
+    saving.value = false
   }
 }
 
 function retakePhoto() {
   photoData.value = null
+  showAnalysis.value = false
+  resetAnalysis()
+
+  // Restart camera if needed
+  if (!stream.value && cameraReady.value) {
+    // Re-initialize camera
+    initCamera()
+  }
+}
+
+function goBackToCamera() {
+  showAnalysis.value = false
+  resetAnalysis()
+}
+
+function showManualEntry() {
+  // Show a prompt for manual food entry
+  const foodName = prompt('Enter the name of the food in the image:')
+
+  if (foodName) {
+    try {
+      const manualResult = createManualAnalysis(foodName)
+      ;(_analysisResult as { value: unknown }).value = manualResult
+      showAnalysis.value = true
+
+      // Stop camera stream since we're moving to analysis phase
+      if (stream.value) {
+        stream.value.getTracks().forEach((track) => track.stop())
+      }
+    } catch (err) {
+      console.error('Manual entry error:', err)
+    }
+  }
 }
 
 function goToManualEntry() {
-  router.push('/add-meal')
+  // If we have a photo, pass it to manual entry
+  if (photoData.value) {
+    // TODO: Could store photo in session storage and pick it up in add-meal
+    router.push('/add-meal')
+  } else {
+    router.push('/add-meal')
+  }
 }
 </script>

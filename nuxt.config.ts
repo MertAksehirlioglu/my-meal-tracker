@@ -4,21 +4,21 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   css: ['vuetify/styles'],
   build: {
-    transpile: ['vuetify']
+    transpile: ['vuetify'],
   },
-  modules: ['@nuxtjs/supabase'],
+  modules: ['@nuxtjs/supabase', '@nuxt/eslint'],
   app: {
     head: {
       meta: [
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' }
-      ]
-    }
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      ],
+    },
   },
   supabase: {
     redirectOptions: {
-      login: '/login',        // Where to send unauthenticated users
-      callback: '/confirm',   // Where to send after email confirmation
-      include: ['/home', '/goals', '/snap'] // Pages that don't require auth
-    }
-  }
+      login: '/login',
+      callback: '/confirm',
+      exclude: ['/*'], // Exclude all pages from auth guards
+    },
+  },
 })

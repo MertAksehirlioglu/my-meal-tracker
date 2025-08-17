@@ -9,23 +9,23 @@
           </v-avatar>
           <h1 class="text-h5 font-weight-bold text-primary">MealSnap</h1>
         </div>
-        
+
         <div class="d-flex align-center">
           <!-- Home Button -->
-          <v-btn 
-            icon 
-            @click="goToHome"
+          <v-btn
+            icon
             :color="$route.path === '/home' ? 'primary' : 'grey'"
             class="mr-2"
+            @click="goToHome"
           >
             <v-icon>mdi-home</v-icon>
           </v-btn>
-          
+
           <!-- Profile Menu -->
           <v-menu>
-            <template v-slot:activator="{ props }">
-              <v-btn 
-                icon 
+            <template #activator="{ props }">
+              <v-btn
+                icon
                 v-bind="props"
                 :color="$route.path === '/profile' ? 'primary' : 'grey'"
               >
@@ -39,10 +39,16 @@
               <v-list-item @click="goToGoals">
                 <v-list-item-title>Goals</v-list-item-title>
               </v-list-item>
-              <v-divider></v-divider>
+              <v-divider />
               <v-list-item @click="logout">
                 <v-list-item-title class="text-error">
-                  <v-progress-circular v-if="loading" indeterminate color="error" size="20" class="mr-2" />
+                  <v-progress-circular
+                    v-if="loading"
+                    indeterminate
+                    color="error"
+                    size="20"
+                    class="mr-2"
+                  />
                   Logout
                 </v-list-item-title>
               </v-list-item>
@@ -53,7 +59,7 @@
     </v-app-bar>
 
     <!-- Main Content -->
-    <v-main style="padding-top: 80px;">
+    <v-main style="padding-top: 80px">
       <slot />
     </v-main>
   </v-app>

@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
     if (!user?.id) {
       throw createError({
         statusCode: 401,
-        statusMessage: 'Unauthorized'
+        statusMessage: 'Unauthorized',
       })
     }
 
@@ -19,8 +19,19 @@ export default defineEventHandler(async (event) => {
 
     // Get today's date range
     const today = new Date()
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59)
+    const startOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    )
+    const endOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      23,
+      59,
+      59
+    )
 
     // Fetch today's meals and calculate progress
     const { data: meals, error } = await supabase
@@ -34,7 +45,7 @@ export default defineEventHandler(async (event) => {
       console.error('Database error:', error)
       throw createError({
         statusCode: 500,
-        statusMessage: 'Failed to fetch progress'
+        statusMessage: 'Failed to fetch progress',
       })
     }
 
@@ -43,29 +54,32 @@ export default defineEventHandler(async (event) => {
       id: `temp_${user.id}_${today.toISOString().split('T')[0]}`,
       user_id: user.id,
       date: today.toISOString().split('T')[0],
-      total_calories: meals?.reduce((sum, meal) => sum + (meal.total_calories || 0), 0) || 0,
-      total_protein: meals?.reduce((sum, meal) => sum + (meal.total_protein || 0), 0) || 0,
-      total_carbs: meals?.reduce((sum, meal) => sum + (meal.total_carbs || 0), 0) || 0,
-      total_fat: meals?.reduce((sum, meal) => sum + (meal.total_fat || 0), 0) || 0,
-      created_at: new Date().toISOString()
+      total_calories:
+        meals?.reduce((sum, meal) => sum + (meal.total_calories || 0), 0) || 0,
+      total_protein:
+        meals?.reduce((sum, meal) => sum + (meal.total_protein || 0), 0) || 0,
+      total_carbs:
+        meals?.reduce((sum, meal) => sum + (meal.total_carbs || 0), 0) || 0,
+      total_fat:
+        meals?.reduce((sum, meal) => sum + (meal.total_fat || 0), 0) || 0,
+      created_at: new Date().toISOString(),
     }
 
     return {
       success: true,
       data: progress,
-      message: 'Progress fetched successfully'
+      message: 'Progress fetched successfully',
     }
-
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching progress:', error)
-    
-    if (error.statusCode) {
+
+    if ((error as { statusCode?: number })?.statusCode) {
       throw error
     }
 
     throw createError({
       statusCode: 500,
-      statusMessage: 'Internal server error'
+      statusMessage: 'Internal server error',
     })
   }
-}) 
+})

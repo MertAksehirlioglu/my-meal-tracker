@@ -14,6 +14,7 @@
   _For error states and warnings._
 
 ## 🖌️ Usage Guidelines
+
 - Use **Primary Green** for main branding, headers, and key actions.
 - Use **Accent Orange** for buttons, highlights, and important UI elements.
 - Use **Background Light** for page backgrounds.
@@ -21,5 +22,6 @@
 - Use **Error Red** for error messages and destructive actions.
 
 ## 📝 Other Design Notes
+
 - Add your font choices, logo usage, and spacing rules here as you define them.
-- Update this file as your design system evolves! 
+- Update this file as your design system evolves!
