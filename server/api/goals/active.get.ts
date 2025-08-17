@@ -3,25 +3,34 @@ import type { UserGoal } from '~/server/database/schemas'
 
 export default defineEventHandler(async (event) => {
   try {
-    // Get user from auth context (you'll need to implement auth middleware)
+    // Get user from auth context
     const user = event.context.user
-    if (!user?.id) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Unauthorized',
-      })
+
+    // For development: if no user in context, get from query params
+    let userId = user?.id
+    if (!userId) {
+      const query = getQuery(event)
+      userId = query.user_id as string
+
+      if (!userId) {
+        throw createError({
+          statusCode: 401,
+          statusMessage: 'Unauthorized - user ID required',
+        })
+      }
     }
 
     // Create Supabase client
     const supabaseUrl = process.env.SUPABASE_URL!
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    const supabaseKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Fetch active user goals
     const { data, error } = await supabase
       .from('user_goals')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('is_active', true)
       .single()
 

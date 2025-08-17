@@ -1,8 +1,6 @@
 -- Initial database schema for MealSnap
 -- Run this in your Supabase SQL editor
-
--- Enable Row Level Security
-ALTER TABLE auth.users ENABLE ROW LEVEL SECURITY;
+-- FIXED VERSION - skips auth.users modifications
 
 -- Create custom types
 CREATE TYPE meal_type AS ENUM ('breakfast', 'lunch', 'dinner', 'snack');
@@ -215,4 +213,4 @@ INSERT INTO public.food_database (name, calories_per_100g, protein_per_100g, car
 ('Eggs', 155, 13, 1.1, 11, 0, 1.1, 'protein'),
 ('Sweet Potato', 86, 1.6, 20, 0.1, 3, 4.2, 'vegetables'),
 ('Quinoa', 120, 4.4, 22, 1.9, 2.8, 0.9, 'grains'),
-('Spinach', 23, 2.9, 3.6, 0.4, 2.2, 0.4, 'vegetables'); 
+('Spinach', 23, 2.9, 3.6, 0.4, 2.2, 0.4, 'vegetables');

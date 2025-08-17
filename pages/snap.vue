@@ -124,13 +124,13 @@
       <AnalyzedMealReview
         :analysis-result="analysisResult"
         :photo-url="photoData || undefined"
-        :loading="saving"
+        :loading="saving || errorHandlingLoading"
         @save="(payload: unknown) => saveMeal(payload as CreateMeal)"
         @cancel="goBackToCamera"
       />
     </div>
 
-    <!-- Loading Overlay -->
+    <!-- Analysis Loading Overlay -->
     <v-overlay v-model="analyzing" class="d-flex align-center justify-center">
       <v-card class="pa-6 text-center" elevation="8" rounded="lg">
         <v-progress-circular
@@ -145,6 +145,27 @@
         </p>
       </v-card>
     </v-overlay>
+
+    <!-- Saving Loading Overlay -->
+    <v-overlay v-model="saving" class="d-flex align-center justify-center">
+      <v-card class="pa-6 text-center" elevation="8" rounded="lg">
+        <v-progress-circular
+          indeterminate
+          color="success"
+          size="64"
+          class="mb-4"
+        />
+        <h3 class="text-h6 mb-2">Saving your meal...</h3>
+        <p class="text-grey-darken-1">Uploading image and storing meal data.</p>
+      </v-card>
+    </v-overlay>
+
+    <!-- Error Notifications -->
+    <ErrorNotification
+      :error="latestError"
+      :retryable="false"
+      @close="clearError"
+    />
   </v-container>
 </template>
 
@@ -154,7 +175,9 @@ import { useRouter } from 'vue-router'
 import { useFoodAnalysis } from '@/composables/useFoodAnalysis'
 import { useStorage } from '@/composables/useStorage'
 import { useAuth } from '@/composables/useAuth'
+import { useErrorHandling } from '@/composables/useErrorHandling'
 import AnalyzedMealReview from '@/components/AnalyzedMealReview.vue'
+import ErrorNotification from '@/components/ErrorNotification.vue'
 import type { CreateMeal } from '~/server/database/schemas'
 
 // Page meta
@@ -165,6 +188,12 @@ definePageMeta({
 
 const router = useRouter()
 const { user } = useAuth()
+const {
+  isLoading: errorHandlingLoading,
+  latestError,
+  clearError,
+  withErrorHandling,
+} = useErrorHandling()
 const {
   analyzing,
   analysisError,
@@ -290,54 +319,72 @@ async function analyzePhoto() {
 async function saveMeal(mealPayload: CreateMeal) {
   if (!user.value?.id) return
 
-  try {
-    saving.value = true
-    let imageUrl = null
+  const result = await withErrorHandling(
+    async () => {
+      saving.value = true
+      let imageUrl = null
 
-    // Upload photo to storage if available
-    if (photoData.value) {
-      const photoFile = dataURLtoFile(photoData.value, 'meal-photo.jpg')
+      // Upload photo to storage if available
+      if (photoData.value) {
+        const photoFile = dataURLtoFile(photoData.value, 'meal-photo.jpg')
 
-      // Compress image before uploading
-      const compressedFile = await compressImage(photoFile, 800, 0.8)
+        // Compress image before uploading
+        const compressedFile = await compressImage(photoFile, 800, 0.8)
 
-      const { error: uploadError, data: imagePath } = await uploadMealImage(
-        compressedFile,
-        user.value.id
-      )
+        const { error: uploadError, data: imagePath } = await uploadMealImage(
+          compressedFile,
+          user.value!.id
+        )
 
-      if (!uploadError && imagePath) {
-        // Get the public URL for the uploaded image
-        const { data } = useSupabaseClient()
-          .storage.from(
-            process.env.SUPABASE_MEAL_IMAGES_BUCKET || 'meal-images'
-          )
-          .getPublicUrl(imagePath)
+        if (uploadError) {
+          throw new Error(`Failed to upload image: ${uploadError}`)
+        }
 
-        imageUrl = data.publicUrl
+        if (imagePath) {
+          // Get the public URL for the uploaded image
+          const { data } = useSupabaseClient()
+            .storage.from(
+              process.env.SUPABASE_MEAL_IMAGES_BUCKET || 'meal-images'
+            )
+            .getPublicUrl(imagePath)
+
+          imageUrl = data.publicUrl
+        }
       }
-    }
 
-    // Save meal with image URL
-    const response = (await fetch('/api/meals', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...mealPayload,
-        image_url: imageUrl,
-      }),
-    }).then((r) => r.json())) as { success: boolean; message?: string }
+      // Save meal with image URL
+      const response = await fetch('/api/meals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...mealPayload,
+          image_url: imageUrl,
+        }),
+      })
 
-    if (response.success) {
+      if (!response.ok) {
+        throw new Error(`Failed to save meal: ${response.statusText}`)
+      }
+
+      const data = (await response.json()) as {
+        success: boolean
+        message?: string
+      }
+
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to save meal')
+      }
+
       // Navigate back to home with success
       router.push('/home')
-    } else {
-      throw new Error(response.message || 'Failed to save meal')
-    }
-  } catch (err) {
-    console.error('Error saving meal:', err)
-    error.value = 'Failed to save meal. Please try again.'
-  } finally {
+    },
+    'saving meal',
+    false
+  )
+
+  if (result !== null) {
+    saving.value = false
+  } else {
     saving.value = false
   }
 }

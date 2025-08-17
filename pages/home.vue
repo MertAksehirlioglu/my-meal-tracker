@@ -215,6 +215,22 @@
           </v-card-text>
         </v-card>
 
+        <!-- Loading Overlay -->
+        <v-overlay v-model="loading" class="d-flex align-center justify-center">
+          <v-card class="pa-6 text-center" elevation="8" rounded="lg">
+            <v-progress-circular
+              indeterminate
+              color="primary"
+              size="64"
+              class="mb-4"
+            />
+            <h3 class="text-h6 mb-2">Loading your dashboard...</h3>
+            <p class="text-grey-darken-1">
+              Getting your meals and progress data.
+            </p>
+          </v-card>
+        </v-overlay>
+
         <!-- Today's Meals -->
         <v-card elevation="2" rounded="lg">
           <v-card-title class="d-flex align-center justify-space-between">
@@ -230,9 +246,14 @@
                 >mdi-food</v-icon
               >
               <p class="text-grey">No meals logged today</p>
-              <v-btn color="primary" class="mt-2" @click="goToSnap"
-                >Add Your First Meal</v-btn
-              >
+              <div class="d-flex flex-column gap-2 align-center">
+                <v-btn color="primary" @click="goToSnap"
+                  >Add Your First Meal</v-btn
+                >
+                <v-btn color="secondary" variant="outlined" size="small" @click="createSampleData"
+                  >Add Sample Data for Testing</v-btn
+                >
+              </div>
             </div>
 
             <div v-else>
@@ -285,12 +306,22 @@
     >
       <v-icon size="32">mdi-camera</v-icon>
     </v-btn>
+
+    <!-- Error Notifications -->
+    <ErrorNotification
+      :error="latestError"
+      :retryable="true"
+      @close="clearError"
+      @retry="retryLoadData"
+    />
   </v-container>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useErrorHandling } from '~/composables/useErrorHandling'
+import ErrorNotification from '~/components/ErrorNotification.vue'
 import type { Meal, UserGoal, UserProgress } from '~/server/database/schemas'
 
 // Page meta
@@ -300,12 +331,14 @@ definePageMeta({
 })
 
 const router = useRouter()
+const { isLoading, latestError, clearError, withErrorHandling, retry } =
+  useErrorHandling()
 
 // Reactive data
 const todayMeals = ref<Meal[]>([])
 const userGoals = ref<UserGoal | null>(null)
 const todayProgress = ref<UserProgress | null>(null)
-const loading = ref(false)
+const loading = computed(() => isLoading.value)
 
 // Chart refs
 const calorieChart = ref<HTMLCanvasElement>()
@@ -558,37 +591,162 @@ const goToSnap = () => {
   router.push('/snap')
 }
 
+const createSampleData = async () => {
+  const result = await withErrorHandling(async () => {
+    const supabase = useSupabaseClient()
+    const user = useSupabaseUser()
+    
+    if (!user.value?.id) {
+      throw new Error('User not authenticated')
+    }
+    
+    // First, ensure user profile exists in public.users table
+    const { data: existingUser, error: userCheckError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', user.value.id)
+      .single()
+
+    if (userCheckError && userCheckError.code === 'PGRST116') {
+      // User doesn't exist, create profile
+      const { error: userCreateError } = await supabase
+        .from('users')
+        .insert({
+          id: user.value.id,
+          email: user.value.email || 'user@example.com'
+        })
+
+      if (userCreateError) {
+        throw new Error(`Failed to create user profile: ${userCreateError.message}`)
+      }
+    } else if (userCheckError) {
+      throw new Error(`Failed to check user profile: ${userCheckError.message}`)
+    }
+    
+    // Create sample data directly with Supabase client (this respects RLS)
+    const today = new Date()
+    const sampleMeals = [
+      {
+        user_id: user.value.id,
+        name: 'Chicken Salad Bowl',
+        meal_type: 'lunch',
+        consumed_at: new Date(today.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+        total_calories: 450,
+        total_protein: 35,
+        total_carbs: 25,
+        total_fat: 18,
+        notes: 'Grilled chicken with mixed greens and avocado'
+      },
+      {
+        user_id: user.value.id,
+        name: 'Greek Yogurt with Berries',
+        meal_type: 'breakfast',
+        consumed_at: new Date(today.getTime() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
+        total_calories: 220,
+        total_protein: 15,
+        total_carbs: 30,
+        total_fat: 5,
+        notes: 'Greek yogurt topped with blueberries and honey'
+      }
+    ]
+
+    // Insert sample meals using client-side Supabase (respects RLS)
+    const { data: mealsData, error: mealsError } = await supabase
+      .from('meals')
+      .insert(sampleMeals)
+      .select()
+
+    if (mealsError) {
+      throw new Error(`Failed to create meals: ${mealsError.message}`)
+    }
+
+    // Add sample user goals
+    const sampleGoals = {
+      user_id: user.value.id,
+      target_calories: 2000,
+      target_protein: 150,
+      target_carbs: 250,
+      target_fat: 65,
+      start_date: today.toISOString().split('T')[0],
+      is_active: true
+    }
+
+    const { data: goalsData, error: goalsError } = await supabase
+      .from('user_goals')
+      .insert(sampleGoals)
+      .select()
+
+    if (goalsError) {
+      throw new Error(`Failed to create goals: ${goalsError.message}`)
+    }
+    
+    // Reload dashboard data to show the new meals
+    await loadDashboardData()
+  }, 'creating sample data')
+
+  return result
+}
+
 // Load data
 const loadDashboardData = async () => {
-  loading.value = true
-  try {
+  const result = await withErrorHandling(async () => {
+    // Get auth headers
+    const supabase = useSupabaseClient()
+    const user = useSupabaseUser()
+    
+    // Ensure user is authenticated
+    if (!user.value) {
+      throw new Error('User not authenticated')
+    }
+    
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (!session?.access_token) {
+      throw new Error('No valid session found')
+    }
+    
+    const headers = {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json'
+    }
+
     // Load today's meals
-    const mealsResponse = (await fetch('/api/meals/today').then((r) =>
-      r.json()
-    )) as { data?: Meal[] }
-    todayMeals.value = mealsResponse?.data || []
+    const mealsResponse = await fetch('/api/meals/today', { headers })
+    if (!mealsResponse.ok) {
+      throw new Error(`Failed to load meals: ${mealsResponse.statusText}`)
+    }
+    const mealsData = (await mealsResponse.json()) as { data?: Meal[] }
+    todayMeals.value = mealsData?.data || []
 
     // Load user goals
-    const goalsResponse = (await fetch('/api/goals/active').then((r) =>
-      r.json()
-    )) as { data?: UserGoal }
-    userGoals.value = goalsResponse?.data || null
+    const goalsResponse = await fetch('/api/goals/active', { headers })
+    if (!goalsResponse.ok) {
+      throw new Error(`Failed to load goals: ${goalsResponse.statusText}`)
+    }
+    const goalsData = (await goalsResponse.json()) as { data?: UserGoal }
+    userGoals.value = goalsData?.data || null
 
     // Load today's progress
-    const progressResponse = (await fetch('/api/progress/today').then((r) =>
-      r.json()
-    )) as { data?: UserProgress }
-    todayProgress.value = progressResponse?.data || null
+    const progressResponse = await fetch('/api/progress/today', { headers })
+    if (!progressResponse.ok) {
+      throw new Error(`Failed to load progress: ${progressResponse.statusText}`)
+    }
+    const progressData = (await progressResponse.json()) as {
+      data?: UserProgress
+    }
+    todayProgress.value = progressData?.data || null
 
     // Update charts after data is loaded
     nextTick(() => {
       updateCharts()
     })
-  } catch (error) {
-    console.error('Error loading dashboard data:', error)
-  } finally {
-    loading.value = false
-  }
+  }, 'loading dashboard data')
+
+  return result
+}
+
+const retryLoadData = async () => {
+  await retry(loadDashboardData, 3, 1000, 'dashboard data')
 }
 
 // Watch for progress changes to update charts

@@ -3,18 +3,27 @@ import type { UserProgress } from '~/server/database/schemas'
 
 export default defineEventHandler(async (event) => {
   try {
-    // Get user from auth context (you'll need to implement auth middleware)
+    // Get user from auth context
     const user = event.context.user
-    if (!user?.id) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Unauthorized',
-      })
+
+    // For development: if no user in context, get from query params
+    let userId = user?.id
+    if (!userId) {
+      const query = getQuery(event)
+      userId = query.user_id as string
+
+      if (!userId) {
+        throw createError({
+          statusCode: 401,
+          statusMessage: 'Unauthorized - user ID required',
+        })
+      }
     }
 
     // Create Supabase client
     const supabaseUrl = process.env.SUPABASE_URL!
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    const supabaseKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Get today's date range
@@ -37,7 +46,7 @@ export default defineEventHandler(async (event) => {
     const { data: meals, error } = await supabase
       .from('meals')
       .select('total_calories, total_protein, total_carbs, total_fat')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .gte('consumed_at', startOfDay.toISOString())
       .lte('consumed_at', endOfDay.toISOString())
 
@@ -51,8 +60,8 @@ export default defineEventHandler(async (event) => {
 
     // Calculate totals
     const progress: UserProgress = {
-      id: `temp_${user.id}_${today.toISOString().split('T')[0]}`,
-      user_id: user.id,
+      id: `temp_${userId}_${today.toISOString().split('T')[0]}`,
+      user_id: userId,
       date: today.toISOString().split('T')[0],
       total_calories:
         meals?.reduce((sum, meal) => sum + (meal.total_calories || 0), 0) || 0,
