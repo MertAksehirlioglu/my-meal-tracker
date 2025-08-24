@@ -78,9 +78,16 @@ Database schema is defined in `server/database/schemas.ts` with TypeScript inter
 - Generic interface for food classification providers
 - Formats food names and normalizes prediction responses
 
+**TensorFlow.js Integration (`lib/tensorflow.ts`)**
+
+- Implements local food classification using MobileNet and COCO-SSD models
+- Runs entirely in the browser without API calls
+- Handles no-food-detection cases and provides proper error messages
+- Factory function `createTensorFlowInference()` for easy instantiation
+
 **Hugging Face Integration (`lib/huggingface.ts`)**
 
-- Implements food classification using `nateraw/food` model
+- Optional fallback provider using `nateraw/food` model  
 - Handles API errors and provides proper error messages
 - Factory function `createHuggingFaceInference()` for easy instantiation
 
@@ -117,12 +124,17 @@ All API routes use Supabase service role key for database operations and handle 
 
 ## AI Food Classification
 
-The app uses Hugging Face's Food-101 model for food classification:
+The app uses TensorFlow.js for local food classification:
 
-- Model: `nateraw/food` (101 food categories)
-- Provides confidence scores for predictions
-- Requires valid VITE_HUGGING_FACE_TOKEN
-- Handles model loading states and API errors
+- **Primary**: TensorFlow.js with MobileNetV2 and COCO-SSD models
+  - Runs locally in browser (no API calls)
+  - No API keys required
+  - Privacy-focused processing
+- **Fallback**: Hugging Face Food-101 model (`nateraw/food`)
+  - 101 food categories
+  - Requires valid VITE_HUGGING_FACE_TOKEN
+  - Handles model loading states and API errors
+- **No-food handling**: Proper error messages when no food detected
 - Currently uses mock nutrition data - integrate with real nutrition database for production
 
 ## Testing & Quality

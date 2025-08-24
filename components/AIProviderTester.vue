@@ -290,17 +290,7 @@ const generateRecommendations = () => {
       )
     }
 
-    if (successful.some((r) => r.provider.includes('OpenAI'))) {
-      recommendations.value.push(
-        '🎯 OpenAI Vision available for high accuracy (paid service)'
-      )
-    }
-
-    if (successful.some((r) => r.provider.includes('Google'))) {
-      recommendations.value.push(
-        '🔍 Google Vision available for good accuracy (paid service)'
-      )
-    }
+    // Using only TensorFlow.js for local processing
 
     recommendations.value.push(
       `⚡ Fastest provider: ${fastest.provider} (${fastest.duration}ms)`
@@ -309,7 +299,7 @@ const generateRecommendations = () => {
 
   if (failed.length > 0) {
     recommendations.value.push(
-      `⚠️ ${failed.length} provider(s) failed - check API keys and configuration`
+      `⚠️ ${failed.length} provider(s) failed - check browser compatibility`
     )
   }
 
@@ -317,15 +307,13 @@ const generateRecommendations = () => {
     recommendations.value.push(
       '❌ No providers working - use manual entry fallback'
     )
-    recommendations.value.push('💡 Check API keys in environment variables')
+    recommendations.value.push('💡 TensorFlow.js models may need time to download')
   }
 }
 
 const getProviderColor = (type: ProviderType) => {
   const colors: Record<string, string> = {
     tensorflow: 'orange',
-    openai: 'green',
-    'google-vision': 'blue',
     manual: 'grey',
   }
   return colors[type] || 'grey'

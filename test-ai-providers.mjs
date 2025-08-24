@@ -95,183 +95,9 @@ async function testTensorFlowJS() {
   }
 }
 
-// Test Strategy 2: OpenAI Vision API
-async function testOpenAIVision() {
-  console.log('\n🤖 Testing OpenAI Vision API')
-  console.log('='.repeat(50))
+// OpenAI Vision removed - using only local TensorFlow.js processing
 
-  const apiKey = process.env.VITE_OPENAI_API_KEY
-
-  if (!apiKey) {
-    console.log('❌ No OpenAI API key found')
-    return {
-      success: false,
-      provider: 'OpenAI Vision',
-      error: 'VITE_OPENAI_API_KEY not configured',
-    }
-  }
-
-  try {
-    console.log('🔑 API key found:', apiKey.substring(0, 10) + '...')
-
-    const testImage = createTestFoodImage()
-    const base64Image = testImage.toString('base64')
-
-    console.log('📸 Test image created:', testImage.length, 'bytes')
-    console.log('🚀 Sending request to OpenAI...')
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Identify the food in this image. Respond with just the food name.',
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:image/png;base64,${base64Image}`,
-                  detail: 'low',
-                },
-              },
-            ],
-          },
-        ],
-        max_tokens: 50,
-      }),
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(
-        `HTTP ${response.status}: ${errorData.error?.message || response.statusText}`
-      )
-    }
-
-    const data = await response.json()
-    const result = data.choices?.[0]?.message?.content || 'unknown food'
-
-    console.log('✅ OpenAI response:', result)
-
-    return {
-      success: true,
-      provider: 'OpenAI Vision',
-      predictions: [{ label: result.toLowerCase(), score: 0.9 }],
-      duration: undefined,
-      notes: 'High accuracy AI analysis',
-    }
-  } catch (error) {
-    console.log('❌ OpenAI Vision failed:', error.message)
-    return {
-      success: false,
-      provider: 'OpenAI Vision',
-      error: error.message,
-    }
-  }
-}
-
-// Test Strategy 3: Google Vision API
-async function testGoogleVision() {
-  console.log('\n🔍 Testing Google Vision API')
-  console.log('='.repeat(50))
-
-  const apiKey = process.env.VITE_GOOGLE_VISION_API_KEY
-
-  if (!apiKey) {
-    console.log('❌ No Google Vision API key found')
-    return {
-      success: false,
-      provider: 'Google Vision',
-      error: 'VITE_GOOGLE_VISION_API_KEY not configured',
-    }
-  }
-
-  try {
-    console.log('🔑 API key found:', apiKey.substring(0, 10) + '...')
-
-    const testImage = createTestFoodImage()
-    const base64Image = testImage.toString('base64')
-
-    console.log('📸 Test image created:', testImage.length, 'bytes')
-    console.log('🚀 Sending request to Google Vision...')
-
-    const response = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          requests: [
-            {
-              image: { content: base64Image },
-              features: [
-                { type: 'LABEL_DETECTION', maxResults: 5 },
-                { type: 'OBJECT_LOCALIZATION', maxResults: 3 },
-              ],
-            },
-          ],
-        }),
-      }
-    )
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(
-        `HTTP ${response.status}: ${errorData.error?.message || response.statusText}`
-      )
-    }
-
-    const data = await response.json()
-    const annotations = data.responses?.[0]
-
-    if (!annotations) {
-      throw new Error('No annotations in response')
-    }
-
-    const predictions = []
-
-    // Process labels
-    if (annotations.labelAnnotations) {
-      annotations.labelAnnotations.forEach((label) => {
-        predictions.push({
-          label: label.description.toLowerCase(),
-          score: label.score,
-        })
-      })
-    }
-
-    console.log('✅ Google Vision results:')
-    predictions.slice(0, 3).forEach((pred) => {
-      console.log(`   - ${pred.label}: ${(pred.score * 100).toFixed(1)}%`)
-    })
-
-    return {
-      success: true,
-      provider: 'Google Vision',
-      predictions: predictions.slice(0, 5),
-      duration: undefined,
-      notes: 'Multi-feature analysis',
-    }
-  } catch (error) {
-    console.log('❌ Google Vision failed:', error.message)
-    return {
-      success: false,
-      provider: 'Google Vision',
-      error: error.message,
-    }
-  }
-}
+// Google Vision removed - using only local TensorFlow.js processing
 
 // Test nutrition mapping system
 function testNutritionMapping() {
@@ -334,8 +160,8 @@ async function runAllTests() {
 
   const results = []
 
-  // Test each strategy
-  const tests = [testTensorFlowJS, testOpenAIVision, testGoogleVision]
+  // Test TensorFlow.js strategy
+  const tests = [testTensorFlowJS]
 
   for (const test of tests) {
     try {
@@ -382,13 +208,7 @@ async function runAllTests() {
     console.log('   🚀 Ready to deploy - no API keys needed')
   }
 
-  if (successful.some((r) => r.provider === 'OpenAI Vision')) {
-    console.log('   🤖 OpenAI Vision available for high accuracy')
-  }
-
-  if (successful.some((r) => r.provider === 'Google Vision')) {
-    console.log('   🔍 Google Vision available for comprehensive analysis')
-  }
+  // Removed cloud providers - using only local TensorFlow.js
 
   if (successful.some((r) => r.provider === 'Nutrition Mapping')) {
     console.log('   🥗 Nutrition mapping system working correctly')
@@ -400,7 +220,7 @@ async function runAllTests() {
     console.log('   2. Try http://localhost:3000/snap for full meal logging')
     console.log('   3. Your app is ready for production!')
   } else {
-    console.log('   1. Check API key configuration')
+    console.log('   1. TensorFlow.js models may need to download')
     console.log('   2. Manual entry fallback is still available')
   }
 

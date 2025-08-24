@@ -67,7 +67,10 @@ export const useFoodAnalysis = () => {
       analysisError.value = errorMessage
 
       // Provide user-friendly error messages
-      if (errorMessage.includes('Model is loading')) {
+      if (errorMessage.includes('NO_FOOD_DETECTED')) {
+        analysisError.value =
+          'No food could be detected in this image. Please try retaking the photo with better lighting and focus, or manually enter your meal information.'
+      } else if (errorMessage.includes('Model is loading')) {
         analysisError.value =
           'AI model is starting up. Please wait a moment and try again.'
       } else if (

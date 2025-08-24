@@ -88,15 +88,19 @@ export class TensorFlowInference {
 
       console.log('✅ TensorFlow.js final results:', sortedResults)
 
-      // If no food-related items found, add a generic food classification
+      // If no food-related items found, throw error instead of returning generic result
       if (sortedResults.length === 0) {
-        sortedResults.push({
-          label: 'mixed meal',
-          score: 0.5,
-        })
+        throw new Error('NO_FOOD_DETECTED')
       }
 
-      return sortedResults
+      // Filter out very low confidence results
+      const confidentResults = sortedResults.filter(result => result.score > 0.1)
+      
+      if (confidentResults.length === 0) {
+        throw new Error('NO_FOOD_DETECTED')
+      }
+
+      return confidentResults
     } catch (error) {
       console.error('TensorFlow.js classification error:', error)
       throw new Error(

@@ -25,6 +25,7 @@ export class OpenAIInference {
       // Create the prompt for food classification
       const prompt = `You are a nutrition expert. Analyze this food image and provide a JSON response with the following structure:
 {
+  "food_detected": true/false,
   "predictions": [
     {
       "food_name": "specific food name",
@@ -35,6 +36,8 @@ export class OpenAIInference {
   "overall_assessment": "brief overall description of the meal"
 }
 
+IMPORTANT: Set "food_detected" to false if you cannot clearly identify any food items in the image.
+
 Focus on identifying:
 1. Main food items visible
 2. Portion sizes (if possible)
@@ -42,7 +45,8 @@ Focus on identifying:
 4. Any ingredients you can identify
 
 Be specific (e.g., "grilled chicken breast" not just "chicken").
-Rate confidence from 0.0 to 1.0 based on image clarity and your certainty.`
+Rate confidence from 0.0 to 1.0 based on image clarity and your certainty.
+If no clear food is visible, set food_detected to false and leave predictions empty.`
 
       // Make API call
       const response = await fetch(
@@ -97,6 +101,12 @@ Rate confidence from 0.0 to 1.0 based on image clarity and your certainty.`
         const parsed = JSON.parse(content)
         const predictions: OpenAIPrediction[] = []
 
+        // Check if food was detected
+        if (parsed.food_detected === false) {
+          console.log('❌ OpenAI Vision: No food detected in image')
+          throw new Error('NO_FOOD_DETECTED')
+        }
+
         if (parsed.predictions && Array.isArray(parsed.predictions)) {
           parsed.predictions.forEach(
             (pred: { food_name?: string; confidence?: number }) => {
@@ -110,20 +120,35 @@ Rate confidence from 0.0 to 1.0 based on image clarity and your certainty.`
           )
         }
 
-        // If no structured predictions, try to extract from text
-        if (predictions.length === 0) {
+        // If no structured predictions but food was detected, try to extract from text
+        if (predictions.length === 0 && parsed.food_detected !== false) {
+          const extractedFood = this.extractFoodFromText(content)
+          if (extractedFood === 'mixed meal') {
+            // If we can only extract generic food, consider it no food detected
+            throw new Error('NO_FOOD_DETECTED')
+          }
           predictions.push({
-            label: this.extractFoodFromText(content),
+            label: extractedFood,
             score: 0.7, // Medium confidence for text extraction
           })
         }
 
+        // If still no predictions, consider it no food detected
+        if (predictions.length === 0) {
+          throw new Error('NO_FOOD_DETECTED')
+        }
+
         console.log('✅ OpenAI Vision parsed predictions:', predictions)
         return predictions
-      } catch {
+      } catch (parseError) {
         console.warn(
           'Failed to parse OpenAI JSON response, using text extraction'
         )
+
+        // If it's a NO_FOOD_DETECTED error, re-throw it
+        if ((parseError as Error).message === 'NO_FOOD_DETECTED') {
+          throw parseError
+        }
 
         // Fallback: extract food names from text
         const extractedFood = this.extractFoodFromText(content)

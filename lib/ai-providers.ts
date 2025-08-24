@@ -1,11 +1,9 @@
 /**
  * Unified AI Provider Interface
- * Manages multiple AI services with fallback strategies
+ * Manages TensorFlow.js local inference
  */
 
 import { createTensorFlowInference } from './tensorflow'
-import { createOpenAIInference } from './openai'
-import { createGoogleVisionInference } from './google-vision'
 
 export interface AIProvider {
   name: string
@@ -14,7 +12,7 @@ export interface AIProvider {
   ): Promise<Array<{ label: string; score: number }>>
 }
 
-export type ProviderType = 'tensorflow' | 'openai' | 'google-vision' | 'manual'
+export type ProviderType = 'tensorflow' | 'manual'
 
 export class UnifiedAIManager {
   private providers: Map<ProviderType, AIProvider> = new Map()
@@ -25,7 +23,7 @@ export class UnifiedAIManager {
   }
 
   private initializeProviders() {
-    // Strategy 1: TensorFlow.js (Local, Free, Private)
+    // TensorFlow.js (Local, Free, Private)
     const tfProvider: AIProvider = {
       name: 'TensorFlow.js (Local)',
       classifyImage: (file: File) =>
@@ -33,44 +31,13 @@ export class UnifiedAIManager {
     }
     this.providers.set('tensorflow', tfProvider)
 
-    // Strategy 2: OpenAI Vision (High Accuracy, Paid)
-    const openaiKey = import.meta.env.VITE_OPENAI_API_KEY
-    if (openaiKey) {
-      const openaiProvider: AIProvider = {
-        name: 'OpenAI Vision',
-        classifyImage: (file: File) =>
-          createOpenAIInference(openaiKey).classifyImage(file),
-      }
-      this.providers.set('openai', openaiProvider)
-    }
-
-    // Strategy 3: Google Vision (Good Accuracy, Paid)
-    const googleKey = import.meta.env.VITE_GOOGLE_VISION_API_KEY
-    if (googleKey) {
-      const googleProvider: AIProvider = {
-        name: 'Google Vision',
-        classifyImage: (file: File) =>
-          createGoogleVisionInference(googleKey).classifyImage(file),
-      }
-      this.providers.set('google-vision', googleProvider)
-    }
-
     // Set provider priority order
     this.setProviderOrder()
   }
 
   private setProviderOrder() {
-    // Prefer local TensorFlow.js first (free, private, fast)
-    // Then cloud services for better accuracy if keys are available
+    // Use TensorFlow.js for local, private processing
     this.providerOrder = ['tensorflow']
-
-    if (this.providers.has('openai')) {
-      this.providerOrder.push('openai')
-    }
-
-    if (this.providers.has('google-vision')) {
-      this.providerOrder.push('google-vision')
-    }
 
     console.log(
       '🤖 AI Provider order:',
@@ -127,15 +94,11 @@ export class UnifiedAIManager {
     name: string
     available: boolean
   }> {
-    const allProviders: ProviderType[] = [
-      'tensorflow',
-      'openai',
-      'google-vision',
-    ]
+    const allProviders: ProviderType[] = ['tensorflow']
 
     return allProviders.map((type) => ({
       type,
-      name: this.providers.get(type)?.name || `${type} (not configured)`,
+      name: this.providers.get(type)?.name || `${type} (not available)`,
       available: this.providers.has(type),
     }))
   }
