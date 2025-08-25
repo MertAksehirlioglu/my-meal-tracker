@@ -267,7 +267,8 @@ const loadProfile = async () => {
 
   try {
     // Load user profile data
-    const response = (await fetch(`/api/users/${user.value.id}`).then((r) =>
+    const { authenticatedFetch } = useAuthenticatedFetch()
+    const response = (await authenticatedFetch(`/api/users/${user.value.id}`).then((r) =>
       r.json()
     )) as { success: boolean; data?: UpdateUser }
     if (response.success && response.data) {
@@ -287,9 +288,9 @@ const saveProfile = async () => {
   success.value = false
 
   try {
-    const response = (await fetch(`/api/users/${user.value.id}`, {
+    const { authenticatedFetch } = useAuthenticatedFetch()
+    const response = (await authenticatedFetch(`/api/users/${user.value.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(profile.value),
     }).then((r) => r.json())) as {
       success: boolean
@@ -329,7 +330,8 @@ const handleAvatarUpload = async (event: Event) => {
     const formData = new FormData()
     formData.append('avatar', file)
 
-    const response = (await fetch(`/api/users/${user.value.id}/avatar`, {
+    const { authenticatedFetch } = useAuthenticatedFetch()
+    const response = (await authenticatedFetch(`/api/users/${user.value.id}/avatar`, {
       method: 'POST',
       body: formData,
     }).then((r) => r.json())) as {

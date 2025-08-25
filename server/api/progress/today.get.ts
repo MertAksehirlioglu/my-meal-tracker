@@ -1,24 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 import type { UserProgress } from '~/server/database/schemas'
+import { requireAuth } from '~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
   try {
-    // Get user from auth context
-    const user = event.context.user
-
-    // For development: if no user in context, get from query params
-    let userId = user?.id
-    if (!userId) {
-      const query = getQuery(event)
-      userId = query.user_id as string
-
-      if (!userId) {
-        throw createError({
-          statusCode: 401,
-          statusMessage: 'Unauthorized - user ID required',
-        })
-      }
-    }
+    // Validate authentication
+    const user = requireAuth(event)
+    const userId = user.id
 
     // Create Supabase client
     const supabaseUrl = process.env.SUPABASE_URL!

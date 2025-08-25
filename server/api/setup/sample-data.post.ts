@@ -1,16 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
+import { requireAuth } from '~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
   try {
-    // Get user from auth context
-    const user = event.context.user
-
-    if (!user?.id) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Unauthorized - user ID required',
-      })
-    }
+    // Validate authentication
+    const user = requireAuth(event)
 
     // Create Supabase client with user's session (not service role)
     // This ensures RLS policies work correctly

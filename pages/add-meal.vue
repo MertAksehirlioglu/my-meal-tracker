@@ -261,9 +261,9 @@ const saveMeal = async () => {
       notes: mealData.notes || null,
     }
 
-    const response = (await fetch('/api/meals', {
+    const { authenticatedFetch } = useAuthenticatedFetch()
+    const response = (await authenticatedFetch('/api/meals', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(mealPayload),
     }).then((r) => r.json())) as { success: boolean; message?: string }
 

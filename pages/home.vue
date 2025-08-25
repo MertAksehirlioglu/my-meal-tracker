@@ -595,8 +595,6 @@ const goToSnap = () => {
 // Load data
 const loadDashboardData = async () => {
   const result = await withErrorHandling(async () => {
-    // Get auth headers
-    const supabase = useSupabaseClient()
     const user = useSupabaseUser()
     
     // Ensure user is authenticated
@@ -604,19 +602,10 @@ const loadDashboardData = async () => {
       throw new Error('User not authenticated')
     }
     
-    const { data: { session } } = await supabase.auth.getSession()
-    
-    if (!session?.access_token) {
-      throw new Error('No valid session found')
-    }
-    
-    const headers = {
-      'Authorization': `Bearer ${session.access_token}`,
-      'Content-Type': 'application/json'
-    }
+    const { authenticatedFetch } = useAuthenticatedFetch()
 
     // Load today's meals
-    const mealsResponse = await fetch('/api/meals/today', { headers })
+    const mealsResponse = await authenticatedFetch('/api/meals/today')
     if (!mealsResponse.ok) {
       throw new Error(`Failed to load meals: ${mealsResponse.statusText}`)
     }
@@ -624,7 +613,7 @@ const loadDashboardData = async () => {
     todayMeals.value = mealsData?.data || []
 
     // Load user goals
-    const goalsResponse = await fetch('/api/goals/active', { headers })
+    const goalsResponse = await authenticatedFetch('/api/goals/active')
     if (!goalsResponse.ok) {
       throw new Error(`Failed to load goals: ${goalsResponse.statusText}`)
     }
@@ -632,7 +621,7 @@ const loadDashboardData = async () => {
     userGoals.value = goalsData?.data || null
 
     // Load today's progress
-    const progressResponse = await fetch('/api/progress/today', { headers })
+    const progressResponse = await authenticatedFetch('/api/progress/today')
     if (!progressResponse.ok) {
       throw new Error(`Failed to load progress: ${progressResponse.statusText}`)
     }

@@ -352,10 +352,10 @@ async function saveMeal(mealPayload: CreateMeal) {
         }
       }
 
-      // Save meal with image URL
-      const response = await fetch('/api/meals', {
+      // Save meal with image URL using authenticated fetch
+      const { authenticatedFetch } = useAuthenticatedFetch()
+      const response = await authenticatedFetch('/api/meals', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...mealPayload,
           image_url: imageUrl,

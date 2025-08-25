@@ -1,11 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Meal } from '~/server/database/schemas'
+import { requireAuth, validateInput, validators } from '~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
   try {
+    // Validate authentication - this is critical for security
+    const user = requireAuth(event)
+
     const body = await readBody(event)
     const {
-      user_id,
       name,
       meal_type,
       consumed_at,
@@ -22,34 +25,27 @@ export default defineEventHandler(async (event) => {
       analysis_method,
     } = body
 
-    // Validate required fields
-    if (
-      !user_id ||
-      !name ||
-      !meal_type ||
-      !consumed_at ||
-      total_calories === null ||
-      total_protein === null ||
-      total_carbs === null ||
-      total_fat === null
-    ) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Missing required fields',
-      })
-    }
+    // Use authenticated user's ID instead of accepting from request body
+    const user_id = user.id
 
-    // Validate AI confidence if provided
-    if (
-      ai_confidence !== null &&
-      ai_confidence !== undefined &&
-      (ai_confidence < 0 || ai_confidence > 1)
-    ) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'AI confidence must be between 0 and 1',
-      })
-    }
+    // Validate input data
+    validateInput(
+      { name, meal_type, consumed_at, total_calories, total_protein, total_carbs, total_fat },
+      ['name', 'meal_type', 'consumed_at', 'total_calories', 'total_protein', 'total_carbs', 'total_fat'],
+      {
+        name: validators.isString,
+        meal_type: validators.isMealType,
+        consumed_at: validators.isDateString,
+        total_calories: validators.isNumber,
+        total_protein: validators.isNumber,
+        total_carbs: validators.isNumber,
+        total_fat: validators.isNumber,
+        total_fiber: validators.isNumber,
+        total_sugar: validators.isNumber,
+        ai_confidence: validators.isConfidence,
+        image_url: validators.isUrl,
+      }
+    )
 
     // Create Supabase client
     const supabaseUrl = process.env.SUPABASE_URL!
