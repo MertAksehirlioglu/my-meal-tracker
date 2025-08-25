@@ -20,7 +20,7 @@
     </v-app-bar>
     <!-- Hero Section -->
     <v-main
-      class="landing-hero d-flex flex-column align-center justify-center text-center py-10 px-4 mt-10"
+      class="landing-hero d-flex flex-column align-center justify-center text-center  px-4 mt-4"
     >
       <img
         src="/logo.png"
@@ -36,7 +36,7 @@
       <v-btn
         color="primary"
         size="large"
-        class="mb-6"
+        class="mb-4"
         @click="scrollToSection('get-started')"
         >Get Started</v-btn
       >
@@ -44,7 +44,7 @@
     <!-- More Information Section -->
     <v-container
       id="more-info"
-      class="py-8 d-flex flex-column align-center justify-center text-center"
+      class="py-4 d-flex flex-column align-center justify-center text-center"
     >
       <v-row class="justify-center">
         <v-col
@@ -73,7 +73,7 @@
       </v-row>
     </v-container>
     <!-- Login Section -->
-    <v-container id="login" class="py-8 text-center">
+    <v-container id="login" class="py-4 text-center">
       <h2 class="font-weight-bold mb-2">Login to Your Account</h2>
       <p class="mb-4">
         Access your personalized dashboard and start tracking today.
@@ -87,8 +87,8 @@
       >
     </v-container>
     <!-- Testimonials Section -->
-    <v-container id="testimonials" class="py-8">
-      <h2 class="font-weight-bold text-center mb-6">What Our Users Say</h2>
+    <v-container id="testimonials" class="py-4">
+      <h2 class="font-weight-bold text-center mb-4">What Our Users Say</h2>
       <v-row>
         <v-col
           v-for="(testimonial, i) in testimonials"
@@ -108,7 +108,7 @@
       </v-row>
     </v-container>
     <!-- Contact Section -->
-    <v-container id="contact" class="py-8 text-center">
+    <v-container id="contact" class="py-4 text-center">
       <h2 class="font-weight-bold mb-2">Contact Us</h2>
       <p class="mb-4">
         Have questions or feedback? You can fill out our contact form or send us
@@ -125,7 +125,7 @@
     <!-- Get Started Section -->
     <v-footer
       id="get-started"
-      class="py-6 d-flex flex-column align-center"
+      class="py-4 d-flex flex-column align-center"
       color="secondary"
     >
       <h2 class="font-weight-bold mb-2">Ready to Start?</h2>
@@ -183,9 +183,8 @@ function goToContactPage() {
 }
 @media (max-width: 600px) {
   .landing-hero {
-    min-height: 60vh;
-    padding-top: 2rem;
-    padding-bottom: 2rem;
+    min-height: 50vh;
+
   }
 }
 </style>

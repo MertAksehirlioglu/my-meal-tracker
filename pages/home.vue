@@ -246,12 +246,13 @@
                 >mdi-food</v-icon
               >
               <p class="text-grey">No meals logged today</p>
-              <div class="d-flex flex-column gap-2 align-center">
-                <v-btn color="primary" @click="goToSnap"
+              <div class="d-flex flex-column gap-2 align-center mt-4 ">
+                <v-btn 
+                  color="primary" 
+                  size="large"
+                  class="px-8 py-2"
+                  @click="goToSnap"
                   >Add Your First Meal</v-btn
-                >
-                <v-btn color="secondary" variant="outlined" size="small" @click="createSampleData"
-                  >Add Sample Data for Testing</v-btn
                 >
               </div>
             </div>
@@ -589,102 +590,6 @@ const updateCharts = () => {
 
 const goToSnap = () => {
   router.push('/snap')
-}
-
-const createSampleData = async () => {
-  const result = await withErrorHandling(async () => {
-    const supabase = useSupabaseClient()
-    const user = useSupabaseUser()
-    
-    if (!user.value?.id) {
-      throw new Error('User not authenticated')
-    }
-    
-    // First, ensure user profile exists in public.users table
-    const { data: existingUser, error: userCheckError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('id', user.value.id)
-      .single()
-
-    if (userCheckError && userCheckError.code === 'PGRST116') {
-      // User doesn't exist, create profile
-      const { error: userCreateError } = await supabase
-        .from('users')
-        .insert({
-          id: user.value.id,
-          email: user.value.email || 'user@example.com'
-        })
-
-      if (userCreateError) {
-        throw new Error(`Failed to create user profile: ${userCreateError.message}`)
-      }
-    } else if (userCheckError) {
-      throw new Error(`Failed to check user profile: ${userCheckError.message}`)
-    }
-    
-    // Create sample data directly with Supabase client (this respects RLS)
-    const today = new Date()
-    const sampleMeals = [
-      {
-        user_id: user.value.id,
-        name: 'Chicken Salad Bowl',
-        meal_type: 'lunch',
-        consumed_at: new Date(today.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-        total_calories: 450,
-        total_protein: 35,
-        total_carbs: 25,
-        total_fat: 18,
-        notes: 'Grilled chicken with mixed greens and avocado'
-      },
-      {
-        user_id: user.value.id,
-        name: 'Greek Yogurt with Berries',
-        meal_type: 'breakfast',
-        consumed_at: new Date(today.getTime() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
-        total_calories: 220,
-        total_protein: 15,
-        total_carbs: 30,
-        total_fat: 5,
-        notes: 'Greek yogurt topped with blueberries and honey'
-      }
-    ]
-
-    // Insert sample meals using client-side Supabase (respects RLS)
-    const { data: mealsData, error: mealsError } = await supabase
-      .from('meals')
-      .insert(sampleMeals)
-      .select()
-
-    if (mealsError) {
-      throw new Error(`Failed to create meals: ${mealsError.message}`)
-    }
-
-    // Add sample user goals
-    const sampleGoals = {
-      user_id: user.value.id,
-      target_calories: 2000,
-      target_protein: 150,
-      target_carbs: 250,
-      target_fat: 65,
-      start_date: today.toISOString().split('T')[0],
-      is_active: true
-    }
-
-    const { data: goalsData, error: goalsError } = await supabase
-      .from('user_goals')
-      .insert(sampleGoals)
-      .select()
-
-    if (goalsError) {
-      throw new Error(`Failed to create goals: ${goalsError.message}`)
-    }
-    
-    // Reload dashboard data to show the new meals
-    await loadDashboardData()
-  }, 'creating sample data')
-
-  return result
 }
 
 // Load data
