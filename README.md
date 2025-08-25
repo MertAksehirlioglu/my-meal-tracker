@@ -131,9 +131,6 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 # Storage Configuration
 SUPABASE_MEAL_IMAGES_BUCKET=meal-images
 
-# Optional: Hugging Face API (for enhanced AI accuracy)
-VITE_HUGGING_FACE_TOKEN=your-hf-token
-
 # Contact Configuration
 VITE_CONTACT_MAIL=your-email@example.com
 ```
@@ -221,12 +218,6 @@ npm run generate
 # Deploy static site to Netlify
 ```
 
-**Docker**
-```bash
-# Build Docker image
-docker build -t mealsnap .
-docker run -p 3000:3000 mealsnap
-```
 
 ### Environment Variables for Production
 Ensure all production environment variables are configured in your hosting platform.

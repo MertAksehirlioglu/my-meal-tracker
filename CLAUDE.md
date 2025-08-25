@@ -11,7 +11,7 @@ MealSnap is a full-stack Nuxt 3 meal tracking application that allows users to a
 - Frontend: Nuxt 3 + Vue 3 + Vuetify 3
 - Backend: Nuxt Server API routes
 - Database & Auth: Supabase (PostgreSQL with RLS)
-- AI: Hugging Face Inference API (Food-101 model)
+- AI: TensorFlow.js local inference
 - Storage: Supabase Storage for meal images
 
 ## Development Commands
@@ -43,7 +43,6 @@ Copy `.env.example` to `.env` and configure:
 - `SUPABASE_URL` - Your Supabase project URL
 - `SUPABASE_KEY` - Your Supabase anon key
 - `SUPABASE_SERVICE_ROLE_KEY` - Service role key for server-side operations
-- `VITE_HUGGING_FACE_TOKEN` - Hugging Face API token for food classification
 - `VITE_CONTACT_MAIL` - Contact email address
 - `SUPABASE_MEAL_IMAGES_BUCKET` - Bucket name for meal image storage
 
@@ -85,12 +84,6 @@ Database schema is defined in `server/database/schemas.ts` with TypeScript inter
 - Handles no-food-detection cases and provides proper error messages
 - Factory function `createTensorFlowInference()` for easy instantiation
 
-**Hugging Face Integration (`lib/huggingface.ts`)**
-
-- Optional fallback provider using `nateraw/food` model  
-- Handles API errors and provides proper error messages
-- Factory function `createHuggingFaceInference()` for easy instantiation
-
 **Storage (`composables/useStorage.ts`)**
 
 - Handles Supabase Storage operations for meal images
@@ -126,14 +119,10 @@ All API routes use Supabase service role key for database operations and handle 
 
 The app uses TensorFlow.js for local food classification:
 
-- **Primary**: TensorFlow.js with MobileNetV2 and COCO-SSD models
+- **TensorFlow.js**: MobileNetV2 and COCO-SSD models
   - Runs locally in browser (no API calls)
   - No API keys required
   - Privacy-focused processing
-- **Fallback**: Hugging Face Food-101 model (`nateraw/food`)
-  - 101 food categories
-  - Requires valid VITE_HUGGING_FACE_TOKEN
-  - Handles model loading states and API errors
 - **No-food handling**: Proper error messages when no food detected
 - Currently uses mock nutrition data - integrate with real nutrition database for production
 
@@ -145,7 +134,7 @@ When running tests or quality checks:
 - Use ESLint and Prettier for code formatting (scripts may need to be added)
 - Verify environment variables are properly configured
 - Test Supabase connection and RLS policies
-- Validate Hugging Face API integration
+- Test TensorFlow.js model loading
 
 ## Common Development Patterns
 
