@@ -36,7 +36,10 @@ export default defineEventHandler(async (event) => {
     )
 
     console.log('Fetching meals for user:', userId)
-    console.log('Date range:', { startOfDay: startOfDay.toISOString(), endOfDay: endOfDay.toISOString() })
+    console.log('Date range:', {
+      startOfDay: startOfDay.toISOString(),
+      endOfDay: endOfDay.toISOString(),
+    })
 
     // Fetch today's meals
     const { data, error } = await supabase

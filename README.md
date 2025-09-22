@@ -26,31 +26,35 @@
 🎯 **Personalized Goals** - Set and track daily nutrition targets (calories, protein, carbs, fats)  
 📊 **Progress Dashboard** - Beautiful visualizations of your nutrition progress  
 📱 **Mobile-First Design** - Responsive interface optimized for all devices  
-🔒 **Privacy-Focused** - Local AI processing means your food photos never leave your device  
+🔒 **Privacy-Focused** - Local AI processing means your food photos never leave your device
 
 ---
 
 ## 🏗️ Architecture & Tech Stack
 
 ### Frontend
+
 - **[Nuxt 3](https://nuxt.com/)** - Full-stack Vue framework
 - **[Vue 3](https://vuejs.org/)** - Progressive JavaScript framework
 - **[Vuetify 3](https://vuetifyjs.com/)** - Vue Material Design components
 - **[TypeScript](https://www.typescriptlang.org/)** - Type-safe development
 
 ### Backend & Database
+
 - **[Supabase](https://supabase.io/)** - PostgreSQL database with real-time subscriptions
 - **Supabase Auth** - User authentication and authorization
 - **Supabase Storage** - Image storage for meal photos
 - **Row Level Security (RLS)** - Database-level security policies
 
 ### AI & Machine Learning
+
 - **[TensorFlow.js](https://www.tensorflow.org/js)** - Local food classification
 - **MobileNetV2** - Efficient image classification model
 - **COCO-SSD** - Object detection for food items
 - **[Hugging Face](https://huggingface.co/)** - Optional fallback API for enhanced accuracy
 
 ### Development Tools
+
 - **ESLint + Prettier** - Code formatting and linting
 - **TypeScript** - Static type checking
 - **Nuxt DevTools** - Enhanced development experience
@@ -60,24 +64,28 @@
 ## 📱 Screenshots
 
 ### 🏠 Landing Page
+
 <div align="center">
 <img src="./screenshots/landing-mobile.png" alt="MealSnap Landing Page - Mobile View" width="300">
 <p><em>Clean, modern landing page with call-to-action</em></p>
 </div>
 
 ### 🔐 User Registration
+
 <div align="center">
 <img src="./screenshots/signup.png" alt="User Signup Flow" width="300">
 <p><em>Secure user registration with Supabase Auth</em></p>
 </div>
 
 ### 📊 Dashboard & Progress Tracking
+
 <div align="center">
 <img src="./screenshots/dashboard-mobile.png" alt="Nutrition Dashboard" width="300">
 <p><em>Real-time nutrition tracking with visual progress indicators</em></p>
 </div>
 
 ### 📸 AI-Powered Food Scanner
+
 <div align="center">
 <img src="./screenshots/food-scanner.png" alt="Food Scanner Interface" width="300">
 <img src="./screenshots/food-scanner-analysis.png" alt="AI Food Analysis Results" width="300">
@@ -85,6 +93,7 @@
 </div>
 
 ### 👤 User Profile Management
+
 <div align="center">
 <img src="./screenshots/profile.png" alt="User Profile Settings" width="300">
 <p><em>Complete profile management and account settings</em></p>
@@ -95,7 +104,8 @@
 ## 🚀 Installation
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - npm or yarn
 - Supabase account (free tier available)
 
@@ -148,18 +158,21 @@ VITE_CONTACT_MAIL=your-email@example.com
 ## 🎯 Key Features Showcase
 
 ### 🤖 AI-Powered Food Recognition
+
 - **Local Processing**: Uses TensorFlow.js for privacy-focused food classification
 - **No API Calls**: All image processing happens in your browser
 - **Fallback Support**: Optional Hugging Face integration for enhanced accuracy
 - **Smart Nutrition Mapping**: Automatically estimates calories and macros
 
 ### 📊 Comprehensive Tracking
+
 - **Daily Progress**: Visual progress bars for calories and macronutrients
 - **Meal History**: Detailed log of all tracked meals
 - **Goal Management**: Customizable daily nutrition targets
 - **Progress Charts**: Beautiful visualizations of your nutrition journey
 
 ### 🔒 Security & Privacy
+
 - **Row Level Security**: Database-level data isolation
 - **Secure Authentication**: JWT-based auth with Supabase
 - **Local AI Processing**: Food photos never leave your device
@@ -207,19 +220,21 @@ npm run check        # Run all checks (typecheck, lint, format)
 ### Recommended Platforms
 
 **[Vercel](https://vercel.com/)** (Recommended)
+
 ```bash
 npm run build
 # Deploy to Vercel with zero configuration
 ```
 
 **[Netlify](https://netlify.com/)**
+
 ```bash
 npm run generate
 # Deploy static site to Netlify
 ```
 
-
 ### Environment Variables for Production
+
 Ensure all production environment variables are configured in your hosting platform.
 
 ---
@@ -227,12 +242,14 @@ Ensure all production environment variables are configured in your hosting platf
 ## 🎨 Design Philosophy
 
 ### User Experience
+
 - **Mobile-First**: Designed for on-the-go meal tracking
 - **Intuitive Interface**: Clean, Material Design-inspired UI
 - **Fast Performance**: Optimized for quick meal logging
 - **Accessibility**: WCAG compliant design patterns
 
-### Technical Philosophy  
+### Technical Philosophy
+
 - **Privacy by Design**: AI processing happens locally
 - **Progressive Enhancement**: Works without JavaScript for core features
 - **Type Safety**: Full TypeScript coverage
@@ -245,6 +262,7 @@ Ensure all production environment variables are configured in your hosting platf
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
 ### Development Guidelines
+
 - Follow the existing code style (ESLint + Prettier)
 - Add TypeScript types for all new code
 - Write descriptive commit messages
@@ -261,17 +279,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👨‍💻 Author
 
 **Mert Akşehirlioglu**
+
 - GitHub: [@mertaksehirlioglu](https://github.com/mertaksehirlioglu)
 - Email: mertaksehirlioglu@hotmail.com
-
----
-
-## 🙏 Acknowledgments
-
-- [Nuxt.js](https://nuxt.com/) team for the amazing framework
-- [Supabase](https://supabase.io/) for the backend infrastructure
-- [TensorFlow.js](https://www.tensorflow.org/js) for enabling local AI processing
-- [Vuetify](https://vuetifyjs.com/) for the beautiful Material Design components
 
 ---
 

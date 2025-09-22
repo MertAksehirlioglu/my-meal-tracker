@@ -30,8 +30,24 @@ export default defineEventHandler(async (event) => {
 
     // Validate input data
     validateInput(
-      { name, meal_type, consumed_at, total_calories, total_protein, total_carbs, total_fat },
-      ['name', 'meal_type', 'consumed_at', 'total_calories', 'total_protein', 'total_carbs', 'total_fat'],
+      {
+        name,
+        meal_type,
+        consumed_at,
+        total_calories,
+        total_protein,
+        total_carbs,
+        total_fat,
+      },
+      [
+        'name',
+        'meal_type',
+        'consumed_at',
+        'total_calories',
+        'total_protein',
+        'total_carbs',
+        'total_fat',
+      ],
       {
         name: validators.isString,
         meal_type: validators.isMealType,

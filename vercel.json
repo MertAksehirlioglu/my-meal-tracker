@@ -1,0 +1,20 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".output/public",
+  "framework": "nuxtjs",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
+  "env": {
+    "SUPABASE_URL": "@supabase-url",
+    "SUPABASE_KEY": "@supabase-key",
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase-service-role-key",
+    "SUPABASE_MEAL_IMAGES_BUCKET": "@supabase-meal-images-bucket",
+    "VITE_CONTACT_MAIL": "@vite-contact-mail",
+    "NUXT_PUBLIC_SIGNUP_DISABLED": "@nuxt-public-signup-disabled"
+  },
+  "functions": {
+    "server/api/**/*.ts": {
+      "runtime": "nodejs18.x"
+    }
+  }
+}

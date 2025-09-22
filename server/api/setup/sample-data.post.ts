@@ -10,15 +10,15 @@ export default defineEventHandler(async (event) => {
     // This ensures RLS policies work correctly
     const authHeader = getHeader(event, 'authorization')
     const token = authHeader?.substring(7) // Remove 'Bearer ' prefix
-    
+
     const supabaseUrl = process.env.SUPABASE_URL!
     const supabaseKey = process.env.SUPABASE_KEY!
     const supabase = createClient(supabaseUrl, supabaseKey, {
       global: {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
+          Authorization: `Bearer ${token}`,
+        },
+      },
     })
 
     // Add sample meal data for the user
@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
         total_protein: 35,
         total_carbs: 25,
         total_fat: 18,
-        notes: 'Grilled chicken with mixed greens and avocado'
+        notes: 'Grilled chicken with mixed greens and avocado',
       },
       {
         user_id: user.id,
@@ -44,8 +44,8 @@ export default defineEventHandler(async (event) => {
         total_protein: 15,
         total_carbs: 30,
         total_fat: 5,
-        notes: 'Greek yogurt topped with blueberries and honey'
-      }
+        notes: 'Greek yogurt topped with blueberries and honey',
+      },
     ]
 
     // Insert sample meals
@@ -70,7 +70,7 @@ export default defineEventHandler(async (event) => {
       target_carbs: 250,
       target_fat: 65,
       start_date: today.toISOString().split('T')[0],
-      is_active: true
+      is_active: true,
     }
 
     const { data: goalsData, error: goalsError } = await supabase
@@ -91,8 +91,8 @@ export default defineEventHandler(async (event) => {
       message: 'Sample data created successfully',
       data: {
         meals: mealsData,
-        goals: goalsData
-      }
+        goals: goalsData,
+      },
     }
   } catch (error: unknown) {
     console.error('Error creating sample data:', error)

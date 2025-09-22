@@ -12,7 +12,9 @@ export const useErrorHandling = () => {
   const isLoading = ref(false)
 
   const hasErrors = computed(() => errors.value.length > 0)
-  const latestError = computed(() => errors.value[errors.value.length - 1] || null)
+  const latestError = computed(
+    () => errors.value[errors.value.length - 1] || null
+  )
 
   const addError = (
     message: string,

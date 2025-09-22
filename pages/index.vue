@@ -20,7 +20,7 @@
     </v-app-bar>
     <!-- Hero Section -->
     <v-main
-      class="landing-hero d-flex flex-column align-center justify-center text-center  px-4 mt-4"
+      class="landing-hero d-flex flex-column align-center justify-center text-center px-4 mt-4"
     >
       <img
         src="/logo.png"
@@ -128,16 +128,52 @@
       class="py-4 d-flex flex-column align-center"
       color="secondary"
     >
-      <h2 class="font-weight-bold mb-2">Ready to Start?</h2>
-      <v-btn variant="outlined" size="x-large" @click="goToSignupPage"
-        >Sign Up Free</v-btn
-      >
+      <div v-if="!signupDisabled" class="text-center">
+        <h2 class="font-weight-bold mb-2">Ready to Start?</h2>
+        <v-btn
+          variant="outlined"
+          size="x-large"
+          @click="goToSignupPage"
+        >
+          Sign Up Free
+        </v-btn>
+      </div>
+      <v-card v-else variant="text" class="text-center">
+        <v-card-title class="font-weight-bold mb-2">Portfolio Demo</v-card-title>
+        <v-card-text>
+          <v-card-subtitle class="mb-3">
+            This is a portfolio demonstration. New signups are disabled.
+          </v-card-subtitle>
+          <v-row justify="center">
+            <v-col cols="auto">
+              <v-btn
+                variant="outlined"
+                size="large"
+                prepend-icon="mdi-image-multiple"
+                @click="viewScreenshots"
+              >
+                View Screenshots
+              </v-btn>
+            </v-col>
+            <v-col cols="auto">
+              <v-btn
+                variant="outlined"
+                size="large"
+                prepend-icon="mdi-email"
+                @click="contactDeveloper"
+              >
+                Contact Developer
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
     </v-footer>
   </v-app>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const testimonials = ref([
   {
@@ -159,6 +195,9 @@ const testimonials = ref([
   },
 ])
 
+const config = useRuntimeConfig()
+const signupDisabled = computed(() => config.public.signupDisabled)
+
 function scrollToSection(id: string) {
   const el = document.getElementById(id)
   if (el) el.scrollIntoView({ behavior: 'smooth' })
@@ -174,6 +213,23 @@ function goToSignupPage() {
 function goToContactPage() {
   router.push('/contact')
 }
+
+function viewScreenshots() {
+  window.open(
+    'https://github.com/mertaksehirlioglu/my-meal-tracker#screenshots',
+    '_blank'
+  )
+}
+
+function contactDeveloper() {
+  const subject = encodeURIComponent('MealSnap Portfolio Demo - Contact')
+  const body = encodeURIComponent(
+    'Hi Mert,\n\nI am interested in learning more about your MealSnap portfolio application.\n\nThank you!'
+  )
+  window.open(
+    `mailto:mertaksehirlioglu@hotmail.com?subject=${subject}&body=${body}`
+  )
+}
 </script>
 
 <style scoped>
@@ -184,7 +240,6 @@ function goToContactPage() {
 @media (max-width: 600px) {
   .landing-hero {
     min-height: 50vh;
-
   }
 }
 </style>

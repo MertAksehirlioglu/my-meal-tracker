@@ -7,6 +7,11 @@ export default defineNuxtConfig({
     transpile: ['vuetify'],
   },
   modules: ['@nuxtjs/supabase', '@nuxt/eslint'],
+  runtimeConfig: {
+    public: {
+      signupDisabled: process.env.NUXT_PUBLIC_SIGNUP_DISABLED === 'true',
+    },
+  },
   app: {
     head: {
       meta: [

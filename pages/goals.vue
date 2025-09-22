@@ -335,7 +335,9 @@ const loadGoals = async () => {
 
   try {
     const { authenticatedFetch } = useAuthenticatedFetch()
-    const response = (await authenticatedFetch('/api/goals').then((r) => r.json())) as {
+    const response = (await authenticatedFetch('/api/goals').then((r) =>
+      r.json()
+    )) as {
       success: boolean
       data?: UserGoal[]
     }
@@ -382,10 +384,13 @@ const saveGoal = async () => {
     const { authenticatedFetch } = useAuthenticatedFetch()
     let response
     if (editingGoal.value) {
-      response = (await authenticatedFetch(`/api/goals/${editingGoal.value.id}`, {
-        method: 'PUT',
-        body: JSON.stringify(payload),
-      }).then((r) => r.json())) as {
+      response = (await authenticatedFetch(
+        `/api/goals/${editingGoal.value.id}`,
+        {
+          method: 'PUT',
+          body: JSON.stringify(payload),
+        }
+      ).then((r) => r.json())) as {
         success: boolean
         data?: UserGoal
         message?: string

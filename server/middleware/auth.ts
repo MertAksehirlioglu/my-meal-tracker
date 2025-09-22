@@ -22,7 +22,10 @@ export default defineEventHandler(async (event) => {
 
   const url = event.node.req.url
   const method = event.node.req.method
-  const clientIP = getRequestIP(event, { xForwardedFor: true }) || event.node.req.socket?.remoteAddress || 'unknown'
+  const clientIP =
+    getRequestIP(event, { xForwardedFor: true }) ||
+    event.node.req.socket?.remoteAddress ||
+    'unknown'
 
   // Public endpoints that don't require authentication
   const publicEndpoints = [
@@ -51,7 +54,7 @@ export default defineEventHandler(async (event) => {
 
     // Get and validate authorization header
     const authHeader = getHeader(event, 'authorization')
-    
+
     if (!authHeader) {
       if (isDevelopment) {
         console.warn(`[DEV] No authorization header for ${method} ${url}`)
@@ -60,42 +63,44 @@ export default defineEventHandler(async (event) => {
         event.context.isAuthenticated = false
         return
       }
-      
+
       throw createError({
         statusCode: 401,
         statusMessage: 'Authorization header required',
-        data: { code: 'MISSING_AUTH_HEADER' }
+        data: { code: 'MISSING_AUTH_HEADER' },
       })
     }
 
     if (!authHeader.startsWith('Bearer ')) {
       throw createError({
         statusCode: 401,
-        statusMessage: 'Invalid authorization header format. Expected: Bearer <token>',
-        data: { code: 'INVALID_AUTH_FORMAT' }
+        statusMessage:
+          'Invalid authorization header format. Expected: Bearer <token>',
+        data: { code: 'INVALID_AUTH_FORMAT' },
       })
     }
 
     // Extract and validate token
     const token = authHeader.substring(7).trim()
-    
+
     if (!token || token.length < 10) {
       throw createError({
         statusCode: 401,
         statusMessage: 'Invalid token format',
-        data: { code: 'INVALID_TOKEN_FORMAT' }
+        data: { code: 'INVALID_TOKEN_FORMAT' },
       })
     }
 
     // Validate environment variables
     const supabaseUrl = process.env.SUPABASE_URL
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY
+    const supabaseKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY
 
     if (!supabaseUrl || !supabaseKey) {
       console.error('Missing Supabase configuration')
       throw createError({
         statusCode: 500,
-        statusMessage: 'Server configuration error'
+        statusMessage: 'Server configuration error',
       })
     }
 
@@ -113,29 +118,34 @@ export default defineEventHandler(async (event) => {
     )
 
     const verifyPromise = supabase.auth.getUser(token)
-    
-    const result = await Promise.race([
-      verifyPromise,
-      timeoutPromise,
-    ])
-    
-    const { data: { user }, error } = result as { data: { user: User | null }; error: Error | null }
+
+    const result = await Promise.race([verifyPromise, timeoutPromise])
+
+    const {
+      data: { user },
+      error,
+    } = result as { data: { user: User | null }; error: Error | null }
 
     if (error) {
       if (isDevelopment) {
-        console.warn(`[DEV] Token verification failed for ${url}:`, error.message)
+        console.warn(
+          `[DEV] Token verification failed for ${url}:`,
+          error.message
+        )
         event.context.user = createMockUser()
         event.context.isAuthenticated = false
         return
       }
 
       // Log security events in production
-      console.warn(`[SECURITY] Invalid token attempt from ${clientIP} for ${method} ${url}`)
-      
+      console.warn(
+        `[SECURITY] Invalid token attempt from ${clientIP} for ${method} ${url}`
+      )
+
       throw createError({
         statusCode: 401,
         statusMessage: 'Invalid or expired token',
-        data: { code: 'TOKEN_VERIFICATION_FAILED' }
+        data: { code: 'TOKEN_VERIFICATION_FAILED' },
       })
     }
 
@@ -150,7 +160,7 @@ export default defineEventHandler(async (event) => {
       throw createError({
         statusCode: 401,
         statusMessage: 'User not found',
-        data: { code: 'USER_NOT_FOUND' }
+        data: { code: 'USER_NOT_FOUND' },
       })
     }
 
@@ -160,7 +170,7 @@ export default defineEventHandler(async (event) => {
       throw createError({
         statusCode: 403,
         statusMessage: 'User account is temporarily suspended',
-        data: { code: 'USER_BANNED' }
+        data: { code: 'USER_BANNED' },
       })
     }
 
@@ -172,7 +182,6 @@ export default defineEventHandler(async (event) => {
     if (isProduction) {
       console.info(`[AUTH] User ${user.id} accessed ${method} ${url}`)
     }
-
   } catch (error: unknown) {
     // Handle different error types
     if (error && typeof error === 'object' && 'statusCode' in error) {
@@ -194,7 +203,7 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 500,
       statusMessage: 'Authentication service error',
-      data: { code: 'AUTH_SERVICE_ERROR' }
+      data: { code: 'AUTH_SERVICE_ERROR' },
     })
   }
 })
@@ -205,9 +214,9 @@ export default defineEventHandler(async (event) => {
 function applyRateLimit(clientIP: string, url?: string) {
   const now = Date.now()
   const key = `${clientIP}:${url}`
-  
+
   const current = rateLimitStore.get(key)
-  
+
   if (!current || now > current.resetTime) {
     // New window
     rateLimitStore.set(key, {
@@ -216,7 +225,7 @@ function applyRateLimit(clientIP: string, url?: string) {
     })
     return
   }
-  
+
   if (current.count >= RATE_LIMIT.maxRequests) {
     throw createError({
       statusCode: 429,
@@ -224,10 +233,10 @@ function applyRateLimit(clientIP: string, url?: string) {
       data: {
         code: 'RATE_LIMIT_EXCEEDED',
         resetTime: current.resetTime,
-      }
+      },
     })
   }
-  
+
   current.count++
 }
 

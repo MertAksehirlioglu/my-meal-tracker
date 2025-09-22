@@ -246,9 +246,9 @@
                 >mdi-food</v-icon
               >
               <p class="text-grey">No meals logged today</p>
-              <div class="d-flex flex-column gap-2 align-center mt-4 ">
-                <v-btn 
-                  color="primary" 
+              <div class="d-flex flex-column gap-2 align-center mt-4">
+                <v-btn
+                  color="primary"
                   size="large"
                   class="px-8 py-2"
                   @click="goToSnap"
@@ -596,12 +596,12 @@ const goToSnap = () => {
 const loadDashboardData = async () => {
   const result = await withErrorHandling(async () => {
     const user = useSupabaseUser()
-    
+
     // Ensure user is authenticated
     if (!user.value) {
       throw new Error('User not authenticated')
     }
-    
+
     const { authenticatedFetch } = useAuthenticatedFetch()
 
     // Load today's meals

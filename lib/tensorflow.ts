@@ -94,8 +94,10 @@ export class TensorFlowInference {
       }
 
       // Filter out very low confidence results
-      const confidentResults = sortedResults.filter(result => result.score > 0.1)
-      
+      const confidentResults = sortedResults.filter(
+        (result) => result.score > 0.1
+      )
+
       if (confidentResults.length === 0) {
         throw new Error('NO_FOOD_DETECTED')
       }

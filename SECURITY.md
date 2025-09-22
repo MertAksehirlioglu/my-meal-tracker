@@ -46,24 +46,28 @@ Please provide as much information as possible:
 MealSnap implements several security measures:
 
 #### Authentication & Authorization
+
 - JWT-based authentication via Supabase Auth
 - Row Level Security (RLS) on all database tables
 - Mandatory authentication on all user data endpoints
 - User session management and automatic logout
 
 #### Data Protection
+
 - All API endpoints validate user authorization
 - Input validation and sanitization on all endpoints
 - SQL injection protection via Supabase's built-in protections
 - No sensitive data in client-side code or logs
 
 #### Infrastructure Security
+
 - HTTPS enforcement in production
 - Environment variable management for secrets
 - Database access restricted to service accounts
 - Cross-Origin Resource Sharing (CORS) configuration
 
 #### Privacy
+
 - Minimal data collection policy
 - User data isolated via database-level RLS
 - Secure image storage with access controls
@@ -112,7 +116,7 @@ Before submitting code changes:
 
 We maintain a hall of fame for security researchers who responsibly disclose vulnerabilities:
 
-- *Your name could be here!*
+- _Your name could be here!_
 
 ---
 

@@ -4,7 +4,7 @@
   >
     <v-card
       class="pa-8 py-10 mx-auto"
-      max-width="400"
+      max-width="450"
       elevation="10"
       rounded="xl"
     >
@@ -16,12 +16,80 @@
           style="max-width: 64px; max-height: 64px; border-radius: 12px"
         />
         <h1 class="font-weight-bold mb-6 text-primary">MealSnap</h1>
-        <h2 class="font-weight-bold mb-2 text-primary">Sign Up</h2>
+        <h2 class="font-weight-bold mb-2 text-primary">
+          {{ signupDisabled ? 'Portfolio Demo' : 'Sign Up' }}
+        </h2>
         <p class="mb-4 text-grey-darken-1">
-          Create your account to start tracking your meals and goals.
+          {{
+            signupDisabled
+              ? 'This is a portfolio demonstration application.'
+              : 'Create your account to start tracking your meals and goals.'
+          }}
         </p>
       </div>
-      <v-form ref="formRef" v-model="formValid" @submit.prevent="onSubmit">
+
+      <!-- Signup Disabled Message -->
+      <div v-if="signupDisabled" class="text-center">
+        <v-alert
+          type="info"
+          variant="tonal"
+          class="mb-4"
+          icon="mdi-information"
+        >
+          <div class="mb-3">
+            <strong>New signups are currently disabled.</strong>
+          </div>
+          <p class="mb-2">This app is not intended for production use.</p>
+        </v-alert>
+
+        <v-card-text class="text-center">
+          <v-card-subtitle class="mb-2">To see how the app works:</v-card-subtitle>
+          <v-row justify="center" class="mb-3">
+            <v-col cols="auto">
+              <v-btn
+                variant="outlined"
+                color="primary"
+                prepend-icon="mdi-image-multiple"
+                @click="viewScreenshots"
+              >
+                View Screenshots
+              </v-btn>
+            </v-col>
+            <v-col cols="auto">
+              <v-btn
+                variant="outlined"
+                color="primary"
+                prepend-icon="mdi-email"
+                @click="requestTestUser"
+              >
+                Request Test User
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-card-text>
+
+        <v-divider class="my-4" />
+
+        <v-card-text class="text-center">
+          <v-card-subtitle class="text-grey-darken-2 mb-2">Contact the developer:</v-card-subtitle>
+          <v-chip
+            color="primary"
+            variant="outlined"
+            prepend-icon="mdi-email"
+            @click="contactDeveloper"
+          >
+            mertaksehirlioglu@hotmail.com
+          </v-chip>
+        </v-card-text>
+      </div>
+
+      <!-- Regular Signup Form -->
+      <v-form
+        v-else
+        ref="formRef"
+        v-model="formValid"
+        @submit.prevent="onSubmit"
+      >
         <v-text-field
           v-model="name"
           label="Name"
@@ -76,6 +144,7 @@
           account.</v-alert
         >
       </v-form>
+
       <div class="mt-4 text-center">
         <span class="text-grey-darken-1">Already have an account?</span>
         <v-btn variant="text" color="primary" class="ml-1" @click="goToLogin"
@@ -87,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '~/composables/useAuth'
 
@@ -100,12 +169,15 @@ const success = ref(false)
 const router = useRouter()
 const { register, updateProfile, loading, error } = useAuth()
 
+const config = useRuntimeConfig()
+const signupDisabled = computed(() => config.public.signupDisabled)
+
 async function onSubmit() {
   if (!formRef.value?.validate()) return
   success.value = false
   const { error: regError } = await register(email.value, password.value)
   if (!regError) {
-    await updateProfile({ name: name.value }) // Update profile with name
+    await updateProfile({ name: name.value })
     success.value = true
     setTimeout(() => {
       success.value = false
@@ -117,7 +189,31 @@ async function onSubmit() {
     }, 3500)
   }
 }
+
 function goToLogin() {
   router.push('/login')
+}
+
+function viewScreenshots() {
+  window.open(
+    'https://github.com/mertaksehirlioglu/my-meal-tracker#screenshots',
+    '_blank'
+  )
+}
+
+function requestTestUser() {
+  contactDeveloper()
+}
+
+function contactDeveloper() {
+  const subject = encodeURIComponent(
+    'MealSnap Portfolio Demo - Test User Request'
+  )
+  const body = encodeURIComponent(
+    'Hi Mert,\n\nI would like to request a test user account for your MealSnap portfolio application.\n\nThank you!'
+  )
+  window.open(
+    `mailto:mertaksehirlioglu@hotmail.com?subject=${subject}&body=${body}`
+  )
 }
 </script>

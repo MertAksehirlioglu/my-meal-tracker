@@ -64,12 +64,40 @@
           Login
         </v-btn>
         <v-divider class="my-4" />
-        <div class="mb-4 text-center">
+        <div v-if="!signupDisabled" class="mb-4 text-center">
           New here? Create an account to get started!
         </div>
-        <v-btn color="primary" block size="large" @click="goToSignup">
+        <v-btn
+          v-if="!signupDisabled"
+          color="primary"
+          block
+          size="large"
+          @click="goToSignup"
+        >
           Sign Up Now
         </v-btn>
+        <v-card-text v-else class="text-center">
+          <v-alert
+            type="info"
+            variant="tonal"
+            class="mb-3"
+            icon="mdi-information"
+          >
+            <v-card-title class="mb-2">
+              <strong>This is a portfolio demo.</strong>
+            </v-card-title>
+            <v-card-subtitle class="mb-0">New signups are disabled.</v-card-subtitle>
+          </v-alert>
+          <v-card-subtitle class="text-grey-darken-2 mb-2">For demo access, contact:</v-card-subtitle>
+          <v-chip
+            color="primary"
+            variant="outlined"
+            prepend-icon="mdi-email"
+            @click="contactDeveloper"
+          >
+            mertaksehirlioglu@hotmail.com
+          </v-chip>
+        </v-card-text>
         <v-alert v-if="error" type="error" class="mt-2">{{ error }}</v-alert>
       </v-form>
     </v-card>
@@ -77,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '~/composables/useAuth'
 
@@ -87,6 +115,9 @@ const formValid = ref(false)
 const formRef = ref()
 const router = useRouter()
 const { login, loading, error } = useAuth()
+
+const config = useRuntimeConfig()
+const signupDisabled = computed(() => config.public.signupDisabled)
 
 const resetError = () => {
   if (error.value) error.value = null
@@ -108,5 +139,17 @@ function goToSignup() {
 
 function goToForgotPassword() {
   router.push('/forgot-password')
+}
+
+function contactDeveloper() {
+  const subject = encodeURIComponent(
+    'MealSnap Portfolio Demo - Test User Request'
+  )
+  const body = encodeURIComponent(
+    'Hi Mert,\n\nI would like to request a test user account for your MealSnap portfolio application.\n\nThank you!'
+  )
+  window.open(
+    `mailto:mertaksehirlioglu@hotmail.com?subject=${subject}&body=${body}`
+  )
 }
 </script>
