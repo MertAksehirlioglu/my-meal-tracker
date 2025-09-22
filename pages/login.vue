@@ -40,12 +40,15 @@
           :rules="[(v) => !!v || 'Password is required']"
           @input="resetError"
         />
-        <div
-          class="mb-4 text-left text-primary"
-          style="cursor: pointer; margin-top: -18px"
-          @click="goToForgotPassword"
-        >
-          Forgot Password?
+        <div class="text-left mb-4">
+          <v-btn
+            variant="text"
+            color="primary"
+            size="small"
+            @click="goToForgotPassword"
+          >
+            Forgot Password?
+          </v-btn>
         </div>
         <v-btn
           :disabled="!formValid || loading"
@@ -82,17 +85,16 @@
             variant="tonal"
             class="mb-3"
             icon="mdi-information"
+            density="compact"
           >
-            <v-card-title class="mb-2">
-              <strong>This is a portfolio demo.</strong>
-            </v-card-title>
-            <v-card-subtitle class="mb-0">New signups are disabled.</v-card-subtitle>
+            <v-alert-title class="text-body-2">This is a portfolio demo. New signups are disabled.</v-alert-title>
           </v-alert>
           <v-card-subtitle class="text-grey-darken-2 mb-2">For demo access, contact:</v-card-subtitle>
           <v-chip
             color="primary"
             variant="outlined"
             prepend-icon="mdi-email"
+            size="small"
             @click="contactDeveloper"
           >
             mertaksehirlioglu@hotmail.com
