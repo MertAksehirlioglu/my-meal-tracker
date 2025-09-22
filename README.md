@@ -217,25 +217,52 @@ npm run check        # Run all checks (typecheck, lint, format)
 
 ## 🚀 Deployment
 
-### Recommended Platforms
+### Vercel (Recommended)
 
-**[Vercel](https://vercel.com/)** (Recommended)
+The project includes a `vercel.json` configuration for seamless deployment with auto-deploy on commits.
 
-```bash
-npm run build
-# Deploy to Vercel with zero configuration
-```
+#### Quick Setup:
+1. Fork/clone this repository
+2. Connect to [Vercel](https://vercel.com) with your GitHub account
+3. Import the repository - Vercel auto-detects Nuxt 3
+4. Configure environment variables in Vercel dashboard:
+   ```
+   SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_KEY=your-anon-key
+   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+   SUPABASE_MEAL_IMAGES_BUCKET=meal-images
+   VITE_CONTACT_MAIL=your-email@example.com
+   VITE_HUGGING_FACE_TOKEN=your-hf-token (optional)
+   NUXT_PUBLIC_SIGNUP_DISABLED=true  # For portfolio demo
+   ```
+5. Deploy! 🚀
+
+#### Auto-Deployment:
+- **Main branch**: Automatic production deployments
+- **Pull requests**: Preview deployments for testing
+- **Zero configuration**: Uses included `vercel.json` settings
+
+### Alternative Platforms
 
 **[Netlify](https://netlify.com/)**
-
 ```bash
 npm run generate
 # Deploy static site to Netlify
 ```
 
-### Environment Variables for Production
+**GitHub Actions + GitHub Pages**
+```bash
+# Use the workflow in .github/workflows/deploy.yml
+# Automatic deployment on push to main branch
+```
 
-Ensure all production environment variables are configured in your hosting platform.
+### Portfolio Demo Configuration
+
+For portfolio/demo deployments, set `NUXT_PUBLIC_SIGNUP_DISABLED=true` to:
+- Disable new user registrations
+- Show professional demo messaging
+- Direct users to contact developer for test access
+- Display links to screenshots and documentation
 
 ---
 
