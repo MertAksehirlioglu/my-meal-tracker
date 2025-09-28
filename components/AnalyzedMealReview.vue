@@ -233,6 +233,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 const { user } = useAuth()
+const { checkDemoRestriction } = useDemoNotification()
 
 // Form refs
 const form = ref()
@@ -328,6 +329,11 @@ const adjustNutritionForPortion = (newSize: string) => {
 const saveMeal = async () => {
   if (!form.value?.validate()) return
   if (!user.value?.id) return
+
+  // Check demo user restrictions
+  if (checkDemoRestriction('saving meals')) {
+    return
+  }
 
   const mealPayload = {
     ...mealData,

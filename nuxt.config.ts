@@ -10,6 +10,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       signupDisabled: process.env.NUXT_PUBLIC_SIGNUP_DISABLED === 'true',
+      demoEmail: process.env.NUXT_PUBLIC_DEMO_EMAIL,
+      demoPassword: process.env.NUXT_PUBLIC_DEMO_PASSWORD,
     },
   },
   app: {

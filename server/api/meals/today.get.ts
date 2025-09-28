@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Meal } from '~/server/database/schemas'
 import { requireAuth } from '~/server/utils/auth'
+import { isDemoUser } from '~/server/utils/demo'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -8,10 +9,29 @@ export default defineEventHandler(async (event) => {
     const user = requireAuth(event)
     const userId = user.id
 
-    // Create Supabase client
+    // Check if this is the demo user and return dummy data
+    if (isDemoUser(user)) {
+      // Import demo data helper
+      const { useDemoData } = await import('~/composables/useDemoData')
+      const { getTodaysMeals } = useDemoData()
+      const todaysMeals = getTodaysMeals()
+
+      // Override user_id to match the authenticated demo user
+      const userDemoMeals: Meal[] = todaysMeals.map((meal) => ({
+        ...meal,
+        user_id: userId,
+      }))
+
+      return {
+        success: true,
+        data: userDemoMeals,
+        message: 'Demo meals fetched successfully',
+      }
+    }
+
+    // Create Supabase client for non-demo users
     const supabaseUrl = process.env.SUPABASE_URL!
-    const supabaseKey =
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY!
+    const supabaseKey = process.env.SUPABASE_KEY!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Get today's date range (use local timezone)

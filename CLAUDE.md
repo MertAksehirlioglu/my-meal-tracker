@@ -42,7 +42,6 @@ Copy `.env.example` to `.env` and configure:
 
 - `SUPABASE_URL` - Your Supabase project URL
 - `SUPABASE_KEY` - Your Supabase anon key
-- `SUPABASE_SERVICE_ROLE_KEY` - Service role key for server-side operations
 - `VITE_CONTACT_MAIL` - Contact email address
 - `SUPABASE_MEAL_IMAGES_BUCKET` - Bucket name for meal image storage
 

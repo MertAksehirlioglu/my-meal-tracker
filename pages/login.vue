@@ -1,6 +1,7 @@
 <template>
   <v-container
     class="d-flex flex-column align-center justify-center text-center"
+    style="min-height: 100vh"
   >
     <img
       src="/logo.png"
@@ -79,7 +80,7 @@
         >
           Sign Up Now
         </v-btn>
-        <v-card-text v-else class="text-center">
+        <div v-else class="text-center">
           <v-alert
             type="info"
             variant="tonal"
@@ -87,9 +88,33 @@
             icon="mdi-information"
             density="compact"
           >
-            <v-alert-title class="text-body-2">This is a portfolio demo. New signups are disabled.</v-alert-title>
+            <v-alert-title class="text-body-2"
+              >This is a portfolio demo. New signups are
+              disabled.</v-alert-title
+            >
           </v-alert>
-          <v-card-subtitle class="text-grey-darken-2 mb-2">For demo access, contact:</v-card-subtitle>
+          <v-btn
+            :disabled="loading"
+            color="primary"
+            variant="outlined"
+            block
+            size="large"
+            class="mb-3"
+            @click="onDemoLogin"
+          >
+            <v-progress-circular
+              v-if="loading"
+              indeterminate
+              color="primary"
+              size="20"
+              class="mr-2"
+            />
+            <v-icon class="mr-2">mdi-account-eye</v-icon>
+            Try Demo Mode
+          </v-btn>
+          <v-card-subtitle class="text-grey-darken-2 mb-2"
+            >For demo access, contact:</v-card-subtitle
+          >
           <v-chip
             color="primary"
             variant="outlined"
@@ -99,7 +124,7 @@
           >
             mertaksehirlioglu@hotmail.com
           </v-chip>
-        </v-card-text>
+        </div>
         <v-alert v-if="error" type="error" class="mt-2">{{ error }}</v-alert>
       </v-form>
     </v-card>
@@ -116,7 +141,7 @@ const password = ref('')
 const formValid = ref(false)
 const formRef = ref()
 const router = useRouter()
-const { login, loading, error } = useAuth()
+const { login, loginDemo, loading, error } = useAuth()
 
 const config = useRuntimeConfig()
 const signupDisabled = computed(() => config.public.signupDisabled)
@@ -131,6 +156,14 @@ async function onSubmit() {
   const { error: loginError } = await login(email.value, password.value)
   if (!loginError) {
     // Redirect to home page on successful login
+    router.push('/home')
+  }
+}
+
+async function onDemoLogin() {
+  const { error: loginError } = await loginDemo()
+  if (!loginError) {
+    // Redirect to home page on successful demo login
     router.push('/home')
   }
 }

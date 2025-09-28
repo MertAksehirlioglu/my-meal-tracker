@@ -136,7 +136,6 @@ Create a `.env` file with the following variables:
 # Supabase Configuration
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 # Storage Configuration
 SUPABASE_MEAL_IMAGES_BUCKET=meal-images
@@ -222,6 +221,7 @@ npm run check        # Run all checks (typecheck, lint, format)
 The project includes a `vercel.json` configuration for seamless deployment with auto-deploy on commits.
 
 #### Quick Setup:
+
 1. Fork/clone this repository
 2. Connect to [Vercel](https://vercel.com) with your GitHub account
 3. Import the repository - Vercel auto-detects Nuxt 3
@@ -229,7 +229,6 @@ The project includes a `vercel.json` configuration for seamless deployment with 
    ```
    SUPABASE_URL=https://your-project.supabase.co
    SUPABASE_KEY=your-anon-key
-   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
    SUPABASE_MEAL_IMAGES_BUCKET=meal-images
    VITE_CONTACT_MAIL=your-email@example.com
    VITE_HUGGING_FACE_TOKEN=your-hf-token (optional)
@@ -238,6 +237,7 @@ The project includes a `vercel.json` configuration for seamless deployment with 
 5. Deploy! 🚀
 
 #### Auto-Deployment:
+
 - **Main branch**: Automatic production deployments
 - **Pull requests**: Preview deployments for testing
 - **Zero configuration**: Uses included `vercel.json` settings
@@ -245,12 +245,14 @@ The project includes a `vercel.json` configuration for seamless deployment with 
 ### Alternative Platforms
 
 **[Netlify](https://netlify.com/)**
+
 ```bash
 npm run generate
 # Deploy static site to Netlify
 ```
 
 **GitHub Actions + GitHub Pages**
+
 ```bash
 # Use the workflow in .github/workflows/deploy.yml
 # Automatic deployment on push to main branch
@@ -259,6 +261,7 @@ npm run generate
 ### Portfolio Demo Configuration
 
 For portfolio/demo deployments, set `NUXT_PUBLIC_SIGNUP_DISABLED=true` to:
+
 - Disable new user registrations
 - Show professional demo messaging
 - Direct users to contact developer for test access

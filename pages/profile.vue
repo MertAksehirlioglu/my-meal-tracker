@@ -5,6 +5,22 @@
       <h1 class="text-h5 font-weight-bold">Profile</h1>
     </div>
 
+    <!-- Demo Mode Notice -->
+    <v-alert
+      v-if="isDemoUser"
+      type="info"
+      variant="tonal"
+      class="mb-6"
+      icon="mdi-information"
+    >
+      <v-alert-title>Demo Mode</v-alert-title>
+      You're viewing demo profile data. Profile changes and avatar uploads are not available in demo mode.
+      <a href="/signup" class="text-primary text-decoration-none font-weight-bold">
+        Create an account
+      </a>
+      to save your personal information and customize your profile.
+    </v-alert>
+
     <v-form ref="formRef" v-model="formValid" @submit.prevent="saveProfile">
       <!-- Personal Information -->
       <v-card class="mb-6" elevation="2" rounded="lg">
@@ -216,7 +232,7 @@ definePageMeta({
 })
 
 // const router = useRouter() // TODO: Use router when needed
-const { user } = useAuth()
+const { user, isDemoUser } = useAuth()
 
 // Form refs
 const formRef = ref()
@@ -283,6 +299,12 @@ const loadProfile = async () => {
 const saveProfile = async () => {
   if (!user.value?.id) return
 
+  // Show demo restriction message for demo users
+  if (isDemoUser.value) {
+    error.value = 'Profile updates are not available in demo mode. Sign up for a full account to save your profile changes!'
+    return
+  }
+
   loading.value = true
   error.value = ''
   success.value = false
@@ -322,6 +344,14 @@ const handleAvatarUpload = async (event: Event) => {
   const file = target.files?.[0]
 
   if (!file || !user.value?.id) return
+
+  // Show demo restriction message for demo users
+  if (isDemoUser.value) {
+    error.value = 'Avatar uploads are not available in demo mode. Sign up for a full account to upload a profile picture!'
+    // Reset file input
+    if (target) target.value = ''
+    return
+  }
 
   try {
     loading.value = true

@@ -130,16 +130,14 @@
     >
       <div v-if="!signupDisabled" class="text-center">
         <h2 class="font-weight-bold mb-2">Ready to Start?</h2>
-        <v-btn
-          variant="outlined"
-          size="x-large"
-          @click="goToSignupPage"
-        >
+        <v-btn variant="outlined" size="x-large" @click="goToSignupPage">
           Sign Up Free
         </v-btn>
       </div>
       <v-card v-else variant="text" class="text-center">
-        <v-card-title class="font-weight-bold mb-2">Portfolio Demo</v-card-title>
+        <v-card-title class="font-weight-bold mb-2"
+          >Portfolio Demo</v-card-title
+        >
         <v-card-text>
           <v-card-subtitle class="mb-3">
             This is a portfolio demonstration. New signups are disabled.

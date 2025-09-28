@@ -1,11 +1,15 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Meal } from '~/server/database/schemas'
 import { requireAuth, validateInput, validators } from '~/server/utils/auth'
+import { blockDemoUserWrite } from '~/server/utils/demo'
 
 export default defineEventHandler(async (event) => {
   try {
     // Validate authentication - this is critical for security
     const user = requireAuth(event)
+
+    // Block demo users from creating meals
+    blockDemoUserWrite(event)
 
     const body = await readBody(event)
     const {
@@ -65,8 +69,7 @@ export default defineEventHandler(async (event) => {
 
     // Create Supabase client
     const supabaseUrl = process.env.SUPABASE_URL!
-    const supabaseKey =
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY!
+    const supabaseKey = process.env.SUPABASE_KEY!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Prepare meal data

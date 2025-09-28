@@ -1,10 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 import { requireAuth } from '~/server/utils/auth'
+import { blockDemoUserWrite } from '~/server/utils/demo'
 
 export default defineEventHandler(async (event) => {
   try {
     // Validate authentication
     const user = requireAuth(event)
+
+    // Block demo users from creating sample data
+    blockDemoUserWrite(event)
 
     // Create Supabase client with user's session (not service role)
     // This ensures RLS policies work correctly
@@ -21,32 +25,25 @@ export default defineEventHandler(async (event) => {
       },
     })
 
+    // Import demo data helper to get sample meals
+    const { useDemoData } = await import('~/composables/useDemoData')
+    const { getTodaysMeals, demoGoals } = useDemoData()
+    const sampleMealsTemplate = getTodaysMeals()
+
     // Add sample meal data for the user
-    const today = new Date()
-    const sampleMeals = [
-      {
-        user_id: user.id,
-        name: 'Chicken Salad Bowl',
-        meal_type: 'lunch',
-        consumed_at: new Date(today.getTime() - 2 * 60 * 60 * 1000), // 2 hours ago
-        total_calories: 450,
-        total_protein: 35,
-        total_carbs: 25,
-        total_fat: 18,
-        notes: 'Grilled chicken with mixed greens and avocado',
-      },
-      {
-        user_id: user.id,
-        name: 'Greek Yogurt with Berries',
-        meal_type: 'breakfast',
-        consumed_at: new Date(today.getTime() - 5 * 60 * 60 * 1000), // 5 hours ago
-        total_calories: 220,
-        total_protein: 15,
-        total_carbs: 30,
-        total_fat: 5,
-        notes: 'Greek yogurt topped with blueberries and honey',
-      },
-    ]
+    const sampleMeals = sampleMealsTemplate.map((meal) => ({
+      user_id: user.id,
+      name: meal.name,
+      meal_type: meal.meal_type,
+      consumed_at: meal.consumed_at,
+      total_calories: meal.total_calories,
+      total_protein: meal.total_protein,
+      total_carbs: meal.total_carbs,
+      total_fat: meal.total_fat,
+      total_fiber: meal.total_fiber,
+      total_sugar: meal.total_sugar,
+      notes: meal.notes,
+    }))
 
     // Insert sample meals
     const { data: mealsData, error: mealsError } = await supabase
@@ -62,15 +59,15 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Add sample user goals
+    // Add sample user goals from demo data
     const sampleGoals = {
       user_id: user.id,
-      target_calories: 2000,
-      target_protein: 150,
-      target_carbs: 250,
-      target_fat: 65,
-      start_date: today.toISOString().split('T')[0],
-      is_active: true,
+      target_calories: demoGoals.target_calories,
+      target_protein: demoGoals.target_protein,
+      target_carbs: demoGoals.target_carbs,
+      target_fat: demoGoals.target_fat,
+      start_date: demoGoals.start_date,
+      is_active: demoGoals.is_active,
     }
 
     const { data: goalsData, error: goalsError } = await supabase

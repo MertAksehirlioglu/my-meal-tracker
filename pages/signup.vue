@@ -1,155 +1,111 @@
 <template>
   <v-container
-    class="fill-height d-flex flex-column align-center justify-center"
+    class="d-flex align-center justify-center"
+    style="min-height: 100vh"
   >
-    <v-card
-      class="pa-8 py-10 mx-auto"
-      max-width="450"
-      elevation="10"
-      rounded="xl"
-    >
-      <div class="d-flex flex-column align-center mb-6">
+    <v-card max-width="400" class="pa-6">
+      <div class="text-center mb-4">
         <img
           src="/logo.png"
           alt="MealSnap Logo"
-          class="mb-4"
-          style="max-width: 64px; max-height: 64px; border-radius: 12px"
+          class="mb-3"
+          style="max-width: 48px; max-height: 48px; border-radius: 8px"
         />
-        <h1 class="font-weight-bold mb-6 text-primary">MealSnap</h1>
-        <h2 class="font-weight-bold mb-2 text-primary">
-          {{ signupDisabled ? 'Portfolio Demo' : 'Sign Up' }}
-        </h2>
-        <p class="mb-4 text-grey-darken-1">
-          {{
-            signupDisabled
-              ? 'This is a portfolio demonstration application.'
-              : 'Create your account to start tracking your meals and goals.'
-          }}
+        <h1 class="text-h4 font-weight-bold text-primary mb-2">MealSnap</h1>
+        <p class="text-grey-darken-1">
+          {{ signupDisabled ? 'Portfolio Demo' : 'Create Account' }}
         </p>
       </div>
 
-      <!-- Signup Disabled Message -->
-      <div v-if="signupDisabled" class="text-center">
-        <v-alert
-          type="info"
-          variant="tonal"
-          class="mb-4"
-          icon="mdi-information"
-        >
-          <div class="mb-3">
-            <strong>New signups are currently disabled.</strong>
-          </div>
-          <p class="mb-2">This app is not intended for production use.</p>
+      <div v-if="signupDisabled">
+        <v-alert type="info" class="mb-4">
+          New signups are disabled. This is a demo deployment.
         </v-alert>
 
-        <v-card-text class="text-center">
-          <v-card-subtitle class="mb-2">To see how the app works:</v-card-subtitle>
-          <v-row justify="center" class="mb-3">
-            <v-col cols="auto">
-              <v-btn
-                variant="outlined"
-                color="primary"
-                prepend-icon="mdi-image-multiple"
-                @click="viewScreenshots"
-              >
-                View Screenshots
-              </v-btn>
-            </v-col>
-            <v-col cols="auto">
-              <v-btn
-                variant="outlined"
-                color="primary"
-                prepend-icon="mdi-email"
-                @click="requestTestUser"
-              >
-                Request Test User
-              </v-btn>
-            </v-col>
-          </v-row>
-        </v-card-text>
+        <v-btn
+          :loading="loading"
+          color="primary"
+          variant="outlined"
+          block
+          class="mb-3"
+          @click="onDemoLogin"
+        >
+          <v-icon class="mr-2">mdi-account-eye</v-icon>
+          Try Demo Mode
+        </v-btn>
 
-        <v-divider class="my-4" />
-
-        <v-card-text class="text-center">
-          <v-card-subtitle class="text-grey-darken-2 mb-2">Contact the developer:</v-card-subtitle>
-          <v-chip
-            color="primary"
+        <div class="d-flex ga-2">
+          <v-btn
             variant="outlined"
+            color="primary"
+            size="small"
+            prepend-icon="mdi-image-multiple"
+            style="flex: 1"
+            @click="viewScreenshots"
+          >
+            Screenshots
+          </v-btn>
+          <v-btn
+            variant="outlined"
+            color="primary"
+            size="small"
             prepend-icon="mdi-email"
+            style="flex: 1"
             @click="contactDeveloper"
           >
-            mertaksehirlioglu@hotmail.com
-          </v-chip>
-        </v-card-text>
+            Contact
+          </v-btn>
+        </div>
       </div>
 
-      <!-- Regular Signup Form -->
-      <v-form
-        v-else
-        ref="formRef"
-        v-model="formValid"
-        @submit.prevent="onSubmit"
-      >
+      <v-form v-else @submit.prevent="onSubmit">
         <v-text-field
           v-model="name"
           label="Name"
-          :rules="[(v) => !!v || 'Name is required']"
-          required
           color="primary"
+          :rules="[(v) => !!v || 'Name is required']"
           class="mb-3"
         />
         <v-text-field
           v-model="email"
           label="Email"
+          type="email"
+          color="primary"
           :rules="[
             (v) => !!v || 'Email is required',
             (v) => /.+@.+\..+/.test(v) || 'Email must be valid',
           ]"
-          required
-          color="primary"
-          type="email"
           class="mb-3"
         />
         <v-text-field
           v-model="password"
           label="Password"
+          type="password"
+          color="primary"
           :rules="[
             (v) => !!v || 'Password is required',
             (v) => v.length >= 6 || 'Password must be at least 6 characters',
           ]"
-          required
-          color="primary"
-          type="password"
           class="mb-4"
         />
         <v-btn
-          :disabled="!formValid || loading"
+          :loading="loading"
+          :disabled="!formValid"
           color="primary"
           block
-          size="large"
           type="submit"
         >
-          <v-progress-circular
-            v-if="loading"
-            indeterminate
-            color="white"
-            size="20"
-            class="mr-2"
-          />
           Sign Up
         </v-btn>
-        <v-alert v-if="error" type="error" class="mt-2">{{ error }}</v-alert>
-        <v-alert v-if="success" type="success" class="mt-2"
-          >Account created! Please check your email to confirm your
-          account.</v-alert
-        >
+        <v-alert v-if="error" type="error" class="mt-3">{{ error }}</v-alert>
+        <v-alert v-if="success" type="success" class="mt-3">
+          Account created! Check your email to confirm.
+        </v-alert>
       </v-form>
 
-      <div class="mt-4 text-center">
-        <span class="text-grey-darken-1">Already have an account?</span>
-        <v-btn variant="text" color="primary" class="ml-1" @click="goToLogin"
-          >Login</v-btn
-        >
+      <div class="text-center mt-4">
+        <span class="text-grey-darken-1">Already have an account? </span>
+        <v-btn variant="text" color="primary" @click="goToLogin">Login</v-btn>
       </div>
     </v-card>
   </v-container>
@@ -163,30 +119,28 @@ import { useAuth } from '~/composables/useAuth'
 const name = ref('')
 const email = ref('')
 const password = ref('')
-const formValid = ref(false)
-const formRef = ref()
+const formValid = ref(true)
 const success = ref(false)
 const router = useRouter()
-const { register, updateProfile, loading, error } = useAuth()
+const { register, updateProfile, loginDemo, loading, error } = useAuth()
 
 const config = useRuntimeConfig()
 const signupDisabled = computed(() => config.public.signupDisabled)
 
 async function onSubmit() {
-  if (!formRef.value?.validate()) return
   success.value = false
   const { error: regError } = await register(email.value, password.value)
   if (!regError) {
     await updateProfile({ name: name.value })
     success.value = true
-    setTimeout(() => {
-      success.value = false
-      name.value = ''
-      email.value = ''
-      password.value = ''
-      formRef.value?.resetValidation()
-      router.push('/home')
-    }, 3500)
+    setTimeout(() => router.push('/home'), 2000)
+  }
+}
+
+async function onDemoLogin() {
+  const { error: loginError } = await loginDemo()
+  if (!loginError) {
+    router.push('/home')
   }
 }
 
@@ -201,17 +155,9 @@ function viewScreenshots() {
   )
 }
 
-function requestTestUser() {
-  contactDeveloper()
-}
-
 function contactDeveloper() {
-  const subject = encodeURIComponent(
-    'MealSnap Portfolio Demo - Test User Request'
-  )
-  const body = encodeURIComponent(
-    'Hi Mert,\n\nI would like to request a test user account for your MealSnap portfolio application.\n\nThank you!'
-  )
+  const subject = 'MealSnap Demo Request'
+  const body = 'Hi, I would like to request access to the MealSnap demo.'
   window.open(
     `mailto:mertaksehirlioglu@hotmail.com?subject=${subject}&body=${body}`
   )

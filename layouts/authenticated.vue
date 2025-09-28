@@ -8,6 +8,17 @@
             <v-img src="/logo.png" alt="MealSnap Logo" />
           </v-avatar>
           <h1 class="text-h5 font-weight-bold text-primary">MealSnap</h1>
+          <!-- Demo Mode Indicator -->
+          <v-chip
+            v-if="isDemoUser"
+            color="primary"
+            variant="outlined"
+            size="small"
+            class="ml-3"
+            prepend-icon="mdi-test-tube"
+          >
+            Demo Mode
+          </v-chip>
         </div>
 
         <div class="d-flex align-center">
@@ -62,6 +73,9 @@
     <v-main style="padding-top: 80px">
       <slot />
     </v-main>
+
+    <!-- Demo Notifications -->
+    <DemoNotification />
   </v-app>
 </template>
 
@@ -69,9 +83,10 @@
 import { useRouter } from 'vue-router'
 import { useAuth } from '~/composables/useAuth'
 import { onMounted } from 'vue'
+import DemoNotification from '~/components/DemoNotification.vue'
 
 const router = useRouter()
-const { logout: authLogout, loading, isAuthenticated } = useAuth()
+const { logout: authLogout, loading, isAuthenticated, isDemoUser } = useAuth()
 
 onMounted(() => {
   if (!isAuthenticated.value) {

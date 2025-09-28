@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import type { UserGoal } from '~/server/database/schemas'
+import type { User } from '~/server/database/schemas'
 import { requireAuth } from '~/server/utils/auth'
 import { isDemoUser } from '~/server/utils/demo'
 
@@ -7,24 +7,33 @@ export default defineEventHandler(async (event) => {
   try {
     // Validate authentication
     const user = requireAuth(event)
-    const userId = user.id
+    const requestedUserId = getRouterParam(event, 'id')
 
-    // Check if this is the demo user and return dummy data
+    // Ensure user can only access their own profile
+    if (user.id !== requestedUserId) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: 'Forbidden: Can only access your own profile',
+      })
+    }
+
+    // Check if this is the demo user and return demo data
     if (isDemoUser(user)) {
       // Import demo data helper
       const { useDemoData } = await import('~/composables/useDemoData')
-      const { demoGoals } = useDemoData()
+      const { demoUser } = useDemoData()
 
       // Override user_id to match the authenticated demo user
-      const userDemoGoals: UserGoal = {
-        ...demoGoals,
-        user_id: userId,
+      const userDemoProfile: User = {
+        ...demoUser,
+        id: user.id,
+        email: user.email || demoUser.email,
       }
 
       return {
         success: true,
-        data: userDemoGoals,
-        message: 'Demo goals fetched successfully',
+        data: userDemoProfile,
+        message: 'Demo profile fetched successfully',
       }
     }
 
@@ -33,12 +42,11 @@ export default defineEventHandler(async (event) => {
     const supabaseKey = process.env.SUPABASE_KEY!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    // Fetch active user goals
+    // Fetch user profile
     const { data, error } = await supabase
-      .from('user_goals')
+      .from('users')
       .select('*')
-      .eq('user_id', userId)
-      .eq('is_active', true)
+      .eq('id', user.id)
       .single()
 
     if (error && error.code !== 'PGRST116') {
@@ -46,17 +54,17 @@ export default defineEventHandler(async (event) => {
       console.error('Database error:', error)
       throw createError({
         statusCode: 500,
-        statusMessage: 'Failed to fetch goals',
+        statusMessage: 'Failed to fetch user profile',
       })
     }
 
     return {
       success: true,
-      data: data as UserGoal | null,
-      message: 'Goals fetched successfully',
+      data: data as User | null,
+      message: 'Profile fetched successfully',
     }
   } catch (error: unknown) {
-    console.error('Error fetching goals:', error)
+    console.error('Error fetching user profile:', error)
 
     if ((error as { statusCode?: number })?.statusCode) {
       throw error

@@ -201,6 +201,7 @@ definePageMeta({
 
 const router = useRouter()
 const { user } = useAuth()
+const { checkDemoRestriction } = useDemoNotification()
 
 // Form refs
 const form = ref()
@@ -246,6 +247,11 @@ const rules = {
 const saveMeal = async () => {
   if (!form.value?.validate()) return
   if (!user.value?.id) return
+
+  // Check demo user restrictions
+  if (checkDemoRestriction('saving meals')) {
+    return
+  }
 
   loading.value = true
   try {
