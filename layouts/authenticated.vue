@@ -32,6 +32,21 @@
             <v-icon>mdi-home</v-icon>
           </v-btn>
 
+          <!-- History Button -->
+          <v-btn
+            icon
+            :color="$route.path === '/history' ? 'primary' : 'grey'"
+            class="mr-2"
+            @click="router.push('/history')"
+          >
+            <v-icon>mdi-history</v-icon>
+          </v-btn>
+
+          <!-- Dark Mode Toggle -->
+          <v-btn icon class="mr-2" @click="toggleDarkMode">
+            <v-icon>{{ isDark ? 'mdi-weather-sunny' : 'mdi-weather-night' }}</v-icon>
+          </v-btn>
+
           <!-- Profile Menu -->
           <v-menu>
             <template #activator="{ props }">
@@ -80,19 +95,34 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useTheme } from 'vuetify'
 import { useAuth } from '~/composables/useAuth'
-import { onMounted } from 'vue'
 import DemoNotification from '~/components/DemoNotification.vue'
 
 const router = useRouter()
+const theme = useTheme()
 const { logout: authLogout, loading, isAuthenticated, isDemoUser } = useAuth()
+
+const isDark = ref(false)
 
 onMounted(() => {
   if (!isAuthenticated.value) {
     router.push('/login')
   }
+  const saved = localStorage.getItem('mealsnap-theme')
+  if (saved === 'dark') {
+    isDark.value = true
+    theme.global.name.value = 'dark'
+  }
 })
+
+const toggleDarkMode = () => {
+  isDark.value = !isDark.value
+  theme.global.name.value = isDark.value ? 'dark' : 'light'
+  localStorage.setItem('mealsnap-theme', isDark.value ? 'dark' : 'light')
+}
 
 const goToHome = () => {
   router.push('/home')
