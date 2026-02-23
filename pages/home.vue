@@ -231,13 +231,61 @@
           </v-card>
         </v-overlay>
 
+        <!-- Weekly Progress Summary -->
+        <v-card v-if="weeklyData.length > 0" class="mb-6" elevation="2" rounded="lg">
+          <v-card-title class="d-flex align-center justify-space-between">
+            <span class="text-h6 font-weight-bold">Last 7 Days</span>
+            <v-btn size="small" variant="text" color="primary" @click="router.push('/history')">
+              View History
+            </v-btn>
+          </v-card-title>
+          <v-card-text>
+            <v-row>
+              <v-col
+                v-for="day in weeklyData"
+                :key="day.date"
+                cols="auto"
+                class="text-center pa-1 flex-grow-1"
+              >
+                <div class="text-caption text-grey mb-1">{{ formatShortDate(day.date) }}</div>
+                <div
+                  class="mx-auto rounded"
+                  style="width: 28px; background: #e0e0e0; position: relative"
+                  :style="{ height: '60px' }"
+                >
+                  <div
+                    class="rounded"
+                    style="width: 100%; position: absolute; bottom: 0; background: #1976d2; transition: height 0.3s"
+                    :style="{ height: getBarHeight(day.total_calories) }"
+                  />
+                </div>
+                <div class="text-caption mt-1" style="font-size:10px">
+                  {{ day.total_calories > 0 ? day.total_calories : '–' }}
+                </div>
+              </v-col>
+            </v-row>
+            <div class="text-caption text-grey text-center mt-2">Calories per day</div>
+          </v-card-text>
+        </v-card>
+
         <!-- Today's Meals -->
         <v-card elevation="2" rounded="lg">
           <v-card-title class="d-flex align-center justify-space-between">
             <span class="text-h6 font-weight-bold">Today's Meals</span>
-            <v-chip v-if="todayMeals.length > 0" color="primary" size="small">
-              {{ todayMeals.length }} meals
-            </v-chip>
+            <div class="d-flex align-center gap-2">
+              <v-chip v-if="todayMeals.length > 0" color="primary" size="small">
+                {{ todayMeals.length }} meals
+              </v-chip>
+              <v-btn
+                v-if="todayMeals.length > 0"
+                size="small"
+                variant="text"
+                color="primary"
+                @click="router.push('/history')"
+              >
+                History
+              </v-btn>
+            </div>
           </v-card-title>
 
           <v-card-text>
@@ -279,13 +327,25 @@
                   </v-list-item-subtitle>
 
                   <template #append>
-                    <div class="text-right">
-                      <div class="font-weight-medium">
-                        {{ meal.total_calories }} cal
+                    <div class="d-flex align-center gap-2">
+                      <div class="text-right">
+                        <div class="font-weight-medium">
+                          {{ meal.total_calories }} cal
+                        </div>
+                        <div class="text-caption text-grey">
+                          {{ meal.total_protein }}g protein
+                        </div>
                       </div>
-                      <div class="text-caption text-grey">
-                        {{ meal.total_protein }}g protein
-                      </div>
+                      <v-btn
+                        icon
+                        size="small"
+                        color="error"
+                        variant="text"
+                        :loading="deletingMealId === meal.id"
+                        @click="confirmDeleteMeal(meal)"
+                      >
+                        <v-icon size="18">mdi-delete</v-icon>
+                      </v-btn>
                     </div>
                   </template>
                 </v-list-item>
@@ -307,6 +367,28 @@
     >
       <v-icon size="32">mdi-camera</v-icon>
     </v-btn>
+
+    <!-- Delete confirmation dialog -->
+    <v-dialog v-model="deleteDialog" max-width="400">
+      <v-card rounded="lg">
+        <v-card-title class="text-h6">Delete Meal?</v-card-title>
+        <v-card-text>
+          Are you sure you want to delete <strong>{{ mealToDelete?.name }}</strong>? This action cannot be undone.
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="deleteDialog = false">Cancel</v-btn>
+          <v-btn color="error" variant="flat" :loading="!!deletingMealId" @click="deleteMeal">
+            Delete
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Snackbar feedback -->
+    <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="3000">
+      {{ snackbarMessage }}
+    </v-snackbar>
 
     <!-- Error Notifications -->
     <ErrorNotification
@@ -340,6 +422,25 @@ const todayMeals = ref<Meal[]>([])
 const userGoals = ref<UserGoal | null>(null)
 const todayProgress = ref<UserProgress | null>(null)
 const loading = computed(() => isLoading.value)
+
+// Weekly progress
+interface DailyTotal {
+  date: string
+  total_calories: number
+  total_protein: number
+  total_carbs: number
+  total_fat: number
+  meal_count: number
+}
+const weeklyData = ref<DailyTotal[]>([])
+
+// Delete state
+const deletingMealId = ref<string | null>(null)
+const deleteDialog = ref(false)
+const mealToDelete = ref<Meal | null>(null)
+const snackbar = ref(false)
+const snackbarMessage = ref('')
+const snackbarColor = ref('success')
 
 // Chart refs
 const calorieChart = ref<HTMLCanvasElement>()
@@ -592,6 +693,49 @@ const goToSnap = () => {
   router.push('/snap')
 }
 
+// Weekly bar chart helper
+const getBarHeight = (calories: number) => {
+  const maxCal = Math.max(...weeklyData.value.map((d) => d.total_calories), 1)
+  const pct = Math.min((calories / maxCal) * 100, 100)
+  return `${pct}%`
+}
+
+const formatShortDate = (dateStr: string) => {
+  const d = new Date(dateStr + 'T12:00:00')
+  return d.toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 2)
+}
+
+// Delete meal handlers
+const confirmDeleteMeal = (meal: Meal) => {
+  mealToDelete.value = meal
+  deleteDialog.value = true
+}
+
+const deleteMeal = async () => {
+  if (!mealToDelete.value) return
+  const id = mealToDelete.value.id
+  deletingMealId.value = id
+  deleteDialog.value = false
+  try {
+    const { authenticatedFetch } = useAuthenticatedFetch()
+    const res = await authenticatedFetch(`/api/meals/${id}`, { method: 'DELETE' })
+    if (!res.ok) throw new Error('Failed to delete')
+    todayMeals.value = todayMeals.value.filter((m) => m.id !== id)
+    snackbarMessage.value = 'Meal deleted'
+    snackbarColor.value = 'success'
+    snackbar.value = true
+    // Reload progress after deletion
+    await loadDashboardData()
+  } catch {
+    snackbarMessage.value = 'Could not delete meal'
+    snackbarColor.value = 'error'
+    snackbar.value = true
+  } finally {
+    deletingMealId.value = null
+    mealToDelete.value = null
+  }
+}
+
 // Load data
 const loadDashboardData = async () => {
   const result = await withErrorHandling(async () => {
@@ -629,6 +773,17 @@ const loadDashboardData = async () => {
       data?: UserProgress
     }
     todayProgress.value = progressData?.data || null
+
+    // Load weekly progress
+    try {
+      const weeklyResponse = await authenticatedFetch('/api/progress/weekly')
+      if (weeklyResponse.ok) {
+        const weeklyJson = (await weeklyResponse.json()) as { data?: DailyTotal[] }
+        weeklyData.value = weeklyJson?.data || []
+      }
+    } catch {
+      // Weekly data is non-critical; ignore errors
+    }
 
     // Update charts after data is loaded
     nextTick(() => {
