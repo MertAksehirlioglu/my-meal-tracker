@@ -311,7 +311,8 @@
                   v-for="meal in todayMeals"
                   :key="meal.id"
                   class="mb-2"
-                  style="background-color: #f5f5f5; border-radius: 8px"
+                  style="background-color: #f5f5f5; border-radius: 8px; cursor: pointer"
+                  @click="openMealDetail(meal)"
                 >
                   <template #prepend>
                     <v-icon :color="getMealTypeColor(meal.meal_type)" size="24">
@@ -342,7 +343,7 @@
                         color="error"
                         variant="text"
                         :loading="deletingMealId === meal.id"
-                        @click="confirmDeleteMeal(meal)"
+                        @click.stop="confirmDeleteMeal(meal)"
                       >
                         <v-icon size="18">mdi-delete</v-icon>
                       </v-btn>
@@ -367,6 +368,9 @@
     >
       <v-icon size="32">mdi-camera</v-icon>
     </v-btn>
+
+    <!-- Meal detail modal -->
+    <MealDetailModal v-model="detailModalOpen" :meal="selectedMeal" />
 
     <!-- Delete confirmation dialog -->
     <v-dialog v-model="deleteDialog" max-width="400">
@@ -438,6 +442,8 @@ const weeklyData = ref<DailyTotal[]>([])
 const deletingMealId = ref<string | null>(null)
 const deleteDialog = ref(false)
 const mealToDelete = ref<Meal | null>(null)
+const detailModalOpen = ref(false)
+const selectedMeal = ref<Meal | null>(null)
 const snackbar = ref(false)
 const snackbarMessage = ref('')
 const snackbarColor = ref('success')
@@ -703,6 +709,12 @@ const getBarHeight = (calories: number) => {
 const formatShortDate = (dateStr: string) => {
   const d = new Date(dateStr + 'T12:00:00')
   return d.toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 2)
+}
+
+// Meal detail modal handler
+const openMealDetail = (meal: Meal) => {
+  selectedMeal.value = meal
+  detailModalOpen.value = true
 }
 
 // Delete meal handlers
