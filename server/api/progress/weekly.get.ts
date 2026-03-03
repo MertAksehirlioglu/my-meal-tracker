@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { requireAuth } from '~/server/utils/auth'
+import { isDemoUser } from '~/server/utils/demo'
 
 interface DailyTotal {
   date: string
@@ -14,6 +15,36 @@ export default defineEventHandler(async (event) => {
   try {
     const user = requireAuth(event)
     const userId = user.id
+
+    // Check if this is the demo user and aggregate from demo data
+    if (isDemoUser(user)) {
+      const { useDemoData } = await import('~/composables/useDemoData')
+      const { demoMeals } = useDemoData()
+
+      const today = new Date()
+      const dailyMap = new Map<string, DailyTotal>()
+
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(today)
+        d.setDate(today.getDate() - i)
+        const key = d.toISOString().split('T')[0]
+        dailyMap.set(key, { date: key, total_calories: 0, total_protein: 0, total_carbs: 0, total_fat: 0, meal_count: 0 })
+      }
+
+      for (const meal of demoMeals) {
+        const key = meal.consumed_at.split('T')[0]
+        const existing = dailyMap.get(key)
+        if (existing) {
+          existing.total_calories += meal.total_calories ?? 0
+          existing.total_protein += meal.total_protein ?? 0
+          existing.total_carbs += meal.total_carbs ?? 0
+          existing.total_fat += meal.total_fat ?? 0
+          existing.meal_count += 1
+        }
+      }
+
+      return { success: true, data: Array.from(dailyMap.values()) }
+    }
 
     const supabaseUrl = process.env.SUPABASE_URL!
     const supabaseKey = process.env.SUPABASE_KEY!

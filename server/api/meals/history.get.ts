@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Meal } from '~/server/database/schemas'
 import { requireAuth } from '~/server/utils/auth'
+import { isDemoUser } from '~/server/utils/demo'
 
 export default defineEventHandler(async (event) => {
   try {
@@ -15,6 +16,23 @@ export default defineEventHandler(async (event) => {
 
     if (isNaN(targetDate.getTime())) {
       throw createError({ statusCode: 400, statusMessage: 'Invalid date parameter' })
+    }
+
+    // Check if this is the demo user and return filtered dummy data
+    if (isDemoUser(user)) {
+      const { useDemoData } = await import('~/composables/useDemoData')
+      const { demoMeals } = useDemoData()
+
+      const targetDateStr = targetDate.toISOString().split('T')[0]
+      const filtered: Meal[] = demoMeals
+        .filter((meal) => meal.consumed_at.split('T')[0] === targetDateStr)
+        .map((meal) => ({ ...meal, user_id: userId }))
+
+      return {
+        success: true,
+        data: filtered,
+        date: targetDateStr,
+      }
     }
 
     const startOfDay = new Date(

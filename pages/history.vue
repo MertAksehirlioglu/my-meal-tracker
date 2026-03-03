@@ -74,7 +74,7 @@
             <div v-else-if="meals.length === 0" class="text-center py-8">
               <v-icon size="64" color="grey-lighten-1" class="mb-4">mdi-food-off</v-icon>
               <p class="text-grey">No meals logged on this day</p>
-              <v-btn class="mt-4" color="primary" @click="router.push('/snap')">
+              <v-btn class="mt-4" color="primary" @click="router.push('/add-meal')">
                 Log a Meal
               </v-btn>
             </div>
