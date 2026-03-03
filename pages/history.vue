@@ -84,7 +84,8 @@
                 v-for="meal in meals"
                 :key="meal.id"
                 class="mb-2"
-                style="background-color:#f5f5f5; border-radius:8px"
+                style="background-color:#f5f5f5; border-radius:8px; cursor:pointer"
+                @click="openMealDetail(meal)"
               >
                 <template #prepend>
                   <v-icon :color="getMealTypeColor(meal.meal_type)" size="24">
@@ -113,7 +114,7 @@
                       color="error"
                       variant="text"
                       :loading="deletingId === meal.id"
-                      @click="confirmDelete(meal)"
+                      @click.stop="confirmDelete(meal)"
                     >
                       <v-icon size="18">mdi-delete</v-icon>
                     </v-btn>
@@ -142,6 +143,9 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Meal detail modal -->
+    <MealDetailModal v-model="detailModalOpen" :meal="selectedMeal" />
 
     <!-- Snackbar for feedback -->
     <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="3000">
@@ -174,6 +178,8 @@ const loadingMeals = ref(false)
 const deletingId = ref<string | null>(null)
 const deleteDialog = ref(false)
 const mealToDelete = ref<Meal | null>(null)
+const detailModalOpen = ref(false)
+const selectedMeal = ref<Meal | null>(null)
 const snackbar = ref(false)
 const snackbarMessage = ref('')
 const snackbarColor = ref('success')
@@ -261,6 +267,11 @@ const onDatePicked = (value: unknown) => {
   const iso = typeof raw === 'string' ? raw : (raw as Date).toISOString().split('T')[0]
   selectedDate.value = iso
   datePicker.value = false
+}
+
+const openMealDetail = (meal: Meal) => {
+  selectedMeal.value = meal
+  detailModalOpen.value = true
 }
 
 const confirmDelete = (meal: Meal) => {
