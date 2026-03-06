@@ -44,7 +44,9 @@
 
           <!-- Dark Mode Toggle -->
           <v-btn icon class="mr-2" @click="toggleDarkMode">
-            <v-icon>{{ isDark ? 'mdi-weather-sunny' : 'mdi-weather-night' }}</v-icon>
+            <v-icon>{{
+              isDark ? 'mdi-weather-sunny' : 'mdi-weather-night'
+            }}</v-icon>
           </v-btn>
 
           <!-- Profile Menu -->

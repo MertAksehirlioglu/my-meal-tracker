@@ -14,8 +14,12 @@
       icon="mdi-information"
     >
       <v-alert-title>Demo Mode</v-alert-title>
-      You're viewing demo profile data. Profile changes and avatar uploads are not available in demo mode.
-      <a href="/signup" class="text-primary text-decoration-none font-weight-bold">
+      You're viewing demo profile data. Profile changes and avatar uploads are
+      not available in demo mode.
+      <a
+        href="/signup"
+        class="text-primary text-decoration-none font-weight-bold"
+      >
         Create an account
       </a>
       to save your personal information and customize your profile.
@@ -33,7 +37,7 @@
             label="Full Name"
             variant="outlined"
             class="mb-3"
-            :rules="[(v) => !!v || 'Name is required']"
+            :rules="[requiredRule]"
             required
           />
 
@@ -56,12 +60,7 @@
                 type="number"
                 min="100"
                 max="250"
-                :rules="[
-                  (v) =>
-                    !v ||
-                    (v >= 100 && v <= 250) ||
-                    'Height must be between 100-250 cm',
-                ]"
+                :rules="[heightRule]"
               />
             </v-col>
             <v-col cols="6">
@@ -72,12 +71,7 @@
                 type="number"
                 min="30"
                 max="300"
-                :rules="[
-                  (v) =>
-                    !v ||
-                    (v >= 30 && v <= 300) ||
-                    'Weight must be between 30-300 kg',
-                ]"
+                :rules="[weightRule]"
               />
             </v-col>
           </v-row>
@@ -90,10 +84,7 @@
             type="number"
             min="13"
             max="120"
-            :rules="[
-              (v) =>
-                !v || (v >= 13 && v <= 120) || 'Age must be between 13-120',
-            ]"
+            :rules="[ageRule]"
           />
         </v-card-text>
       </v-card>
@@ -112,7 +103,7 @@
             :items="activityLevels"
             item-title="label"
             item-value="value"
-            :rules="[(v) => !!v || 'Activity level is required']"
+            :rules="[requiredRule]"
             required
           />
 
@@ -124,7 +115,7 @@
             :items="goals"
             item-title="label"
             item-value="value"
-            :rules="[(v) => !!v || 'Fitness goal is required']"
+            :rules="[requiredRule]"
             required
           />
 
@@ -136,12 +127,7 @@
             min="1200"
             max="5000"
             hint="Recommended: 1200-5000 calories"
-            :rules="[
-              (v) =>
-                !v ||
-                (v >= 1200 && v <= 5000) ||
-                'Calorie target must be between 1200-5000',
-            ]"
+            :rules="[calorieRule]"
           />
         </v-card-text>
       </v-card>
@@ -223,6 +209,7 @@
 import { ref, onMounted } from 'vue'
 // import { useRouter } from 'vue-router' // TODO: Use router when needed
 import { useAuth } from '~/composables/useAuth'
+import { useFormValidation } from '~/composables/useFormValidation'
 import type { UpdateUser } from '~/server/database/schemas'
 
 // Page meta
@@ -233,6 +220,8 @@ definePageMeta({
 
 // const router = useRouter() // TODO: Use router when needed
 const { user, isDemoUser } = useAuth()
+const { requiredRule, heightRule, weightRule, ageRule, calorieRule } =
+  useFormValidation()
 
 // Form refs
 const formRef = ref()
@@ -301,7 +290,8 @@ const saveProfile = async () => {
 
   // Show demo restriction message for demo users
   if (isDemoUser.value) {
-    error.value = 'Profile updates are not available in demo mode. Sign up for a full account to save your profile changes!'
+    error.value =
+      'Profile updates are not available in demo mode. Sign up for a full account to save your profile changes!'
     return
   }
 
@@ -347,7 +337,8 @@ const handleAvatarUpload = async (event: Event) => {
 
   // Show demo restriction message for demo users
   if (isDemoUser.value) {
-    error.value = 'Avatar uploads are not available in demo mode. Sign up for a full account to upload a profile picture!'
+    error.value =
+      'Avatar uploads are not available in demo mode. Sign up for a full account to upload a profile picture!'
     // Reset file input
     if (target) target.value = ''
     return

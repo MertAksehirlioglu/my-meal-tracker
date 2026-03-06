@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prettier --check components/landing/ composables/useAnalysisCache.ts composables/useImageOptimizer.ts composables/useOptimizedFoodAnalysis.ts composables/useDemoData.ts data/demo-meals.ts pages/index.vue)",
+      "Bash(npx prettier --write server/api/meals/history.get.ts server/api/progress/today.get.ts server/api/users/[id]/avatar.post.ts server/utils/demo-data.ts)",
+      "Bash(npx prettier --check server/)",
+      "Bash(npx prettier --check server/api/ server/utils/)",
+      "Bash(npm run lint)"
+    ]
+  }
+}

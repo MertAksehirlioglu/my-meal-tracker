@@ -2,11 +2,16 @@ import { ref, computed } from 'vue'
 
 export interface ErrorState {
   message: string
-  type: 'error' | 'warning' | 'info'
+  type: 'error' | 'warning' | 'info' | 'success'
   retryable: boolean
   timestamp: number
 }
 
+/**
+ * Centralized error handling composable.
+ * Provides consistent error management across all pages.
+ * Use withErrorHandling() for all async operations.
+ */
 export const useErrorHandling = () => {
   const errors = ref<ErrorState[]>([])
   const isLoading = ref(false)
@@ -18,7 +23,7 @@ export const useErrorHandling = () => {
 
   const addError = (
     message: string,
-    type: 'error' | 'warning' | 'info' = 'error',
+    type: 'error' | 'warning' | 'info' | 'success' = 'error',
     retryable = false
   ) => {
     errors.value.push({
@@ -34,6 +39,10 @@ export const useErrorHandling = () => {
         clearError(errors.value.length - 1)
       }, 10000)
     }
+  }
+
+  const addSuccess = (message: string) => {
+    addError(message, 'success', false)
   }
 
   const clearError = (index?: number) => {
@@ -137,10 +146,34 @@ export const useErrorHandling = () => {
     hasErrors,
     latestError,
     addError,
+    addSuccess,
     clearError,
     clearAllErrors,
     handleApiError,
     withErrorHandling,
     retry,
+  }
+}
+
+/**
+ * Helper function to create a standard error notification object
+ * that can be used with v-alert or custom notification components.
+ */
+export const createErrorNotification = (error: unknown): ErrorState => {
+  let message = 'An unexpected error occurred'
+
+  if (error instanceof Error) {
+    message = error.message
+  } else if (typeof error === 'string') {
+    message = error
+  } else if (error && typeof error === 'object' && 'message' in error) {
+    message = (error as { message: string }).message
+  }
+
+  return {
+    message,
+    type: 'error',
+    retryable: true,
+    timestamp: Date.now(),
   }
 }

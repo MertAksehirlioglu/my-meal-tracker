@@ -155,12 +155,7 @@
               min="30"
               max="300"
               class="mb-3"
-              :rules="[
-                (v) =>
-                  !v ||
-                  (v >= 30 && v <= 300) ||
-                  'Weight must be between 30-300 kg',
-              ]"
+              :rules="[weightRule]"
             />
 
             <v-text-field
@@ -171,12 +166,7 @@
               min="1200"
               max="5000"
               class="mb-3"
-              :rules="[
-                (v) =>
-                  !v ||
-                  (v >= 1200 && v <= 5000) ||
-                  'Calories must be between 1200-5000',
-              ]"
+              :rules="[calorieRule]"
             />
 
             <v-row>
@@ -189,12 +179,7 @@
                   min="0"
                   max="500"
                   class="mb-3"
-                  :rules="[
-                    (v) =>
-                      !v ||
-                      (v >= 0 && v <= 500) ||
-                      'Protein must be between 0-500g',
-                  ]"
+                  :rules="[proteinRule]"
                 />
               </v-col>
               <v-col cols="6">
@@ -206,12 +191,7 @@
                   min="0"
                   max="1000"
                   class="mb-3"
-                  :rules="[
-                    (v) =>
-                      !v ||
-                      (v >= 0 && v <= 1000) ||
-                      'Carbs must be between 0-1000g',
-                  ]"
+                  :rules="[carbsRule]"
                 />
               </v-col>
             </v-row>
@@ -224,10 +204,7 @@
               min="0"
               max="200"
               class="mb-3"
-              :rules="[
-                (v) =>
-                  !v || (v >= 0 && v <= 200) || 'Fat must be between 0-200g',
-              ]"
+              :rules="[fatRule]"
             />
 
             <v-row>
@@ -238,7 +215,7 @@
                   variant="outlined"
                   type="date"
                   class="mb-3"
-                  :rules="[(v) => !!v || 'Start date is required']"
+                  :rules="[requiredRule]"
                   required
                 />
               </v-col>
@@ -278,12 +255,14 @@
     </v-dialog>
 
     <!-- Success/Error Messages -->
-    <v-alert v-if="success" type="success" class="mt-4">
-      {{ success }}
-    </v-alert>
-
-    <v-alert v-if="error" type="error" class="mt-4">
-      {{ error }}
+    <v-alert
+      v-if="latestError"
+      :type="latestError.type"
+      closable
+      class="mt-4"
+      @click:close="clearError()"
+    >
+      {{ latestError.message }}
     </v-alert>
   </v-container>
 </template>
@@ -292,6 +271,9 @@
 import { ref, onMounted } from 'vue'
 // import { useRouter } from 'vue-router' // TODO: Use router when needed
 import { useAuth } from '~/composables/useAuth'
+import { formatDate } from '~/lib/date-utils'
+import { useFormValidation } from '~/composables/useFormValidation'
+import { useErrorHandling } from '~/composables/useErrorHandling'
 import type { UserGoal, CreateUserGoal } from '~/server/database/schemas'
 
 // Page meta
@@ -302,6 +284,16 @@ definePageMeta({
 
 // const router = useRouter() // TODO: Use router when needed
 const { user } = useAuth()
+const {
+  weightRule,
+  calorieRule,
+  proteinRule,
+  carbsRule,
+  fatRule,
+  requiredRule,
+} = useFormValidation()
+const { withErrorHandling, latestError, clearError, addSuccess } =
+  useErrorHandling()
 
 // Form refs
 const goalFormRef = ref()
@@ -313,8 +305,6 @@ const goalHistory = ref<UserGoal[]>([])
 const showGoalDialog = ref(false)
 const editingGoal = ref<UserGoal | null>(null)
 const loading = ref(false)
-const success = ref('')
-const error = ref('')
 
 // Goal form
 const goalForm = ref<CreateUserGoal>({
@@ -333,7 +323,7 @@ const goalForm = ref<CreateUserGoal>({
 const loadGoals = async () => {
   if (!user.value?.id) return
 
-  try {
+  await withErrorHandling(async () => {
     const { authenticatedFetch } = useAuthenticatedFetch()
     const response = (await authenticatedFetch('/api/goals').then((r) =>
       r.json()
@@ -345,11 +335,10 @@ const loadGoals = async () => {
       goalHistory.value = response.data || []
       activeGoal.value =
         goalHistory.value.find((goal) => goal.is_active) || null
+    } else {
+      throw new Error('Failed to load goals')
     }
-  } catch (err) {
-    console.error('Error loading goals:', err)
-    error.value = 'Failed to load goals'
-  }
+  }, 'loading goals')
 }
 
 const editGoal = (goal: UserGoal) => {
@@ -372,57 +361,56 @@ const saveGoal = async () => {
   if (!goalFormRef.value?.validate() || !user.value?.id) return
 
   loading.value = true
-  error.value = ''
-  success.value = ''
+  await withErrorHandling(
+    async () => {
+      const payload = {
+        ...goalForm.value,
+        user_id: user.value?.id || '',
+      }
 
-  try {
-    const payload = {
-      ...goalForm.value,
-      user_id: user.value.id,
-    }
-
-    const { authenticatedFetch } = useAuthenticatedFetch()
-    let response
-    if (editingGoal.value) {
-      response = (await authenticatedFetch(
-        `/api/goals/${editingGoal.value.id}`,
-        {
-          method: 'PUT',
-          body: JSON.stringify(payload),
+      const { authenticatedFetch } = useAuthenticatedFetch()
+      let response
+      if (editingGoal.value) {
+        response = (await authenticatedFetch(
+          `/api/goals/${editingGoal.value.id}`,
+          {
+            method: 'PUT',
+            body: JSON.stringify(payload),
+          }
+        ).then((r) => r.json())) as {
+          success: boolean
+          data?: UserGoal
+          message?: string
         }
-      ).then((r) => r.json())) as {
-        success: boolean
-        data?: UserGoal
-        message?: string
+      } else {
+        response = (await authenticatedFetch('/api/goals', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        }).then((r) => r.json())) as {
+          success: boolean
+          data?: UserGoal
+          message?: string
+        }
       }
-    } else {
-      response = (await authenticatedFetch('/api/goals', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      }).then((r) => r.json())) as {
-        success: boolean
-        data?: UserGoal
-        message?: string
-      }
-    }
 
-    if (response.success) {
-      success.value = editingGoal.value
-        ? 'Goal updated successfully!'
-        : 'Goal created successfully!'
-      showGoalDialog.value = false
-      editingGoal.value = null
-      resetGoalForm()
-      await loadGoals()
-    } else {
-      error.value = response.message || 'Failed to save goal'
-    }
-  } catch (err) {
-    console.error('Error saving goal:', err)
-    error.value = 'Failed to save goal'
-  } finally {
-    loading.value = false
-  }
+      if (response.success) {
+        addSuccess(
+          editingGoal.value
+            ? 'Goal updated successfully!'
+            : 'Goal created successfully!'
+        )
+        showGoalDialog.value = false
+        editingGoal.value = null
+        resetGoalForm()
+        await loadGoals()
+      } else {
+        throw new Error(response.message || 'Failed to save goal')
+      }
+    },
+    'saving goal',
+    false // Don't use built-in loading state
+  )
+  loading.value = false
 }
 
 const resetGoalForm = () => {
@@ -437,14 +425,6 @@ const resetGoalForm = () => {
     end_date: undefined,
     is_active: true,
   }
-}
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
 }
 
 const getGoalTitle = (goal: UserGoal) => {

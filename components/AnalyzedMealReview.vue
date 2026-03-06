@@ -37,7 +37,7 @@
               v-model="mealData.name"
               label="Meal Name"
               placeholder="e.g., Grilled Chicken Salad"
-              :rules="[rules.required]"
+              :rules="[requiredRule]"
               required
               variant="outlined"
               prepend-inner-icon="mdi-food"
@@ -48,7 +48,7 @@
               v-model="mealData.meal_type"
               label="Meal Type"
               :items="mealTypes"
-              :rules="[rules.required]"
+              :rules="[requiredRule]"
               required
               variant="outlined"
               prepend-inner-icon="mdi-clock-outline"
@@ -62,7 +62,7 @@
               v-model="mealData.consumed_at"
               label="Time Consumed"
               type="datetime-local"
-              :rules="[rules.required]"
+              :rules="[requiredRule]"
               required
               variant="outlined"
               prepend-inner-icon="mdi-calendar"
@@ -96,52 +96,12 @@
           </v-chip>
         </div>
 
-        <v-row>
-          <v-col cols="12" sm="6" md="3">
-            <v-text-field
-              v-model.number="mealData.total_calories"
-              label="Calories"
-              type="number"
-              :rules="[rules.required, rules.positive]"
-              required
-              variant="outlined"
-              suffix="cal"
-            />
-          </v-col>
-          <v-col cols="12" sm="6" md="3">
-            <v-text-field
-              v-model.number="mealData.total_protein"
-              label="Protein"
-              type="number"
-              :rules="[rules.required, rules.positive]"
-              required
-              variant="outlined"
-              suffix="g"
-            />
-          </v-col>
-          <v-col cols="12" sm="6" md="3">
-            <v-text-field
-              v-model.number="mealData.total_carbs"
-              label="Carbohydrates"
-              type="number"
-              :rules="[rules.required, rules.positive]"
-              required
-              variant="outlined"
-              suffix="g"
-            />
-          </v-col>
-          <v-col cols="12" sm="6" md="3">
-            <v-text-field
-              v-model.number="mealData.total_fat"
-              label="Fat"
-              type="number"
-              :rules="[rules.required, rules.positive]"
-              required
-              variant="outlined"
-              suffix="g"
-            />
-          </v-col>
-        </v-row>
+        <NutritionFieldsForm
+          v-model:total-calories="mealData.total_calories"
+          v-model:total-protein="mealData.total_protein"
+          v-model:total-carbs="mealData.total_carbs"
+          v-model:total-fat="mealData.total_fat"
+        />
 
         <!-- Additional Nutrition (Optional) -->
         <v-row>
@@ -150,7 +110,7 @@
               v-model.number="mealData.total_fiber"
               label="Fiber (optional)"
               type="number"
-              :rules="[rules.positive]"
+              :rules="[positiveRule]"
               variant="outlined"
               suffix="g"
             />
@@ -160,7 +120,7 @@
               v-model.number="mealData.total_sugar"
               label="Sugar (optional)"
               type="number"
-              :rules="[rules.positive]"
+              :rules="[positiveRule]"
               variant="outlined"
               suffix="g"
             />
@@ -208,6 +168,7 @@
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted } from 'vue'
 import { useAuth } from '~/composables/useAuth'
+import { useFormValidation } from '~/composables/useFormValidation'
 import type {
   FoodAnalysisResult,
   NutritionInfo,
@@ -234,6 +195,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>()
 const { user } = useAuth()
 const { checkDemoRestriction } = useDemoNotification()
+const { requiredRule, positiveRule } = useFormValidation()
 
 // Form refs
 const form = ref()
@@ -276,16 +238,6 @@ const portionMultipliers = {
   small: 0.75,
   medium: 1.0,
   large: 1.5,
-}
-
-// Validation rules
-const rules = {
-  required: (value: unknown) => !!value || 'This field is required',
-  positive: (value: unknown) => {
-    if (value === null || value === undefined || value === '') return true
-    const numValue = Number(value)
-    return (!isNaN(numValue) && numValue >= 0) || 'Value must be positive'
-  },
 }
 
 // Initialize data from analysis result

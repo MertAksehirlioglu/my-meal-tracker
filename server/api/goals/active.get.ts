@@ -1,70 +1,41 @@
-import { createClient } from '@supabase/supabase-js'
 import type { UserGoal } from '~/server/database/schemas'
 import { requireAuth } from '~/server/utils/auth'
 import { isDemoUser } from '~/server/utils/demo'
+import { getSupabaseClient } from '~/server/utils/supabase'
+import { defineWrappedEventHandler } from '~/server/utils/api-error'
+import { getDemoActiveGoals } from '~/server/utils/demo-data'
 
-export default defineEventHandler(async (event) => {
-  try {
-    // Validate authentication
-    const user = requireAuth(event)
-    const userId = user.id
+export default defineWrappedEventHandler(async (event) => {
+  const user = requireAuth(event)
 
-    // Check if this is the demo user and return dummy data
-    if (isDemoUser(user)) {
-      // Import demo data helper
-      const { useDemoData } = await import('~/composables/useDemoData')
-      const { demoGoals } = useDemoData()
-
-      // Override user_id to match the authenticated demo user
-      const userDemoGoals: UserGoal = {
-        ...demoGoals,
-        user_id: userId,
-      }
-
-      return {
-        success: true,
-        data: userDemoGoals,
-        message: 'Demo goals fetched successfully',
-      }
-    }
-
-    // Create Supabase client for non-demo users
-    const supabaseUrl = process.env.SUPABASE_URL!
-    const supabaseKey = process.env.SUPABASE_KEY!
-    const supabase = createClient(supabaseUrl, supabaseKey)
-
-    // Fetch active user goals
-    const { data, error } = await supabase
-      .from('user_goals')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .single()
-
-    if (error && error.code !== 'PGRST116') {
-      // PGRST116 is "not found"
-      console.error('Database error:', error)
-      throw createError({
-        statusCode: 500,
-        statusMessage: 'Failed to fetch goals',
-      })
-    }
-
+  if (isDemoUser(user)) {
     return {
       success: true,
-      data: data as UserGoal | null,
-      message: 'Goals fetched successfully',
+      data: await getDemoActiveGoals(user.id),
+      message: 'Demo goals fetched successfully',
     }
-  } catch (error: unknown) {
-    console.error('Error fetching goals:', error)
+  }
 
-    if ((error as { statusCode?: number })?.statusCode) {
-      throw error
-    }
+  const supabase = getSupabaseClient()
 
+  const { data, error } = await supabase
+    .from('user_goals')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('is_active', true)
+    .single()
+
+  // PGRST116 is "not found" — not a real error
+  if (error && error.code !== 'PGRST116') {
     throw createError({
       statusCode: 500,
-      statusMessage: 'Internal server error',
+      statusMessage: 'Failed to fetch goals',
     })
+  }
+
+  return {
+    success: true,
+    data: data as UserGoal | null,
+    message: 'Goals fetched successfully',
   }
 })

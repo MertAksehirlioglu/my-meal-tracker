@@ -1,5 +1,10 @@
 <template>
-  <v-dialog :model-value="modelValue" max-width="560" scrollable @update:model-value="$emit('update:modelValue', $event)">
+  <v-dialog
+    :model-value="modelValue"
+    max-width="560"
+    scrollable
+    @update:model-value="$emit('update:modelValue', $event)"
+  >
     <v-card rounded="lg">
       <v-card-title class="d-flex align-center justify-space-between pa-4 pb-2">
         <div>
@@ -9,7 +14,12 @@
             {{ formattedTime }} · {{ meal?.meal_type }}
           </div>
         </div>
-        <v-btn icon size="small" variant="text" @click="$emit('update:modelValue', false)">
+        <v-btn
+          icon
+          size="small"
+          variant="text"
+          @click="$emit('update:modelValue', false)"
+        >
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
@@ -21,7 +31,10 @@
         <v-row dense>
           <v-col v-for="macro in macroTotals" :key="macro.label" cols="3">
             <div class="text-center">
-              <div class="text-subtitle-2 font-weight-bold" :class="macro.colorClass">
+              <div
+                class="text-subtitle-2 font-weight-bold"
+                :class="macro.colorClass"
+              >
                 {{ macro.value }}
               </div>
               <div class="text-caption text-grey">{{ macro.label }}</div>
@@ -45,7 +58,9 @@
 
         <div v-else-if="foodItems.length === 0" class="text-center py-6 px-4">
           <v-icon color="grey-lighten-1" class="mb-2">mdi-food-off</v-icon>
-          <p class="text-caption text-grey">No food items recorded for this meal</p>
+          <p class="text-caption text-grey">
+            No food items recorded for this meal
+          </p>
         </div>
 
         <v-list v-else density="compact" class="py-0">
@@ -64,9 +79,12 @@
 
             <template #append>
               <div class="text-right">
-                <div class="text-body-2 font-weight-medium text-primary">{{ item.calories }} cal</div>
+                <div class="text-body-2 font-weight-medium text-primary">
+                  {{ item.calories }} cal
+                </div>
                 <div class="text-caption text-grey">
-                  P {{ item.protein }}g · C {{ item.carbs }}g · F {{ item.fat }}g
+                  P {{ item.protein }}g · C {{ item.carbs }}g · F
+                  {{ item.fat }}g
                 </div>
               </div>
             </template>
@@ -76,7 +94,12 @@
 
       <v-card-actions class="pa-4 pt-2">
         <v-spacer />
-        <v-btn variant="tonal" color="primary" @click="$emit('update:modelValue', false)">Close</v-btn>
+        <v-btn
+          variant="tonal"
+          color="primary"
+          @click="$emit('update:modelValue', false)"
+          >Close</v-btn
+        >
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -85,6 +108,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import type { Meal, FoodItem } from '~/server/database/schemas'
+import { useMealTypeStyles } from '~/composables/useMealTypeStyles'
+import { formatTime } from '~/lib/date-utils'
 
 const props = defineProps<{
   modelValue: boolean
@@ -96,36 +121,44 @@ defineEmits<{
 }>()
 
 const { authenticatedFetch } = useAuthenticatedFetch()
+const { getMealTypeIcon } = useMealTypeStyles()
 
 const foodItems = ref<FoodItem[]>([])
 const loading = ref(false)
 const error = ref(false)
 
-const mealTypeIcon = computed(() => {
-  const icons: Record<string, string> = {
-    breakfast: 'mdi-sunrise',
-    lunch: 'mdi-sunny',
-    dinner: 'mdi-moon-waning-crescent',
-    snack: 'mdi-food-apple',
-  }
-  return icons[props.meal?.meal_type ?? ''] ?? 'mdi-food'
-})
+const mealTypeIcon = computed(() =>
+  getMealTypeIcon(props.meal?.meal_type ?? '')
+)
 
 const formattedTime = computed(() => {
   if (!props.meal?.consumed_at) return ''
-  return new Date(props.meal.consumed_at).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-  })
+  return formatTime(props.meal.consumed_at)
 })
 
 const macroTotals = computed(() => {
   if (!props.meal) return []
   return [
-    { label: 'Calories', value: props.meal.total_calories, colorClass: 'text-primary' },
-    { label: 'Protein', value: `${Math.round(props.meal.total_protein)}g`, colorClass: 'text-success' },
-    { label: 'Carbs', value: `${Math.round(props.meal.total_carbs)}g`, colorClass: 'text-warning' },
-    { label: 'Fat', value: `${Math.round(props.meal.total_fat)}g`, colorClass: 'text-info' },
+    {
+      label: 'Calories',
+      value: props.meal.total_calories,
+      colorClass: 'text-primary',
+    },
+    {
+      label: 'Protein',
+      value: `${Math.round(props.meal.total_protein)}g`,
+      colorClass: 'text-success',
+    },
+    {
+      label: 'Carbs',
+      value: `${Math.round(props.meal.total_carbs)}g`,
+      colorClass: 'text-warning',
+    },
+    {
+      label: 'Fat',
+      value: `${Math.round(props.meal.total_fat)}g`,
+      colorClass: 'text-info',
+    },
   ]
 })
 

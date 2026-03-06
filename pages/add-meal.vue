@@ -59,52 +59,12 @@
               <v-divider class="my-4" />
               <h3 class="text-h6 mb-4">Nutrition Information</h3>
 
-              <v-row>
-                <v-col cols="12" sm="6" md="3">
-                  <v-text-field
-                    v-model.number="mealData.total_calories"
-                    label="Calories"
-                    type="number"
-                    :rules="[rules.required, rules.positive]"
-                    required
-                    variant="outlined"
-                    suffix="cal"
-                  />
-                </v-col>
-                <v-col cols="12" sm="6" md="3">
-                  <v-text-field
-                    v-model.number="mealData.total_protein"
-                    label="Protein"
-                    type="number"
-                    :rules="[rules.required, rules.positive]"
-                    required
-                    variant="outlined"
-                    suffix="g"
-                  />
-                </v-col>
-                <v-col cols="12" sm="6" md="3">
-                  <v-text-field
-                    v-model.number="mealData.total_carbs"
-                    label="Carbohydrates"
-                    type="number"
-                    :rules="[rules.required, rules.positive]"
-                    required
-                    variant="outlined"
-                    suffix="g"
-                  />
-                </v-col>
-                <v-col cols="12" sm="6" md="3">
-                  <v-text-field
-                    v-model.number="mealData.total_fat"
-                    label="Fat"
-                    type="number"
-                    :rules="[rules.required, rules.positive]"
-                    required
-                    variant="outlined"
-                    suffix="g"
-                  />
-                </v-col>
-              </v-row>
+              <NutritionFieldsForm
+                v-model:total-calories="mealData.total_calories"
+                v-model:total-protein="mealData.total_protein"
+                v-model:total-carbs="mealData.total_carbs"
+                v-model:total-fat="mealData.total_fat"
+              />
 
               <!-- Additional Nutrition (Optional) -->
               <v-row>
@@ -113,7 +73,7 @@
                     v-model.number="mealData.fiber"
                     label="Fiber"
                     type="number"
-                    :rules="[rules.positive]"
+                    :rules="[positiveRule]"
                     variant="outlined"
                     suffix="g"
                   />
@@ -123,7 +83,7 @@
                     v-model.number="mealData.sugar"
                     label="Sugar"
                     type="number"
-                    :rules="[rules.positive]"
+                    :rules="[positiveRule]"
                     variant="outlined"
                     suffix="g"
                   />
@@ -133,7 +93,7 @@
                     v-model.number="mealData.sodium"
                     label="Sodium"
                     type="number"
-                    :rules="[rules.positive]"
+                    :rules="[positiveRule]"
                     variant="outlined"
                     suffix="mg"
                   />
@@ -143,7 +103,7 @@
                     v-model.number="mealData.cholesterol"
                     label="Cholesterol"
                     type="number"
-                    :rules="[rules.positive]"
+                    :rules="[positiveRule]"
                     variant="outlined"
                     suffix="mg"
                   />
@@ -166,7 +126,18 @@
 
               <!-- Action Buttons -->
               <v-row class="mt-6">
-                <v-col cols="12" class="d-flex gap-4">
+                <v-col cols="12">
+                  <!-- Error/Success Notification -->
+                  <v-alert
+                    v-if="latestError"
+                    :type="latestError.type"
+                    closable
+                    class="mb-4"
+                    @click:close="clearError()"
+                  >
+                    {{ latestError.message }}
+                  </v-alert>
+
                   <v-btn
                     color="primary"
                     size="large"
@@ -192,6 +163,8 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '~/composables/useAuth'
+import { useFormValidation } from '~/composables/useFormValidation'
+import { useErrorHandling } from '~/composables/useErrorHandling'
 
 // Page meta
 definePageMeta({
@@ -202,11 +175,17 @@ definePageMeta({
 const router = useRouter()
 const { user } = useAuth()
 const { checkDemoRestriction } = useDemoNotification()
+const { requiredRule, positiveRule } = useFormValidation()
+const { withErrorHandling, latestError, clearError, addSuccess } =
+  useErrorHandling()
 
 // Form refs
 const form = ref()
 const valid = ref(false)
 const loading = ref(false)
+
+// Create rules object for template bindings
+const rules = { required: requiredRule }
 
 // Meal data
 const mealData = reactive({
@@ -233,16 +212,6 @@ const mealTypes = [
   { title: 'Snack', value: 'snack' },
 ]
 
-// Validation rules
-const rules = {
-  required: (value: unknown) => !!value || 'This field is required',
-  positive: (value: unknown) => {
-    if (value === null || value === undefined || value === '') return true
-    const numValue = Number(value)
-    return (!isNaN(numValue) && numValue >= 0) || 'Value must be positive'
-  },
-}
-
 // Methods
 const saveMeal = async () => {
   if (!form.value?.validate()) return
@@ -254,37 +223,36 @@ const saveMeal = async () => {
   }
 
   loading.value = true
-  try {
-    const mealPayload = {
-      ...mealData,
-      user_id: user.value.id,
-      // Convert empty strings to null for optional fields
-      serving_size: mealData.serving_size || null,
-      fiber: mealData.fiber || null,
-      sugar: mealData.sugar || null,
-      sodium: mealData.sodium || null,
-      cholesterol: mealData.cholesterol || null,
-      notes: mealData.notes || null,
-    }
+  await withErrorHandling(
+    async () => {
+      const mealPayload = {
+        ...mealData,
+        user_id: user.value?.id || '',
+        // Convert empty strings to null for optional fields
+        serving_size: mealData.serving_size || null,
+        fiber: mealData.fiber || null,
+        sugar: mealData.sugar || null,
+        sodium: mealData.sodium || null,
+        cholesterol: mealData.cholesterol || null,
+        notes: mealData.notes || null,
+      }
 
-    const { authenticatedFetch } = useAuthenticatedFetch()
-    const response = (await authenticatedFetch('/api/meals', {
-      method: 'POST',
-      body: JSON.stringify(mealPayload),
-    }).then((r) => r.json())) as { success: boolean; message?: string }
+      const { authenticatedFetch } = useAuthenticatedFetch()
+      const response = (await authenticatedFetch('/api/meals', {
+        method: 'POST',
+        body: JSON.stringify(mealPayload),
+      }).then((r) => r.json())) as { success: boolean; message?: string }
 
-    if (response.success) {
-      // Show success message and redirect
-      // You might want to add a toast notification here
-      router.push('/home')
-    } else {
-      throw new Error(response.message || 'Failed to save meal')
-    }
-  } catch (error) {
-    console.error('Error saving meal:', error)
-    // You might want to show an error message to the user
-  } finally {
-    loading.value = false
-  }
+      if (response.success) {
+        addSuccess('Meal saved successfully!')
+        router.push('/home')
+      } else {
+        throw new Error(response.message || 'Failed to save meal')
+      }
+    },
+    'saving meal',
+    false // Don't use built-in loading state
+  )
+  loading.value = false
 }
 </script>

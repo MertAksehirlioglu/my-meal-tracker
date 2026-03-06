@@ -1,4 +1,5 @@
 import type { H3Event } from 'h3'
+import { ApiErrorCode, createErrorResponse } from './api-error'
 
 export interface AuthenticatedUser {
   id: string
@@ -15,10 +16,11 @@ export function requireAuth(event: H3Event): AuthenticatedUser {
   const user = event.context.user
 
   if (!user?.id) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Unauthorized - authentication required',
-    })
+    createErrorResponse(
+      ApiErrorCode.UNAUTHORIZED,
+      'Authentication required',
+      401
+    )
   }
 
   return user as AuthenticatedUser
@@ -37,29 +39,43 @@ export function validateInput(
   optional: Record<string, (_value: unknown) => boolean> = {}
 ) {
   // Check required fields
+  const missingFields: string[] = []
   for (const field of required) {
     if (
       data[field] === null ||
       data[field] === undefined ||
       data[field] === ''
     ) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: `Missing required field: ${field}`,
-      })
+      missingFields.push(field)
     }
   }
 
+  if (missingFields.length > 0) {
+    createErrorResponse(
+      ApiErrorCode.MISSING_REQUIRED_FIELDS,
+      `Missing required fields: ${missingFields.join(', ')}`,
+      400,
+      JSON.stringify({ fields: missingFields })
+    )
+  }
+
   // Validate optional fields if provided
+  const invalidFields: string[] = []
   for (const [field, validator] of Object.entries(optional)) {
     if (data[field] !== null && data[field] !== undefined) {
       if (!validator(data[field])) {
-        throw createError({
-          statusCode: 400,
-          statusMessage: `Invalid value for field: ${field}`,
-        })
+        invalidFields.push(field)
       }
     }
+  }
+
+  if (invalidFields.length > 0) {
+    createErrorResponse(
+      ApiErrorCode.INVALID_INPUT,
+      `Invalid values for fields: ${invalidFields.join(', ')}`,
+      400,
+      JSON.stringify({ fields: invalidFields })
+    )
   }
 }
 

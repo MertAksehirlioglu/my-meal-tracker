@@ -10,11 +10,11 @@ import '@mdi/font/css/materialdesignicons.css'
 const customTheme = {
   dark: false,
   colors: {
-    primary: '#1A2E1C',       // Deep forest green — main brand
-    secondary: '#E07A5F',     // Terra cotta — CTAs & accents
-    accent: '#F0E6D3',        // Warm parchment — highlights
-    background: '#F9F7F4',    // Warm off-white — app background
-    surface: '#FFFFFF',       // White — cards & containers
+    primary: '#1A2E1C', // Deep forest green — main brand
+    secondary: '#E07A5F', // Terra cotta — CTAs & accents
+    accent: '#F0E6D3', // Warm parchment — highlights
+    background: '#F9F7F4', // Warm off-white — app background
+    surface: '#FFFFFF', // White — cards & containers
     error: '#D94F3B',
     info: '#4A90A4',
     success: '#3D7A5B',

@@ -1,5 +1,6 @@
 import type { H3Event } from 'h3'
 import type { AuthenticatedUser } from './auth'
+import { ApiErrorCode, createErrorResponse } from './api-error'
 
 // Demo user configuration - get from environment
 function getDemoUserEmail(): string {
@@ -37,16 +38,12 @@ export function isDemoUserFromEvent(event: H3Event): boolean {
  */
 export function blockDemoUserWrite(event: H3Event): void {
   if (isDemoUserFromEvent(event)) {
-    throw createError({
-      statusCode: 403,
-      statusMessage:
-        'Demo users cannot modify data. This is a read-only demo experience.',
-      data: {
-        isDemoRestriction: true,
-        message:
-          'This action is not available in demo mode. Sign up for a full account to save your meals and track your progress!',
-      },
-    })
+    createErrorResponse(
+      ApiErrorCode.DEMO_USER_RESTRICTION,
+      'Demo users cannot modify data. This is a read-only demo experience.',
+      403,
+      'This action is not available in demo mode. Sign up for a full account to save your meals and track your progress!'
+    )
   }
 }
 

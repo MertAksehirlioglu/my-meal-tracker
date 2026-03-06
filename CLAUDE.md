@@ -4,192 +4,101 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-MealSnap is a full-stack Nuxt 3 meal tracking application that allows users to analyze food via AI-powered image classification, track nutrition, and set daily macro goals. The app uses Supabase for backend services and Vuetify for UI components.
-
-**Key Technologies:**
-
-- Frontend: Nuxt 3 + Vue 3 + Vuetify 3
-- Backend: Nuxt Server API routes
-- Database & Auth: Supabase (PostgreSQL with RLS)
-- AI: TensorFlow.js local inference
-- Storage: Supabase Storage for meal images
+MealSnap is a Nuxt 3 meal tracking app with AI-powered food image classification, nutrition tracking, and daily macro goals. Uses Supabase for auth/database/storage and Vuetify 3 for UI.
 
 ## Development Commands
 
 ```bash
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Generate static site
-npm run generate
-
-# Preview production build
-npm run preview
-
-# Format code (when available)
-npm run format
-
-# Lint code (when available)
-npm run lint
+npm run dev              # Start dev server
+npm run build            # Production build
+npm run check            # Run typecheck + lint + format:check (use before committing)
+npm run typecheck        # npx nuxi typecheck
+npm run lint             # ESLint
+npm run lint:fix         # ESLint with auto-fix
+npm run format           # Prettier format
+npm run format:check     # Prettier check only
 ```
+
+There are no tests in this project. The `check` script is the main quality gate.
 
 ## Environment Setup
 
-Copy `.env.example` to `.env` and configure:
+Copy `.env.example` to `.env`. Required variables:
 
-- `SUPABASE_URL` - Your Supabase project URL
-- `SUPABASE_KEY` - Your Supabase anon key
-- `VITE_CONTACT_MAIL` - Contact email address
-- `SUPABASE_MEAL_IMAGES_BUCKET` - Bucket name for meal image storage
+- `SUPABASE_URL`, `SUPABASE_KEY` — Supabase project credentials
+- `SUPABASE_MEAL_IMAGES_BUCKET` — Storage bucket name (default: `meal-images`)
+- `VITE_CONTACT_MAIL` — Contact page email
+- `NUXT_PUBLIC_SIGNUP_DISABLED` — Set `true` for portfolio demo mode
+- `NUXT_PUBLIC_DEMO_EMAIL`, `NUXT_PUBLIC_DEMO_PASSWORD` — Demo user credentials
 
-## Database Architecture
+TensorFlow.js runs entirely in-browser and requires no API keys.
 
-The app uses Supabase PostgreSQL with Row Level Security (RLS). Key tables:
+## Architecture
 
-- **users** - User profiles extending auth.users
-- **meals** - Individual meal records with macro totals
-- **food_items** - Individual food items within meals
-- **food_database** - Reference nutrition data (public)
-- **user_goals** - Daily macro targets
-- **user_progress** - Daily aggregated nutrition data
+### Request Flow
 
-Database schema is defined in `server/database/schemas.ts` with TypeScript interfaces. Initial migration is in `server/database/migrations/001_initial_schema.sql`.
+1. **Public pages** (`/`, `/login`, `/signup`, `/contact`) use `layouts/default.vue` (minimal `v-app` wrapper)
+2. **Auth-protected pages** (`/home`, `/snap`, `/add-meal`, `/goals`, `/history`, `/profile`) use `layouts/authenticated.vue` (app bar, nav, demo notification) and are guarded by `middleware/auth.ts` (client-side, redirects to `/login` if no Supabase user)
+3. **API calls** from pages use `composables/useAuthenticatedFetch.ts` which auto-attaches `Authorization: Bearer <JWT>` headers
+4. **Server middleware** at `server/middleware/auth.ts` validates JWT tokens on all `/api/` routes (except `/api/health`, `/api/public/*`, `/api/auth/callback`), applies rate limiting (100 req/15min per IP+URL), and falls back to a mock user in development mode
 
-## Key Composables & Architecture
+### AI Classification Pipeline
 
-**Authentication (`composables/useAuth.ts`)**
+The food analysis chain:
 
-- Wraps Supabase auth with login, register, logout, and profile updates
-- Uses `useSupabaseClient()` and `useSupabaseUser()` from @nuxtjs/supabase
+`snap.vue` → `useFoodAnalysis` → `useFoodClassification` → `lib/ai-providers.ts` (UnifiedAIManager) → `lib/tensorflow.ts`
 
-**Food Analysis (`composables/useFoodAnalysis.ts`)**
+- **`lib/ai-providers.ts`** — `UnifiedAIManager` singleton managing provider fallback chain. Currently only TensorFlow.js is registered. Access via `getAIManager()` or `createUnifiedInference()`
+- **`lib/tensorflow.ts`** — Browser-side MobileNetV2 + COCO-SSD inference. Filters predictions by food-relevance keywords with weighted scores (1.0 direct food, 0.7 food-related objects, 0.3 context). Throws `NO_FOOD_DETECTED` when nothing found
+- **`lib/nutrition-database.ts`** — Mock ~30-item nutrition lookup. Maps classification labels to macros with a 300cal default fallback
+- **`lib/huggingface.ts`** and **`lib/openai.ts`** — Unused alternative providers (not wired into `UnifiedAIManager`)
+- **`useOptimizedFoodAnalysis`** — Enhanced version with image caching (24h TTL, 100 entries), image resizing, exponential backoff retry, and performance metrics. Not currently used by any page
 
-- Main orchestrator for food image analysis
-- Combines classification with nutrition estimation
-- Uses mock nutrition database (replace with real data in production)
+After classification, `components/AnalyzedMealReview.vue` lets the user adjust portions (0.75x/1.0x/1.5x multipliers) before saving.
 
-**Food Classification (`composables/useFoodClassification.ts`)**
+### Demo Mode
 
-- Generic interface for food classification providers
-- Formats food names and normalizes prediction responses
+Demo mode is a first-class feature for portfolio showcasing:
 
-**TensorFlow.js Integration (`lib/tensorflow.ts`)**
+- **Client side**: `composables/useDemoData.ts` provides 7 days of hardcoded meals/progress/goals. `composables/useDemoNotification.ts` manages global restriction notifications via module-level refs
+- **Server side**: `server/utils/demo.ts` blocks write operations for demo users
+- Activated via `NUXT_PUBLIC_SIGNUP_DISABLED=true` runtime config
+- Pages detect `isDemoUser` from `useAuth` and serve static demo data instead of calling APIs
 
-- Implements local food classification using MobileNet and COCO-SSD models
-- Runs entirely in the browser without API calls
-- Handles no-food-detection cases and provides proper error messages
-- Factory function `createTensorFlowInference()` for easy instantiation
+### State Management
 
-**Storage (`composables/useStorage.ts`)**
+No dedicated store (no Pinia/Vuex). State lives in:
 
-- Handles Supabase Storage operations for meal images
-- Manages upload, download, and URL generation
+- **Module-level refs** in composables for shared client state (e.g., `useAuth` shares `loading`/`error` refs across all consumers; `useDemoNotification` has global `showDemoNotification` ref)
+- **Supabase** as the persistent backend source of truth
+- **localStorage** only for theme preference (`mealsnap-theme` key)
 
-## Server API Routes
+### Database
 
-Located in `server/api/`:
+Supabase PostgreSQL with RLS. Tables: `users`, `meals`, `food_items`, `food_database`, `user_goals`, `user_progress`. TypeScript interfaces and table name constants in `server/database/schemas.ts`. Migration SQL in `server/database/migrations/`.
 
-- `meals/index.post.ts` - Create new meal records
-- `meals/today.get.ts` - Get today's meals for a user
-- `goals/active.get.ts` - Get user's active macro goals
-- `progress/today.get.ts` - Get today's nutrition progress
+### Server API Routes
 
-All API routes use Supabase service role key for database operations and handle RLS automatically.
+Currently only `server/api/health.get.ts` exists as an implemented route. Pages reference many endpoints (`/api/meals/*`, `/api/goals/*`, `/api/progress/*`, `/api/users/*`) that are **not present** in the repository — they may need to be created or may be served by direct Supabase client calls.
 
-## Component Structure
+Server utilities in `server/utils/`:
 
-- **layouts/** - `default.vue` and `authenticated.vue` layouts
-- **pages/** - File-based routing with auth-protected and public pages
-- **components/** - Reusable Vue components (e.g., `FoodClassifier.vue`)
-- **plugins/vuetify.ts** - Vuetify configuration
+- `auth.ts` — `requireAuth()`, `validateInput()`, common validators
+- `demo.ts` — Demo user detection and write-blocking
 
-## Authentication & Security
+## Vuetify Theme
 
-- Uses Supabase Auth with email/password
-- Row Level Security (RLS) enforced on all tables
-- Auth redirects configured in `nuxt.config.ts`
-- User profiles auto-created via database trigger
-- All user data isolated via RLS policies
+Custom earthy palette in `plugins/vuetify.ts`: primary `#1A2E1C` (forest green), secondary `#E07A5F` (terra cotta), accent `#F0E6D3` (parchment), background `#F9F7F4` (warm off-white). MDI icon set. Fonts loaded in `nuxt.config.ts`: Fraunces (serif, headings) and DM Sans (sans-serif, body).
 
-## AI Food Classification
+## Formatting & Linting
 
-The app uses TensorFlow.js for local food classification:
+- **Prettier** (`.prettierrc`): No semicolons, single quotes, trailing commas (es5), 80 char width, LF line endings
+- **ESLint** (`eslint.config.js`): `no-console` allowed, unused vars error (underscore-prefixed ignored), `no-explicit-any` warn, `vue/html-self-closing` off (deferred to Prettier)
 
-- **TensorFlow.js**: MobileNetV2 and COCO-SSD models
-  - Runs locally in browser (no API calls)
-  - No API keys required
-  - Privacy-focused processing
-- **No-food handling**: Proper error messages when no food detected
-- Currently uses mock nutrition data - integrate with real nutrition database for production
+## Code Quality Rules
 
-## Testing & Quality
-
-When running tests or quality checks:
-
-- Check package.json scripts for available test commands
-- Use ESLint and Prettier for code formatting (scripts may need to be added)
-- Verify environment variables are properly configured
-- Test Supabase connection and RLS policies
-- Test TensorFlow.js model loading
-
-## Common Development Patterns
-
-- Use TypeScript interfaces from `server/database/schemas.ts`
-- Follow Vue 3 Composition API patterns
-- Leverage Nuxt auto-imports for composables
-- Use Vuetify components for consistent UI
-- Handle loading/error states in all async operations
-- Implement proper error boundaries and user feedback
-- Follow RLS patterns for data access security
-
-## Code Quality & Architecture Rules
-
-### File Length and Structure
-
-- Never allow a file to exceed 500 lines
-- If a file approaches 400 lines, break it up immediately
-- Treat 1000 lines as unacceptable, even temporarily
-- Use folders and naming conventions to keep small files logically grouped
-
-### Single Responsibility Principle
-
-- Every file, class, and function should do one thing only
-- If it has multiple responsibilities, split it immediately
-- Each view, manager, or utility should be laser-focused on one concern
-
-### Modular Design
-
-- Code should connect like Lego - interchangeable, testable, and isolated
-- Ask: "Can I reuse this class in a different context or project?" If not, refactor it
-- Reduce tight coupling between components. Favor dependency injection or protocols
-
-### Manager and Coordinator Patterns
-
-- Use ViewModel, Manager, and Coordinator naming conventions for logic separation:
-  - UI logic → ViewModel
-  - Business logic → Manager
-  - Navigation/state flow → Coordinator
-- Never mix views and business logic directly
-
-### Function and Class Size
-
-- Keep functions under 30-40 lines
-- If a class is over 200 lines, assess splitting into smaller helper classes
-
-### Naming and Readability
-
-- All class, method, and variable names must be descriptive and intention-revealing
-- Avoid vague names like data, info, helper, or temp
-
-### Scalability Mindset
-
-- Always code as if someone else will scale this
-- Include extension points (e.g., protocol conformance, dependency injection) from day one
-
-### Avoid God Classes
-
-- Never let one file or class hold everything (e.g., massive ViewController, ViewModel, or Service)
-- Split into UI, State, Handlers, Networking, etc.
+- **File limits**: Max 500 lines per file, start breaking up at 400 lines
+- **Function limits**: Max 30–40 lines per function, split classes over 200 lines
+- **Single responsibility**: Every file, class, and function does one thing
+- **Naming conventions**: ViewModel (UI logic), Manager (business logic), Coordinator (navigation/state flow). All names must be descriptive and intention-revealing — avoid `data`, `info`, `helper`, `temp`
+- **Modularity**: Favor dependency injection, keep components interchangeable and testable. No god classes — split into UI, State, Handlers, Networking
