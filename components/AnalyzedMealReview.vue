@@ -80,6 +80,23 @@
           </v-col>
         </v-row>
 
+        <!-- Custom Portion Grams Input -->
+        <v-row v-if="portionSize === 'custom'" class="mt-n2 mb-2">
+          <v-col cols="12" md="6" offset-md="6">
+            <v-text-field
+              v-model.number="customGrams"
+              label="Custom amount (grams)"
+              type="number"
+              min="1"
+              variant="outlined"
+              prepend-inner-icon="mdi-weight-gram"
+              hint="250g = 1 medium serving"
+              persistent-hint
+              @update:model-value="adjustNutritionForPortion(portionSize)"
+            />
+          </v-col>
+        </v-row>
+
         <!-- Nutrition Information -->
         <v-divider class="my-4" />
         <div class="d-flex align-center mb-4">
@@ -203,6 +220,7 @@ const valid = ref(false)
 
 // Portion size management
 const portionSize = ref('medium')
+const customGrams = ref(250)
 const baseNutrition = ref<NutritionInfo | null>(null)
 
 // Meal data
@@ -228,14 +246,15 @@ const mealTypes = [
 ]
 
 const portionSizes = [
-  { title: 'Small Portion', value: 'small' },
-  { title: 'Medium Portion', value: 'medium' },
-  { title: 'Large Portion', value: 'large' },
+  { title: 'Small Portion (0.5×)', value: 'small' },
+  { title: 'Medium Portion (1×)', value: 'medium' },
+  { title: 'Large Portion (1.5×)', value: 'large' },
+  { title: 'Custom (grams)', value: 'custom' },
 ]
 
-// Portion multipliers
-const portionMultipliers = {
-  small: 0.75,
+// Portion multipliers — Small=0.5, Medium=1.0, Large=1.5, Custom=grams/250
+const portionMultipliers: Record<string, number> = {
+  small: 0.5,
   medium: 1.0,
   large: 1.5,
 }
@@ -259,8 +278,11 @@ onMounted(() => {
 const adjustNutritionForPortion = (newSize: string) => {
   if (!baseNutrition.value) return
 
+  // Custom: scale by grams / 250 (250g = 1 medium serving)
   const multiplier =
-    portionMultipliers[newSize as keyof typeof portionMultipliers] || 1.0
+    newSize === 'custom'
+      ? (customGrams.value || 250) / 250
+      : (portionMultipliers[newSize] ?? 1.0)
 
   mealData.total_calories = Math.round(
     baseNutrition.value.calories * multiplier
@@ -316,6 +338,7 @@ watch(
 
       baseNutrition.value = { ...newResult.nutrition }
       portionSize.value = 'medium'
+      customGrams.value = 250
     }
   }
 )
