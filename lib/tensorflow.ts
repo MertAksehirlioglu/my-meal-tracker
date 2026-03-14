@@ -8,6 +8,20 @@ interface TensorFlowPrediction {
   score: number
 }
 
+// Module-level singleton — model loads once per session
+let modelPromise: Promise<{
+  mobilenetModel: {
+    classify?: (
+      _element: HTMLImageElement
+    ) => Promise<Array<{ className: string; probability: number }>>
+  } | null
+  cocoModel: {
+    detect?: (
+      _element: HTMLImageElement
+    ) => Promise<Array<{ class: string; score: number }>>
+  } | null
+}> | null = null
+
 export class TensorFlowInference {
   private mobilenetModel: {
     classify?: (
@@ -19,7 +33,6 @@ export class TensorFlowInference {
       _element: HTMLImageElement
     ) => Promise<Array<{ class: string; score: number }>>
   } | null = null
-  private isLoading = false
 
   async classifyImage(imageFile: File): Promise<TensorFlowPrediction[]> {
     console.log('🧠 TensorFlow.js: Starting local image classification')
@@ -112,22 +125,18 @@ export class TensorFlowInference {
   }
 
   private async loadModels() {
-    if (this.isLoading) {
-      // Wait for loading to complete
-      while (this.isLoading) {
-        await new Promise((resolve) => setTimeout(resolve, 100))
-      }
+    // Use module-level singleton so models load only once per session
+    if (modelPromise) {
+      console.log('Using cached TF model')
+      const cached = await modelPromise
+      this.mobilenetModel = cached.mobilenetModel
+      this.cocoModel = cached.cocoModel
       return
     }
 
-    if (this.mobilenetModel && this.cocoModel) {
-      return // Already loaded
-    }
+    console.log('Loading TF model...')
 
-    this.isLoading = true
-    console.log('📦 Loading TensorFlow.js models...')
-
-    try {
+    modelPromise = (async () => {
       // Dynamic imports to avoid SSR issues
       const [tf, mobilenet, cocoSsd] = await Promise.all([
         import('@tensorflow/tfjs'),
@@ -163,18 +172,21 @@ export class TensorFlowInference {
         }),
       ])
 
-      this.mobilenetModel = mobilenetModel
-      this.cocoModel = cocoModel
-
       console.log('✅ TensorFlow.js models loaded successfully')
-      console.log('   - MobileNet:', !!this.mobilenetModel)
-      console.log('   - COCO-SSD:', !!this.cocoModel)
-    } catch (error) {
-      console.error('Failed to load TensorFlow.js models:', error)
-      throw error
-    } finally {
-      this.isLoading = false
-    }
+      console.log('   - MobileNet:', !!mobilenetModel)
+      console.log('   - COCO-SSD:', !!cocoModel)
+
+      return { mobilenetModel, cocoModel }
+    })()
+
+    // On error, clear the singleton so next call retries
+    modelPromise.catch(() => {
+      modelPromise = null
+    })
+
+    const loaded = await modelPromise
+    this.mobilenetModel = loaded.mobilenetModel
+    this.cocoModel = loaded.cocoModel
   }
 
   private async fileToImageElement(file: File): Promise<HTMLImageElement> {

@@ -48,6 +48,32 @@
             </v-btn>
           </v-card-title>
           <v-card-text>
+            <!-- Macro tab switcher -->
+            <v-btn-toggle
+              v-model="selectedMacro"
+              mandatory
+              rounded="lg"
+              density="compact"
+              class="mb-4 d-flex flex-wrap"
+            >
+              <v-btn value="calories" size="small" class="flex-grow-1">
+                <v-icon size="14" class="mr-1" color="orange">mdi-fire</v-icon>
+                Calories
+              </v-btn>
+              <v-btn value="protein" size="small" class="flex-grow-1">
+                <v-icon size="14" class="mr-1" color="blue">mdi-arm-flex</v-icon>
+                Protein
+              </v-btn>
+              <v-btn value="carbs" size="small" class="flex-grow-1">
+                <v-icon size="14" class="mr-1" color="amber-darken-2">mdi-barley</v-icon>
+                Carbs
+              </v-btn>
+              <v-btn value="fat" size="small" class="flex-grow-1">
+                <v-icon size="14" class="mr-1" color="red">mdi-water</v-icon>
+                Fat
+              </v-btn>
+            </v-btn-toggle>
+
             <v-row>
               <v-col
                 v-for="day in weeklyData"
@@ -65,23 +91,20 @@
                 >
                   <div
                     class="rounded"
-                    style="
-                      width: 100%;
-                      position: absolute;
-                      bottom: 0;
-                      background: #1976d2;
-                      transition: height 0.3s;
-                    "
-                    :style="{ height: getBarHeight(day.total_calories) }"
+                    style="width: 100%; position: absolute; bottom: 0; transition: height 0.3s"
+                    :style="{
+                      height: getBarHeightForMacro(day),
+                      background: macroColor,
+                    }"
                   />
                 </div>
                 <div class="text-caption mt-1" style="font-size: 10px">
-                  {{ day.total_calories > 0 ? day.total_calories : '–' }}
+                  {{ getMacroValue(day) > 0 ? getMacroValue(day) : '–' }}
                 </div>
               </v-col>
             </v-row>
             <div class="text-caption text-grey text-center mt-2">
-              Calories per day
+              {{ macroLabel }} per day
             </div>
           </v-card-text>
         </v-card>
@@ -185,6 +208,41 @@ interface DailyTotal {
   meal_count: number
 }
 const weeklyData = ref<DailyTotal[]>([])
+
+// Weekly chart macro selection
+type MacroKey = 'calories' | 'protein' | 'carbs' | 'fat'
+const selectedMacro = ref<MacroKey>('calories')
+
+const macroColors: Record<MacroKey, string> = {
+  calories: '#ff9800',
+  protein: '#1976d2',
+  carbs: '#f9a825',
+  fat: '#e53935',
+}
+
+const macroLabels: Record<MacroKey, string> = {
+  calories: 'Calories (kcal)',
+  protein: 'Protein (g)',
+  carbs: 'Carbs (g)',
+  fat: 'Fat (g)',
+}
+
+const macroColor = computed(() => macroColors[selectedMacro.value])
+const macroLabel = computed(() => macroLabels[selectedMacro.value])
+
+const getMacroValue = (day: DailyTotal): number => {
+  if (selectedMacro.value === 'calories') return day.total_calories
+  if (selectedMacro.value === 'protein') return day.total_protein
+  if (selectedMacro.value === 'carbs') return day.total_carbs
+  return day.total_fat
+}
+
+const getBarHeightForMacro = (day: DailyTotal): string => {
+  const values = weeklyData.value.map((d) => getMacroValue(d))
+  const maxVal = Math.max(...values, 1)
+  const pct = Math.min((getMacroValue(day) / maxVal) * 100, 100)
+  return `${pct}%`
+}
 
 const deletingMealId = ref<string | null>(null)
 const deleteDialog = ref(false)
