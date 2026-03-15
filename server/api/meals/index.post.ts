@@ -25,6 +25,44 @@ export default defineWrappedEventHandler(async (event) => {
     analysis_method,
   } = body
 
+  // Validate analysis_method against an allowlist to prevent injection
+  const ALLOWED_ANALYSIS_METHODS = [
+    'ai',
+    'tensorflow',
+    'manual',
+    'huggingface',
+    'openai',
+  ]
+  if (
+    analysis_method !== null &&
+    analysis_method !== undefined &&
+    !ALLOWED_ANALYSIS_METHODS.includes(analysis_method)
+  ) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Invalid analysis_method value',
+      data: { code: 'INVALID_INPUT' },
+    })
+  }
+
+  // Enforce max length on string inputs to prevent oversized payloads
+  const MAX_NAME_LENGTH = 255
+  const MAX_NOTES_LENGTH = 1000
+  if (typeof name === 'string' && name.length > MAX_NAME_LENGTH) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Meal name must be ${MAX_NAME_LENGTH} characters or fewer`,
+      data: { code: 'INVALID_INPUT' },
+    })
+  }
+  if (typeof notes === 'string' && notes.length > MAX_NOTES_LENGTH) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Notes must be ${MAX_NOTES_LENGTH} characters or fewer`,
+      data: { code: 'INVALID_INPUT' },
+    })
+  }
+
   validateInput(
     {
       name,

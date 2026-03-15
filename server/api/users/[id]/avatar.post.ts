@@ -6,6 +6,14 @@ import { defineWrappedEventHandler } from '~/server/utils/api-error'
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 
+// Map MIME type to a canonical extension (derived from validated MIME, not user filename)
+const MIME_TO_EXT: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+}
+
 export default defineWrappedEventHandler(async (event) => {
   const user = requireAuth(event)
   const requestedUserId = getRouterParam(event, 'id')
@@ -49,7 +57,8 @@ export default defineWrappedEventHandler(async (event) => {
 
   const supabase = getSupabaseClient()
 
-  const fileExt = fileData.filename?.split('.').pop() || 'jpg'
+  // Derive extension from validated MIME type — never trust the user-supplied filename
+  const fileExt = MIME_TO_EXT[fileData.type] ?? 'jpg'
   const fileName = `${user.id}-${Date.now()}.${fileExt}`
   const filePath = `avatars/${fileName}`
 

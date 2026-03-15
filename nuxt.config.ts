@@ -8,10 +8,12 @@ export default defineNuxtConfig({
   },
   modules: ['@nuxtjs/supabase', '@nuxt/eslint'],
   runtimeConfig: {
+    // Server-only secrets (never exposed to the browser)
+    // DEMO_PASSWORD: used by /api/auth/demo-login so the credential stays server-side
     public: {
       signupDisabled: process.env.NUXT_PUBLIC_SIGNUP_DISABLED === 'true',
       demoEmail: process.env.NUXT_PUBLIC_DEMO_EMAIL,
-      demoPassword: process.env.NUXT_PUBLIC_DEMO_PASSWORD,
+      // demoPassword intentionally omitted from public — use /api/auth/demo-login instead
       // Used by the CSRF middleware to validate the Origin header on mutation requests.
       // Set NUXT_PUBLIC_APP_URL in production to match your deployed URL (e.g. https://mealsnap.app).
       // To swap the rate-limit store to Redis in production, add to nitro.storage:

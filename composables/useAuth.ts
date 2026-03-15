@@ -27,36 +27,41 @@ export function useAuth() {
     return { user: user.value, error: error.value }
   }
 
-  // Demo Login
+  // Demo Login — calls a server endpoint so the demo password is never sent to the browser
   const loginDemo = async () => {
     loading.value = true
     error.value = null
 
-    const config = useRuntimeConfig()
-    const demoEmail = config.public.demoEmail
-    const demoPassword = config.public.demoPassword
+    try {
+      const response = await fetch('/api/auth/demo-login', { method: 'POST' })
 
-    if (!demoEmail) {
-      error.value =
-        'Demo email not configured. Please set NUXT_PUBLIC_DEMO_EMAIL environment variable.'
-      loading.value = false
-      return { user: user.value, error: error.value }
-    }
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}))
+        error.value = body?.statusMessage || 'Demo login failed'
+        loading.value = false
+        return { user: user.value, error: error.value }
+      }
 
-    if (!demoPassword) {
-      error.value =
-        'Demo password not configured. Please set NUXT_PUBLIC_DEMO_PASSWORD environment variable.'
-      loading.value = false
-      return { user: user.value, error: error.value }
-    }
+      const body = await response.json()
+      const sessionData = body?.data
 
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email: demoEmail,
-      password: demoPassword,
-    })
+      if (!sessionData?.access_token) {
+        error.value = 'Demo login failed: no session returned'
+        loading.value = false
+        return { user: user.value, error: error.value }
+      }
 
-    if (authError) {
-      error.value = authError.message
+      // Set the session on the Supabase client using the tokens returned by the server
+      const { error: setSessionError } = await supabase.auth.setSession({
+        access_token: sessionData.access_token,
+        refresh_token: sessionData.refresh_token,
+      })
+
+      if (setSessionError) {
+        error.value = setSessionError.message
+      }
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Demo login failed'
     }
 
     loading.value = false

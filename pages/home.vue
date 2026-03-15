@@ -61,11 +61,15 @@
                 Calories
               </v-btn>
               <v-btn value="protein" size="small" class="flex-grow-1">
-                <v-icon size="14" class="mr-1" color="blue">mdi-arm-flex</v-icon>
+                <v-icon size="14" class="mr-1" color="blue"
+                  >mdi-arm-flex</v-icon
+                >
                 Protein
               </v-btn>
               <v-btn value="carbs" size="small" class="flex-grow-1">
-                <v-icon size="14" class="mr-1" color="amber-darken-2">mdi-barley</v-icon>
+                <v-icon size="14" class="mr-1" color="amber-darken-2"
+                  >mdi-barley</v-icon
+                >
                 Carbs
               </v-btn>
               <v-btn value="fat" size="small" class="flex-grow-1">
@@ -91,7 +95,12 @@
                 >
                   <div
                     class="rounded"
-                    style="width: 100%; position: absolute; bottom: 0; transition: height 0.3s"
+                    style="
+                      width: 100%;
+                      position: absolute;
+                      bottom: 0;
+                      transition: height 0.3s;
+                    "
                     :style="{
                       height: getBarHeightForMacro(day),
                       background: macroColor,
@@ -292,12 +301,6 @@ const fatProgress = computed(() => {
 })
 
 const formatShortDate = formatShortWeekday
-
-const getBarHeight = (calories: number) => {
-  const maxCal = Math.max(...weeklyData.value.map((d) => d.total_calories), 1)
-  const pct = Math.min((calories / maxCal) * 100, 100)
-  return `${pct}%`
-}
 
 const goToSnap = () => router.push('/snap')
 

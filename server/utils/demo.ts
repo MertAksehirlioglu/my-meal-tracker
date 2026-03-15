@@ -101,12 +101,11 @@ export const DEMO_CONFIG = {
  */
 export function getDemoCredentials() {
   const email = getDemoUserEmail()
-  const password = process.env.NUXT_PUBLIC_DEMO_PASSWORD
+  // Use server-only DEMO_PASSWORD — never the public NUXT_PUBLIC_DEMO_PASSWORD
+  const password = process.env.DEMO_PASSWORD
 
   if (!password) {
-    throw new Error(
-      'NUXT_PUBLIC_DEMO_PASSWORD environment variable is required'
-    )
+    throw new Error('DEMO_PASSWORD environment variable is required')
   }
 
   return { email, password }
