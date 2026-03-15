@@ -12,6 +12,11 @@ export default defineNuxtConfig({
       signupDisabled: process.env.NUXT_PUBLIC_SIGNUP_DISABLED === 'true',
       demoEmail: process.env.NUXT_PUBLIC_DEMO_EMAIL,
       demoPassword: process.env.NUXT_PUBLIC_DEMO_PASSWORD,
+      // Used by the CSRF middleware to validate the Origin header on mutation requests.
+      // Set NUXT_PUBLIC_APP_URL in production to match your deployed URL (e.g. https://mealsnap.app).
+      // To swap the rate-limit store to Redis in production, add to nitro.storage:
+      //   cache: { driver: 'redis', url: process.env.REDIS_URL }
+      appUrl: process.env.NUXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
     },
   },
   app: {
