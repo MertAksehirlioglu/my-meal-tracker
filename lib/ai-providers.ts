@@ -3,7 +3,9 @@
  * Manages TensorFlow.js local inference
  */
 
-import { createTensorFlowInference } from './tensorflow'
+// NOTE: tensorflow.ts is intentionally NOT statically imported here.
+// It is dynamically imported on first use so the TF module (and its
+// dynamic @tensorflow/* imports) only load on the snap page.
 
 export interface AIProvider {
   name: string
@@ -24,10 +26,15 @@ export class UnifiedAIManager {
 
   private initializeProviders() {
     // TensorFlow.js (Local, Free, Private)
+    // createTensorFlowInference is loaded lazily via dynamic import so the
+    // entire tensorflow module (and its @tensorflow/* dynamic imports) are
+    // excluded from the initial bundle and only fetched on the snap page.
     const tfProvider: AIProvider = {
       name: 'TensorFlow.js (Local)',
-      classifyImage: (file: File) =>
-        createTensorFlowInference().classifyImage(file),
+      classifyImage: async (file: File) => {
+        const { createTensorFlowInference } = await import('./tensorflow')
+        return createTensorFlowInference().classifyImage(file)
+      },
     }
     this.providers.set('tensorflow', tfProvider)
 
