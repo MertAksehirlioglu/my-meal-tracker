@@ -81,8 +81,23 @@
           </v-card-text>
         </v-card>
 
-        <!-- Meal List -->
+        <!-- Meal List / Photo Grid -->
         <v-card elevation="2" rounded="lg">
+          <!-- View toggle -->
+          <v-card-title
+            v-if="meals.length > 0 && !loadingMeals"
+            class="d-flex justify-end pa-2 pb-0"
+          >
+            <v-btn-toggle v-model="viewMode" mandatory density="compact" color="primary">
+              <v-btn value="list" icon size="small">
+                <v-icon size="18">mdi-format-list-bulleted</v-icon>
+              </v-btn>
+              <v-btn value="grid" icon size="small">
+                <v-icon size="18">mdi-grid</v-icon>
+              </v-btn>
+            </v-btn-toggle>
+          </v-card-title>
+
           <v-card-text>
             <div v-if="loadingMeals" class="text-center py-8">
               <v-progress-circular
@@ -108,6 +123,49 @@
               </v-btn>
             </div>
 
+            <!-- Photo grid view -->
+            <div v-else-if="viewMode === 'grid'" class="meal-photo-grid">
+              <div
+                v-for="meal in meals"
+                :key="meal.id"
+                class="meal-photo-card"
+                @click="openMealDetail(meal)"
+              >
+                <div class="meal-photo-thumb">
+                  <v-img
+                    v-if="meal.image_url"
+                    :src="meal.image_url"
+                    :alt="meal.name"
+                    cover
+                    class="fill-height"
+                  />
+                  <div v-else class="meal-photo-placeholder">
+                    <span class="meal-placeholder-emoji">🍽️</span>
+                  </div>
+                </div>
+                <div class="meal-photo-info pa-2">
+                  <div class="text-caption font-weight-medium text-truncate">
+                    {{ meal.name }}
+                  </div>
+                  <div class="text-caption text-grey">
+                    {{ meal.total_calories }} cal
+                  </div>
+                  <v-btn
+                    icon
+                    size="x-small"
+                    color="error"
+                    variant="text"
+                    class="meal-photo-delete"
+                    :loading="deletingId === meal.id"
+                    @click.stop="confirmDelete(meal)"
+                  >
+                    <v-icon size="14">mdi-delete</v-icon>
+                  </v-btn>
+                </div>
+              </div>
+            </div>
+
+            <!-- List view -->
             <v-list v-else>
               <v-list-item
                 v-for="meal in meals"
@@ -121,9 +179,26 @@
                 @click="openMealDetail(meal)"
               >
                 <template #prepend>
-                  <v-icon :color="getMealTypeColor(meal.meal_type)" size="24">
-                    {{ getMealTypeIcon(meal.meal_type) }}
-                  </v-icon>
+                  <div class="mr-3 meal-list-thumb">
+                    <v-img
+                      v-if="meal.image_url"
+                      :src="meal.image_url"
+                      :alt="meal.name"
+                      width="44"
+                      height="44"
+                      cover
+                      rounded="lg"
+                    />
+                    <div
+                      v-else
+                      class="meal-list-placeholder d-flex align-center justify-center"
+                      style="width:44px;height:44px;border-radius:8px;background:#e0e0e0"
+                    >
+                      <v-icon :color="getMealTypeColor(meal.meal_type)" size="22">
+                        {{ getMealTypeIcon(meal.meal_type) }}
+                      </v-icon>
+                    </div>
+                  </div>
                 </template>
 
                 <v-list-item-title class="font-weight-medium">
@@ -227,6 +302,7 @@ const pickerValue = ref<string>(todayIso)
 const datePicker = ref(false)
 const meals = ref<Meal[]>([])
 const loadingMeals = ref(false)
+const viewMode = ref<'list' | 'grid'>('list')
 const deletingId = ref<string | null>(null)
 const deleteDialog = ref(false)
 const mealToDelete = ref<Meal | null>(null)
@@ -384,3 +460,69 @@ watch(selectedDate, () => {
 
 onMounted(loadMeals)
 </script>
+
+<style scoped>
+/* Photo grid layout: 2 cols on mobile, 3 on sm, 4 on md+ */
+.meal-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 600px) {
+  .meal-photo-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 960px) {
+  .meal-photo-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.meal-photo-card {
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f5f5f5;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+}
+
+.meal-photo-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.meal-photo-thumb {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #e0e0e0;
+}
+
+.meal-photo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eeeeee;
+}
+
+.meal-placeholder-emoji {
+  font-size: 2rem;
+}
+
+.meal-photo-info {
+  position: relative;
+  padding-right: 28px;
+}
+
+.meal-photo-delete {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+}
+</style>
