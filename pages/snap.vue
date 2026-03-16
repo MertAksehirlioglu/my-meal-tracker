@@ -170,12 +170,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFoodAnalysis } from '@/composables/useFoodAnalysis'
 import { useStorage } from '@/composables/useStorage'
 import { useAuth } from '@/composables/useAuth'
 import { useErrorHandling } from '@/composables/useErrorHandling'
+import { useCamera } from '@/composables/useCamera'
 import AnalyzedMealReview from '@/components/AnalyzedMealReview.vue'
 import ErrorNotification from '@/components/ErrorNotification.vue'
 import type { CreateMeal } from '~/server/database/schemas'
@@ -209,42 +210,32 @@ const {
 const _analysisResult = analysisResult as unknown
 const { uploadMealImage, compressImage } = useStorage()
 
-// Camera and photo state
+// Camera composable
 const videoRef = ref<HTMLVideoElement | null>(null)
-const stream = ref<MediaStream | null>(null)
+const {
+  stream,
+  isStreaming: cameraReady,
+  error: cameraError,
+  startCamera,
+  stopCamera,
+} = useCamera()
+
+// Camera and photo state
 const photoData = ref<string | null>(null)
 const error = ref<string | null>(null)
-const cameraReady = ref(false)
 
 // UI state
 const showAnalysis = ref(false)
 const saving = ref(false)
 
 const initCamera = async () => {
-  try {
-    stream.value = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: 'environment',
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-      },
-    })
-    if (videoRef.value && stream.value) {
-      videoRef.value.srcObject = stream.value
-      cameraReady.value = true
-    }
-  } catch {
-    error.value = 'Unable to access camera. Please allow camera permissions.'
+  await startCamera(videoRef)
+  if (cameraError.value) {
+    error.value = cameraError.value
   }
 }
 
 onMounted(initCamera)
-
-onBeforeUnmount(() => {
-  if (stream.value) {
-    stream.value.getTracks().forEach((track) => track.stop())
-  }
-})
 
 // Convert data URL to File
 function dataURLtoFile(dataURL: string, filename: string): File {
@@ -306,9 +297,7 @@ async function analyzePhoto() {
     showAnalysis.value = true
 
     // Stop camera stream since we're moving to analysis phase
-    if (stream.value) {
-      stream.value.getTracks().forEach((track) => track.stop())
-    }
+    stopCamera()
   } catch (err) {
     console.error('Analysis failed:', err)
     error.value =
@@ -394,9 +383,8 @@ function retakePhoto() {
   showAnalysis.value = false
   resetAnalysis()
 
-  // Restart camera if needed
-  if (!stream.value && cameraReady.value) {
-    // Re-initialize camera
+  // Restart camera if not streaming
+  if (!cameraReady.value) {
     initCamera()
   }
 }
@@ -417,9 +405,7 @@ function showManualEntry() {
       showAnalysis.value = true
 
       // Stop camera stream since we're moving to analysis phase
-      if (stream.value) {
-        stream.value.getTracks().forEach((track) => track.stop())
-      }
+      stopCamera()
     } catch (err) {
       console.error('Manual entry error:', err)
     }

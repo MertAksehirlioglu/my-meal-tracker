@@ -1,5 +1,7 @@
 import { useFoodClassification } from './useFoodClassification'
-import { createUnifiedInference } from '@/lib/ai-providers'
+// ai-providers is NOT statically imported — it is loaded lazily inside
+// useFoodAnalysis() so the TensorFlow.js dependency tree is excluded from
+// the initial bundle and only fetched when the snap page is actually used.
 import { estimateNutrition as sharedEstimateNutrition } from '@/lib/nutrition-database'
 
 export interface NutritionInfo {
@@ -18,13 +20,36 @@ export interface FoodAnalysisResult {
 }
 
 export const useFoodAnalysis = () => {
-  const aiProvider = createUnifiedInference()
+  // Lazy inference provider — resolved on first classifyFood call so that the
+  // ai-providers module (and the TensorFlow.js tree it pulls in) are never
+  // bundled into the initial page load.
+  let _aiProvider: ReturnType<
+    typeof import('@/lib/ai-providers')['createUnifiedInference']
+  > | null = null
+
+  const getAiProvider = async () => {
+    if (!_aiProvider) {
+      const { createUnifiedInference } = await import('@/lib/ai-providers')
+      _aiProvider = createUnifiedInference()
+    }
+    return _aiProvider
+  }
+
+  // useFoodClassification is a thin reactive wrapper; pass a proxy that
+  // delegates to the lazily-loaded provider.
+  const lazyProvider = {
+    classifyImage: async (file: File) => {
+      const provider = await getAiProvider()
+      return provider.classifyImage(file)
+    },
+  }
+
   const {
     classifyFood,
     loading: classificationLoading,
     error: classificationError,
     formatFoodName,
-  } = useFoodClassification(aiProvider)
+  } = useFoodClassification(lazyProvider)
 
   const analyzing = ref(false)
   const analysisError = ref<string | null>(null)
