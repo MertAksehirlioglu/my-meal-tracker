@@ -24,6 +24,17 @@
         </v-btn>
       </v-card-title>
 
+      <!-- Meal image -->
+      <div v-if="meal?.image_url" class="meal-modal-image-wrap">
+        <v-img
+          :src="meal.image_url"
+          :alt="meal.name"
+          max-height="280"
+          cover
+          class="w-100"
+        />
+      </div>
+
       <v-divider />
 
       <!-- Macro totals -->
