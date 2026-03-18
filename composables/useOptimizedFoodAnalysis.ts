@@ -1,5 +1,5 @@
 /**
- * Optimized Food Analysis Composable (unused — kept for future use)
+ * Optimized Food Analysis Composable
  *
  * Wraps useFoodAnalysis with caching, image resizing, and retry logic.
  */

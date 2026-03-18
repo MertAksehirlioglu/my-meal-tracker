@@ -85,6 +85,26 @@
 
       <v-divider class="my-4" />
 
+      <!-- [Feature] Gallery upload fallback -->
+      <input
+        ref="galleryInputRef"
+        type="file"
+        accept="image/*"
+        style="display: none"
+        @change="onGalleryFileSelected"
+      />
+      <v-btn
+        color="secondary"
+        variant="outlined"
+        block
+        size="large"
+        class="mb-2"
+        @click="openGallery"
+      >
+        <v-icon left>mdi-image</v-icon>
+        Upload from Gallery
+      </v-btn>
+
       <v-btn
         color="grey"
         variant="outlined"
@@ -172,7 +192,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useFoodAnalysis } from '@/composables/useFoodAnalysis'
+import { useOptimizedFoodAnalysis } from '@/composables/useOptimizedFoodAnalysis'
 import { useStorage } from '@/composables/useStorage'
 import { useAuth } from '@/composables/useAuth'
 import { useErrorHandling } from '@/composables/useErrorHandling'
@@ -199,12 +219,13 @@ const {
   analyzing,
   analysisError,
   analysisResult,
-  classificationLoading,
-  classificationError,
+  isProcessing: classificationLoading,
   analyzeFood,
-  createManualAnalysis,
   resetAnalysis,
-} = useFoodAnalysis()
+  createManualAnalysis,
+} = useOptimizedFoodAnalysis()
+
+const classificationError = analysisError
 
 // Non-readonly reference for manual analysis result setting
 const _analysisResult = analysisResult as unknown
@@ -413,12 +434,28 @@ function showManualEntry() {
 }
 
 function goToManualEntry() {
-  // If we have a photo, pass it to manual entry
-  if (photoData.value) {
-    // TODO: Could store photo in session storage and pick it up in add-meal
-    router.push('/add-meal')
-  } else {
-    router.push('/add-meal')
+  router.push('/add-meal')
+}
+
+// [Feature] Gallery upload fallback
+const galleryInputRef = ref<HTMLInputElement | null>(null)
+
+function openGallery() {
+  galleryInputRef.value?.click()
+}
+
+function onGalleryFileSelected(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  const reader = new FileReader()
+  reader.onload = () => {
+    photoData.value = reader.result as string
   }
+  reader.readAsDataURL(file)
+
+  // Reset input so same file can be re-selected if needed
+  input.value = ''
 }
 </script>
