@@ -6,9 +6,34 @@
  * only the session tokens — identical to what Supabase would return directly.
  */
 import { createClient } from '@supabase/supabase-js'
-import { defineEventHandler, createError } from 'h3'
+import { defineEventHandler, createError, getRequestIP, setResponseHeader } from 'h3'
+
+// Stricter rate limit for demo login: 5 requests per minute per IP
+const DEMO_LIMIT = 5
+const DEMO_WINDOW_MS = 60 * 1000
+const demoRateLimitStore = new Map<string, { count: number; resetAt: number }>()
 
 export default defineEventHandler(async (_event) => {
+  // Apply rate limiting before any auth logic
+  const now = Date.now()
+  const ip = getRequestIP(_event) ?? 'unknown'
+  const key = `demo:${ip}`
+  const existing = demoRateLimitStore.get(key)
+
+  if (!existing || now > existing.resetAt) {
+    demoRateLimitStore.set(key, { count: 1, resetAt: now + DEMO_WINDOW_MS })
+  } else if (existing.count >= DEMO_LIMIT) {
+    const retryAfterSeconds = Math.ceil((existing.resetAt - now) / 1000)
+    setResponseHeader(_event, 'Retry-After', retryAfterSeconds)
+    throw createError({
+      statusCode: 429,
+      statusMessage: 'Too many demo login attempts, please try again later',
+      data: { code: 'RATE_LIMIT_EXCEEDED', resetAt: existing.resetAt },
+    })
+  } else {
+    demoRateLimitStore.set(key, { count: existing.count + 1, resetAt: existing.resetAt })
+  }
+
   const config = useRuntimeConfig()
 
   const signupDisabled = config.public.signupDisabled as boolean | undefined

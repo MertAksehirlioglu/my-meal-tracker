@@ -13,6 +13,57 @@
           :today="today"
         />
 
+        <!-- [Feature] Water Intake Tracker -->
+        <v-card class="mb-6" elevation="2" rounded="lg">
+          <v-card-text class="pa-4">
+            <div class="d-flex align-center justify-space-between mb-3">
+              <div class="d-flex align-center gap-2">
+                <v-icon color="blue" size="20">mdi-water</v-icon>
+                <span class="text-subtitle-1 font-weight-bold">Hydration</span>
+              </div>
+              <span class="text-body-2 text-grey-darken-1">
+                {{ waterIntakeMl }} / {{ WATER_GOAL_ML }} ml
+              </span>
+            </div>
+            <v-progress-linear
+              :model-value="waterProgress"
+              color="blue"
+              height="8"
+              rounded
+              class="mb-3"
+            />
+            <div class="d-flex gap-2">
+              <v-btn
+                size="small"
+                variant="tonal"
+                color="blue"
+                class="flex-grow-1"
+                @click="addWater(250)"
+              >
+                +250ml
+              </v-btn>
+              <v-btn
+                size="small"
+                variant="tonal"
+                color="blue"
+                class="flex-grow-1"
+                @click="addWater(500)"
+              >
+                +500ml
+              </v-btn>
+              <v-btn
+                size="small"
+                variant="outlined"
+                color="grey"
+                icon
+                @click="resetWater"
+              >
+                <v-icon size="16">mdi-refresh</v-icon>
+              </v-btn>
+            </div>
+          </v-card-text>
+        </v-card>
+
         <!-- Loading Overlay -->
         <v-overlay v-model="loading" class="d-flex align-center justify-center">
           <v-card class="pa-6 text-center" elevation="8" rounded="lg">
@@ -385,8 +436,33 @@ const retryLoadData = async () => {
   await retry(loadDashboardData, 3, 1000, 'dashboard data')
 }
 
+// [Feature] Daily Water Intake Tracker
+const WATER_GOAL_ML = 2000
+const waterKey = computed(() => `water-${new Date().toISOString().split('T')[0]}`)
+const waterIntakeMl = ref(0)
+
+const waterProgress = computed(() =>
+  Math.min((waterIntakeMl.value / WATER_GOAL_ML) * 100, 100)
+)
+
+function loadWater() {
+  const saved = localStorage.getItem(waterKey.value)
+  waterIntakeMl.value = saved ? parseInt(saved, 10) : 0
+}
+
+function addWater(ml: number) {
+  waterIntakeMl.value = Math.min(waterIntakeMl.value + ml, WATER_GOAL_ML * 2)
+  localStorage.setItem(waterKey.value, String(waterIntakeMl.value))
+}
+
+function resetWater() {
+  waterIntakeMl.value = 0
+  localStorage.setItem(waterKey.value, '0')
+}
+
 onMounted(() => {
   loadDashboardData()
+  loadWater()
 })
 </script>
 

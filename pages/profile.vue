@@ -202,6 +202,89 @@
       style="display: none"
       @change="handleAvatarUpload"
     />
+
+    <!-- [Feature] Weight History & Trend Chart -->
+    <v-card class="mb-6" elevation="2" rounded="lg">
+      <v-card-title class="text-h6 font-weight-bold">Weight History</v-card-title>
+      <v-card-text>
+        <!-- Log new weight -->
+        <v-row align="center" class="mb-4">
+          <v-col cols="5">
+            <v-text-field
+              v-model.number="newWeight"
+              label="Weight (kg)"
+              variant="outlined"
+              type="number"
+              density="compact"
+              hide-details
+              :min="20"
+              :max="500"
+            />
+          </v-col>
+          <v-col cols="4">
+            <v-text-field
+              v-model="weightDate"
+              label="Date"
+              variant="outlined"
+              type="date"
+              density="compact"
+              hide-details
+            />
+          </v-col>
+          <v-col cols="3">
+            <v-btn
+              color="primary"
+              block
+              :loading="weightLoading"
+              :disabled="!newWeight || isDemoUser"
+              @click="logWeight"
+            >
+              Log
+            </v-btn>
+          </v-col>
+        </v-row>
+
+        <v-alert v-if="weightError" type="error" density="compact" class="mb-3">
+          {{ weightError }}
+        </v-alert>
+
+        <!-- Simple SVG trend line -->
+        <div v-if="weightLog.length > 1" class="weight-chart mb-4">
+          <svg viewBox="0 0 300 80" style="width:100%;height:80px">
+            <polyline
+              :points="weightLog.map((e, i) => {
+                const x = (i / (weightLog.length - 1)) * 290 + 5
+                const vals = weightLog.map(w => w.weight_kg)
+                const minV = Math.min(...vals)
+                const maxV = Math.max(...vals)
+                const range = maxV - minV || 1
+                const y = 75 - ((e.weight_kg - minV) / range) * 65
+                return `${x},${y}`
+              }).join(' ')"
+              fill="none"
+              stroke="#1976d2"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+
+        <!-- Log entries list -->
+        <v-list v-if="weightLog.length > 0" density="compact" class="pa-0">
+          <v-list-item
+            v-for="entry in [...weightLog].reverse().slice(0, 10)"
+            :key="entry.id"
+            :title="`${entry.weight_kg} kg`"
+            :subtitle="entry.date"
+          >
+            <template #prepend>
+              <v-icon color="blue" size="18">mdi-scale-bathroom</v-icon>
+            </template>
+          </v-list-item>
+        </v-list>
+        <p v-else class="text-grey-darken-1 text-body-2">No weight entries yet. Log your first weight above.</p>
+      </v-card-text>
+    </v-card>
   </v-container>
 </template>
 
@@ -380,7 +463,59 @@ const handleAvatarUpload = async (event: Event) => {
   }
 }
 
+// [Feature] Body Weight History & Trend
+interface WeightEntry {
+  id: string
+  date: string
+  weight_kg: number
+  created_at: string
+}
+
+const weightLog = ref<WeightEntry[]>([])
+const newWeight = ref<number | undefined>(undefined)
+const weightDate = ref(new Date().toISOString().split('T')[0])
+const weightLoading = ref(false)
+const weightError = ref('')
+
+const loadWeightLog = async () => {
+  if (!user.value?.id) return
+  try {
+    const { authenticatedFetch } = useAuthenticatedFetch()
+    const res = await authenticatedFetch(`/api/users/${user.value.id}/weight-log`)
+    if (res.ok) {
+      const json = (await res.json()) as { data?: WeightEntry[] }
+      weightLog.value = json.data ?? []
+    }
+  } catch {
+    // non-critical
+  }
+}
+
+const logWeight = async () => {
+  if (!user.value?.id || !newWeight.value) return
+  weightLoading.value = true
+  weightError.value = ''
+  try {
+    const { authenticatedFetch } = useAuthenticatedFetch()
+    const res = await authenticatedFetch(`/api/users/${user.value.id}/weight-log`, {
+      method: 'POST',
+      body: JSON.stringify({ weight_kg: newWeight.value, date: weightDate.value }),
+    })
+    if (res.ok) {
+      await loadWeightLog()
+      newWeight.value = undefined
+    } else {
+      weightError.value = 'Failed to log weight'
+    }
+  } catch {
+    weightError.value = 'Failed to log weight'
+  } finally {
+    weightLoading.value = false
+  }
+}
+
 onMounted(() => {
   loadProfile()
+  loadWeightLog()
 })
 </script>
