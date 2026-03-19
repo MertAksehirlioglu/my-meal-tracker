@@ -107,6 +107,13 @@
         <v-spacer />
         <v-btn
           variant="tonal"
+          color="secondary"
+          prepend-icon="mdi-pencil"
+          @click="$emit('edit')"
+          >Edit</v-btn
+        >
+        <v-btn
+          variant="tonal"
           color="primary"
           @click="$emit('update:modelValue', false)"
           >Close</v-btn
@@ -129,6 +136,7 @@ const props = defineProps<{
 
 defineEmits<{
   'update:modelValue': [value: boolean]
+  'edit': []
 }>()
 
 const { authenticatedFetch } = useAuthenticatedFetch()
