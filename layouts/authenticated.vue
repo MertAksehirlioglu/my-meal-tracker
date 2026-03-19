@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <!-- App Bar -->
-    <v-app-bar color="white" elevation="2" fixed>
+    <v-app-bar color="surface" elevation="2" fixed>
       <v-container class="d-flex align-center justify-space-between pa-0">
         <div class="d-flex align-center">
           <v-avatar size="40" class="mr-3">
