@@ -65,8 +65,7 @@
                 sm="3"
               >
                 <div
-                  class="text-center pa-2 rounded"
-                  style="background: #f5f5f5"
+                  class="text-center pa-2 rounded bg-surface-variant"
                 >
                   <div
                     class="text-h6 font-weight-bold"
@@ -170,12 +169,8 @@
               <v-list-item
                 v-for="meal in meals"
                 :key="meal.id"
-                class="mb-2"
-                style="
-                  background-color: #f5f5f5;
-                  border-radius: 8px;
-                  cursor: pointer;
-                "
+                class="mb-2 bg-surface-variant"
+                style="border-radius: 8px; cursor: pointer"
                 @click="openMealDetail(meal)"
               >
                 <template #prepend>
@@ -192,7 +187,7 @@
                     <div
                       v-else
                       class="meal-list-placeholder d-flex align-center justify-center"
-                      style="width:44px;height:44px;border-radius:8px;background:#e0e0e0"
+                      style="width:44px;height:44px;border-radius:8px;background:rgb(var(--v-theme-surface-variant))"
                     >
                       <v-icon :color="getMealTypeColor(meal.meal_type)" size="22">
                         {{ getMealTypeIcon(meal.meal_type) }}
@@ -484,7 +479,7 @@ onMounted(loadMeals)
 .meal-photo-card {
   border-radius: 10px;
   overflow: hidden;
-  background: #f5f5f5;
+  background: rgb(var(--v-theme-surface));
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   position: relative;
@@ -499,7 +494,7 @@ onMounted(loadMeals)
   width: 100%;
   aspect-ratio: 1 / 1;
   overflow: hidden;
-  background: #e0e0e0;
+  background: rgb(var(--v-theme-surface-variant));
 }
 
 .meal-photo-placeholder {
@@ -508,7 +503,7 @@ onMounted(loadMeals)
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #eeeeee;
+  background: rgb(var(--v-theme-surface-variant));
 }
 
 .meal-placeholder-emoji {

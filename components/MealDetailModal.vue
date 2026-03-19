@@ -38,7 +38,7 @@
       <v-divider />
 
       <!-- Macro totals -->
-      <div class="px-4 py-3" style="background: #f9f9f9">
+      <div class="px-4 py-3 bg-surface-variant">
         <v-row dense>
           <v-col v-for="macro in macroTotals" :key="macro.label" cols="3">
             <div class="text-center">
@@ -78,7 +78,7 @@
           <v-list-item
             v-for="(item, index) in foodItems"
             :key="item.id"
-            :class="index % 2 === 0 ? 'bg-grey-lighten-5' : ''"
+            :class="index % 2 === 0 ? 'bg-surface-variant' : ''"
             class="py-2"
           >
             <v-list-item-title class="text-body-2 font-weight-medium">

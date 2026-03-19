@@ -141,7 +141,7 @@
                 </div>
                 <div
                   class="mx-auto rounded"
-                  style="width: 28px; background: #e0e0e0; position: relative"
+                  style="width: 28px; background: rgb(var(--v-theme-surface-variant)); position: relative"
                   :style="{ height: '60px' }"
                 >
                   <div

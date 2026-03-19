@@ -103,7 +103,7 @@
             v-for="goal in goalHistory"
             :key="goal.id"
             class="d-flex align-center justify-space-between p-3 rounded-lg"
-            :style="{ backgroundColor: goal.is_active ? '#e8f5e8' : '#f5f5f5' }"
+            :style="{ background: goal.is_active ? 'rgba(var(--v-theme-success), 0.12)' : 'rgb(var(--v-theme-surface-variant))' }"
           >
             <div class="flex-grow-1">
               <div class="d-flex align-center mb-1">
