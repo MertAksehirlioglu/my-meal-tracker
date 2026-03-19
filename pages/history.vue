@@ -152,6 +152,16 @@
                   <v-btn
                     icon
                     size="x-small"
+                    color="primary"
+                    variant="text"
+                    class="meal-photo-edit"
+                    @click.stop="openEditModal(meal)"
+                  >
+                    <v-icon size="14">mdi-pencil</v-icon>
+                  </v-btn>
+                  <v-btn
+                    icon
+                    size="x-small"
                     color="error"
                     variant="text"
                     class="meal-photo-delete"
@@ -217,6 +227,15 @@
                     <v-btn
                       icon
                       size="small"
+                      color="primary"
+                      variant="text"
+                      @click.stop="openEditModal(meal)"
+                    >
+                      <v-icon size="18">mdi-pencil</v-icon>
+                    </v-btn>
+                    <v-btn
+                      icon
+                      size="small"
                       color="error"
                       variant="text"
                       :loading="deletingId === meal.id"
@@ -258,7 +277,18 @@
     </v-dialog>
 
     <!-- Meal detail modal -->
-    <MealDetailModal v-model="detailModalOpen" :meal="selectedMeal" />
+    <MealDetailModal
+      v-model="detailModalOpen"
+      :meal="selectedMeal"
+      @edit="onDetailEdit"
+    />
+
+    <!-- Edit meal modal -->
+    <EditMealModal
+      v-model="editModalOpen"
+      :meal="mealToEdit"
+      @meal-updated="onMealUpdated"
+    />
 
     <!-- Snackbar for feedback -->
     <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="3000">
@@ -301,6 +331,8 @@ const viewMode = ref<'list' | 'grid'>('list')
 const deletingId = ref<string | null>(null)
 const deleteDialog = ref(false)
 const mealToDelete = ref<Meal | null>(null)
+const editModalOpen = ref(false)
+const mealToEdit = ref<Meal | null>(null)
 const detailModalOpen = ref(false)
 const selectedMeal = ref<Meal | null>(null)
 const snackbar = ref(false)
@@ -378,6 +410,20 @@ const onDatePicked = (value: unknown) => {
 const openMealDetail = (meal: Meal) => {
   selectedMeal.value = meal
   detailModalOpen.value = true
+}
+
+const openEditModal = (meal: Meal) => {
+  mealToEdit.value = meal
+  editModalOpen.value = true
+}
+
+const onMealUpdated = (updated: Meal) => {
+  meals.value = meals.value.map((m) => (m.id === updated.id ? updated : m))
+}
+
+const onDetailEdit = () => {
+  detailModalOpen.value = false
+  if (selectedMeal.value) openEditModal(selectedMeal.value)
 }
 
 const confirmDelete = (meal: Meal) => {
@@ -513,6 +559,12 @@ onMounted(loadMeals)
 .meal-photo-info {
   position: relative;
   padding-right: 28px;
+}
+
+.meal-photo-edit {
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
 }
 
 .meal-photo-delete {
