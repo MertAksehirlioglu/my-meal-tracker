@@ -4,10 +4,16 @@
     <v-app-bar color="surface" elevation="2" fixed>
       <v-container class="d-flex align-center justify-space-between pa-0">
         <div class="d-flex align-center">
-          <v-avatar size="40" class="mr-3">
-            <v-img src="/logo.png" alt="MealSnap Logo" />
-          </v-avatar>
-          <h1 class="text-h5 font-weight-bold text-primary">MealSnap</h1>
+          <v-btn
+            variant="text"
+            class="brand-home-btn pa-0 text-none"
+            @click="goToHome"
+          >
+            <v-avatar size="40" class="mr-3">
+              <v-img src="/logo.png" alt="MealSnap Logo" />
+            </v-avatar>
+            <h1 class="text-h5 font-weight-bold text-primary">MealSnap</h1>
+          </v-btn>
           <!-- Demo Mode Indicator -->
           <v-chip
             v-if="isDemoUser"
@@ -154,3 +160,9 @@ const logout = async () => {
   router.push('/login')
 }
 </script>
+
+<style scoped>
+.brand-home-btn {
+  min-width: 0;
+}
+</style>

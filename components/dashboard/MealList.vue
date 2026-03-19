@@ -1,7 +1,7 @@
 <template>
   <v-card elevation="2" rounded="lg">
     <v-card-title class="d-flex align-center justify-space-between">
-      <span class="text-h6 font-weight-bold">Today's Meals</span>
+      <span class="text-h6 font-weight-bold">{{ title }}</span>
       <div class="d-flex align-center gap-2">
         <v-chip v-if="meals.length > 0" color="primary" size="small">
           {{ meals.length }} meals
@@ -39,12 +39,8 @@
           <v-list-item
             v-for="meal in meals"
             :key="meal.id"
-            class="mb-2"
-            style="
-              background-color: #f5f5f5;
-              border-radius: 8px;
-              cursor: pointer;
-            "
+            class="mb-2 meal-item"
+            rounded="lg"
             @click="emit('open-detail', meal)"
           >
             <template #prepend>
@@ -94,10 +90,14 @@ import type { Meal } from '~/server/database/schemas'
 import { useMealTypeStyles } from '~/composables/useMealTypeStyles'
 import { formatTime } from '~/lib/date-utils'
 
-defineProps<{
-  meals: Meal[]
-  deletingMealId: string | null
-}>()
+withDefaults(
+  defineProps<{
+    meals: Meal[]
+    deletingMealId: string | null
+    title?: string
+  }>(),
+  { title: "Today's Meals" }
+)
 
 const emit = defineEmits<{
   'open-detail': [meal: Meal]
@@ -108,3 +108,10 @@ const emit = defineEmits<{
 
 const { getMealTypeColor, getMealTypeIcon } = useMealTypeStyles()
 </script>
+
+<style scoped>
+.meal-item {
+  background-color: rgb(var(--v-theme-surface-variant));
+  cursor: pointer;
+}
+</style>
