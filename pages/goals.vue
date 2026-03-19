@@ -103,7 +103,11 @@
             v-for="goal in goalHistory"
             :key="goal.id"
             class="d-flex align-center justify-space-between p-3 rounded-lg"
-            :style="{ background: goal.is_active ? 'rgba(var(--v-theme-success), 0.12)' : 'rgb(var(--v-theme-surface-variant))' }"
+            :style="{
+              background: goal.is_active
+                ? 'rgba(var(--v-theme-success), 0.12)'
+                : 'rgb(var(--v-theme-surface-variant))',
+            }"
           >
             <div class="flex-grow-1">
               <div class="d-flex align-center mb-1">
@@ -168,8 +172,12 @@
               >
                 {{ autoCalcError }}
               </v-alert>
-              <div v-if="!autoCalcError && !autoCalcLoading" class="text-caption text-grey mt-1">
-                Uses your height, weight, age &amp; activity level to suggest daily targets.
+              <div
+                v-if="!autoCalcError && !autoCalcLoading"
+                class="text-caption text-grey mt-1"
+              >
+                Uses your height, weight, age &amp; activity level to suggest
+                daily targets.
               </div>
             </div>
 
@@ -453,7 +461,8 @@ const autoCalculateGoals = async () => {
     const profile = json.data
 
     if (!profile?.height || !profile?.weight || !profile?.age) {
-      autoCalcError.value = 'Please complete your profile (height, weight, age) first.'
+      autoCalcError.value =
+        'Please complete your profile (height, weight, age) first.'
       return
     }
 
@@ -464,16 +473,18 @@ const autoCalculateGoals = async () => {
       active: 1.725,
       very_active: 1.9,
     }
-    const multiplier = activityMultipliers[profile.activity_level ?? 'moderate'] ?? 1.55
+    const multiplier =
+      activityMultipliers[profile.activity_level ?? 'moderate'] ?? 1.55
 
     // Mifflin-St Jeor (gender-neutral average)
-    const bmr = 10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 78
+    const bmr =
+      10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 78
     const tdee = Math.round(bmr * multiplier)
 
     goalForm.value.target_calories = tdee
-    goalForm.value.target_protein = Math.round((tdee * 0.30) / 4)
-    goalForm.value.target_carbs = Math.round((tdee * 0.40) / 4)
-    goalForm.value.target_fat = Math.round((tdee * 0.30) / 9)
+    goalForm.value.target_protein = Math.round((tdee * 0.3) / 4)
+    goalForm.value.target_carbs = Math.round((tdee * 0.4) / 4)
+    goalForm.value.target_fat = Math.round((tdee * 0.3) / 9)
 
     autoCalcError.value = null
   } catch {

@@ -141,7 +141,7 @@ const password = ref('')
 const formValid = ref(false)
 const formRef = ref()
 const router = useRouter()
-const { login, loginDemo, loading, error } = useAuth()
+const { login, loginDemo, loading, error, waitForUser } = useAuth()
 
 const config = useRuntimeConfig()
 const signupDisabled = computed(() => config.public.signupDisabled)
@@ -155,6 +155,7 @@ async function onSubmit() {
 
   const { error: loginError } = await login(email.value, password.value)
   if (!loginError) {
+    await waitForUser()
     // Redirect to home page on successful login
     router.push('/home')
   }
@@ -163,6 +164,12 @@ async function onSubmit() {
 async function onDemoLogin() {
   const { error: loginError } = await loginDemo()
   if (!loginError) {
+    const ready = await waitForUser()
+    if (!ready) {
+      error.value = 'Login succeeded but session is still initializing'
+      return
+    }
+
     // Redirect to home page on successful demo login
     router.push('/home')
   }

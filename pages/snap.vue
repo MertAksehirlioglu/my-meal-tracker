@@ -234,7 +234,6 @@ const { uploadMealImage, compressImage } = useStorage()
 // Camera composable
 const videoRef = ref<HTMLVideoElement | null>(null)
 const {
-  stream,
   isStreaming: cameraReady,
   error: cameraError,
   startCamera,

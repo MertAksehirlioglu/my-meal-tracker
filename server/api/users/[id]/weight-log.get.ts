@@ -3,8 +3,6 @@ import { getSupabaseClient } from '~/server/utils/supabase'
 import {
   defineWrappedEventHandler,
   createSuccessResponse,
-  createErrorResponse,
-  ApiErrorCode,
 } from '~/server/utils/api-error'
 
 export default defineWrappedEventHandler(async (event) => {

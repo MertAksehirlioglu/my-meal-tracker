@@ -18,6 +18,38 @@ import {
 } from 'h3'
 
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1'])
+
+const isLoopbackHost = (hostname: string): boolean =>
+  LOOPBACK_HOSTS.has(hostname.replace(/^\[(.*)\]$/, '$1'))
+
+const isAllowedOrigin = (
+  requestOrigin: string,
+  allowedOrigin: string,
+  isDevelopment: boolean
+): boolean => {
+  if (requestOrigin === allowedOrigin) {
+    return true
+  }
+
+  // Keep strict matching outside local development.
+  if (!isDevelopment) {
+    return false
+  }
+
+  try {
+    const requestUrl = new URL(requestOrigin)
+    const allowedUrl = new URL(allowedOrigin)
+
+    return (
+      requestUrl.protocol === allowedUrl.protocol &&
+      isLoopbackHost(requestUrl.hostname) &&
+      isLoopbackHost(allowedUrl.hostname)
+    )
+  } catch {
+    return false
+  }
+}
 
 export default defineEventHandler((event) => {
   const method = event.node.req.method?.toUpperCase() ?? ''
@@ -37,6 +69,7 @@ export default defineEventHandler((event) => {
   // NUXT_PUBLIC_APP_URL is exposed via runtimeConfig.public.appUrl
   const allowedOrigin: string =
     (config.public.appUrl as string | undefined) ?? 'http://localhost:3000'
+  const isDevelopment = !!import.meta.dev
 
   // Prefer Origin header; fall back to Referer
   const originHeader = getRequestHeader(event, 'origin')
@@ -60,7 +93,7 @@ export default defineEventHandler((event) => {
     return
   }
 
-  if (requestOrigin !== allowedOrigin) {
+  if (!isAllowedOrigin(requestOrigin, allowedOrigin, isDevelopment)) {
     console.warn(
       `[CSRF] Origin mismatch on ${method} ${url.pathname}: got "${requestOrigin}", expected "${allowedOrigin}"`
     )

@@ -3,9 +3,44 @@ import { ref, computed } from 'vue'
 const loading = ref(false)
 const error = ref<string | null>(null)
 
+const AUTH_POLL_ATTEMPTS = 40
+const AUTH_POLL_INTERVAL_MS = 50
+
 export function useAuth() {
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()
+
+  const waitForSession = async (): Promise<boolean> => {
+    let attempts = 0
+    while (attempts < AUTH_POLL_ATTEMPTS) {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (session?.access_token) {
+        return true
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, AUTH_POLL_INTERVAL_MS))
+      attempts += 1
+    }
+
+    return false
+  }
+
+  const waitForUser = async (): Promise<boolean> => {
+    let attempts = 0
+    while (attempts < AUTH_POLL_ATTEMPTS) {
+      if (user.value?.id) {
+        return true
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, AUTH_POLL_INTERVAL_MS))
+      attempts += 1
+    }
+
+    return false
+  }
 
   // Check if current user is demo user
   const isDemoUser = computed(() => {
@@ -59,6 +94,16 @@ export function useAuth() {
 
       if (setSessionError) {
         error.value = setSessionError.message
+      } else {
+        const ready = await waitForSession()
+        if (!ready) {
+          const { data: refreshed, error: refreshError } =
+            await supabase.auth.refreshSession()
+
+          if (refreshError || !refreshed.session?.access_token) {
+            error.value = 'Demo login could not establish a valid session'
+          }
+        }
       }
     } catch (err) {
       error.value = err instanceof Error ? err.message : 'Demo login failed'
@@ -119,5 +164,6 @@ export function useAuth() {
     resetError,
     isAuthenticated,
     isDemoUser,
+    waitForUser,
   }
 }

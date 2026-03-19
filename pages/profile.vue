@@ -205,7 +205,9 @@
 
     <!-- [Feature] Weight History & Trend Chart -->
     <v-card class="mb-6" elevation="2" rounded="lg">
-      <v-card-title class="text-h6 font-weight-bold">Weight History</v-card-title>
+      <v-card-title class="text-h6 font-weight-bold"
+        >Weight History</v-card-title
+      >
       <v-card-text>
         <!-- Log new weight -->
         <v-row align="center" class="mb-4">
@@ -250,17 +252,21 @@
 
         <!-- Simple SVG trend line -->
         <div v-if="weightLog.length > 1" class="weight-chart mb-4">
-          <svg viewBox="0 0 300 80" style="width:100%;height:80px">
+          <svg viewBox="0 0 300 80" style="width: 100%; height: 80px">
             <polyline
-              :points="weightLog.map((e, i) => {
-                const x = (i / (weightLog.length - 1)) * 290 + 5
-                const vals = weightLog.map(w => w.weight_kg)
-                const minV = Math.min(...vals)
-                const maxV = Math.max(...vals)
-                const range = maxV - minV || 1
-                const y = 75 - ((e.weight_kg - minV) / range) * 65
-                return `${x},${y}`
-              }).join(' ')"
+              :points="
+                weightLog
+                  .map((e, i) => {
+                    const x = (i / (weightLog.length - 1)) * 290 + 5
+                    const vals = weightLog.map((w) => w.weight_kg)
+                    const minV = Math.min(...vals)
+                    const maxV = Math.max(...vals)
+                    const range = maxV - minV || 1
+                    const y = 75 - ((e.weight_kg - minV) / range) * 65
+                    return `${x},${y}`
+                  })
+                  .join(' ')
+              "
               fill="none"
               stroke="#1976d2"
               stroke-width="2"
@@ -282,7 +288,9 @@
             </template>
           </v-list-item>
         </v-list>
-        <p v-else class="text-grey-darken-1 text-body-2">No weight entries yet. Log your first weight above.</p>
+        <p v-else class="text-grey-darken-1 text-body-2">
+          No weight entries yet. Log your first weight above.
+        </p>
       </v-card-text>
     </v-card>
   </v-container>
@@ -481,7 +489,9 @@ const loadWeightLog = async () => {
   if (!user.value?.id) return
   try {
     const { authenticatedFetch } = useAuthenticatedFetch()
-    const res = await authenticatedFetch(`/api/users/${user.value.id}/weight-log`)
+    const res = await authenticatedFetch(
+      `/api/users/${user.value.id}/weight-log`
+    )
     if (res.ok) {
       const json = (await res.json()) as { data?: WeightEntry[] }
       weightLog.value = json.data ?? []
@@ -497,10 +507,16 @@ const logWeight = async () => {
   weightError.value = ''
   try {
     const { authenticatedFetch } = useAuthenticatedFetch()
-    const res = await authenticatedFetch(`/api/users/${user.value.id}/weight-log`, {
-      method: 'POST',
-      body: JSON.stringify({ weight_kg: newWeight.value, date: weightDate.value }),
-    })
+    const res = await authenticatedFetch(
+      `/api/users/${user.value.id}/weight-log`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          weight_kg: newWeight.value,
+          date: weightDate.value,
+        }),
+      }
+    )
     if (res.ok) {
       await loadWeightLog()
       newWeight.value = undefined

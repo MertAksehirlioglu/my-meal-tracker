@@ -461,6 +461,89 @@ export interface DemoProgressEntry {
   created_at: string
 }
 
+// ── Planner demo data ──────────────────────────────────────────────────────
+
+export interface DemoPlannerTemplateData {
+  id: string
+  name: string
+  calories: number
+  protein: number
+  carbs: number
+  fat: number
+  fiber: number
+  serving_size: string
+  notes: string
+}
+
+export const demoPlannerTemplateData: DemoPlannerTemplateData[] = [
+  {
+    id: 'dpt-1',
+    name: 'Chicken & Sweet Potato',
+    calories: 520,
+    protein: 42,
+    carbs: 48,
+    fat: 12,
+    fiber: 6,
+    serving_size: '400g',
+    notes: 'Meal prep staple — bake in batches',
+  },
+  {
+    id: 'dpt-2',
+    name: 'Overnight Oats',
+    calories: 380,
+    protein: 14,
+    carbs: 58,
+    fat: 10,
+    fiber: 8,
+    serving_size: '300g jar',
+    notes: 'With banana and peanut butter',
+  },
+  {
+    id: 'dpt-3',
+    name: 'Avocado Toast & Eggs',
+    calories: 420,
+    protein: 18,
+    carbs: 38,
+    fat: 22,
+    fiber: 7,
+    serving_size: '2 slices + 2 eggs',
+    notes: '',
+  },
+  {
+    id: 'dpt-4',
+    name: 'Salmon & Quinoa',
+    calories: 580,
+    protein: 45,
+    carbs: 42,
+    fat: 20,
+    fiber: 5,
+    serving_size: '350g',
+    notes: 'Rich in omega-3',
+  },
+  {
+    id: 'dpt-5',
+    name: 'Greek Yogurt Bowl',
+    calories: 310,
+    protein: 22,
+    carbs: 35,
+    fat: 8,
+    fiber: 3,
+    serving_size: '250g',
+    notes: 'With granola and mixed berries',
+  },
+  {
+    id: 'dpt-6',
+    name: 'Protein Smoothie',
+    calories: 290,
+    protein: 32,
+    carbs: 28,
+    fat: 6,
+    fiber: 4,
+    serving_size: '500ml',
+    notes: 'Post-workout recovery',
+  },
+]
+
 export const demoProgressTemplates: Array<{
   id: string
   dayOffset: number

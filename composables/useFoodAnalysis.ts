@@ -24,7 +24,7 @@ export const useFoodAnalysis = () => {
   // ai-providers module (and the TensorFlow.js tree it pulls in) are never
   // bundled into the initial page load.
   let _aiProvider: ReturnType<
-    typeof import('@/lib/ai-providers')['createUnifiedInference']
+    (typeof import('@/lib/ai-providers'))['createUnifiedInference']
   > | null = null
 
   const getAiProvider = async () => {

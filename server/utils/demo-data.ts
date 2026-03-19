@@ -4,8 +4,12 @@ import type {
   UserProgress,
   FoodItem,
   User,
+  MealTemplate,
+  MealInventory,
+  MealPlanSlot,
 } from '~/server/database/schemas'
 import type { DailyTotal } from './date-helpers'
+import { demoPlannerTemplateData } from '@/data/demo-meals'
 
 async function getDemoData() {
   const { useDemoData } = await import('~/composables/useDemoData')
@@ -292,4 +296,230 @@ const DEMO_FOOD_ITEMS: Record<string, FoodItem[]> = {
 
 export function getDemoFoodItems(mealId: string): FoodItem[] {
   return DEMO_FOOD_ITEMS[mealId] ?? []
+}
+
+// ── Planner demo data ──────────────────────────────────────────────────────
+
+function plannerAddDays(base: string, days: number): string {
+  const d = new Date(base)
+  d.setDate(d.getDate() + days)
+  return d.toISOString().split('T')[0]!
+}
+
+export function getDemoPlannerTemplates(userId: string): MealTemplate[] {
+  const now = new Date().toISOString()
+  return demoPlannerTemplateData.map((t) => ({
+    id: t.id,
+    user_id: userId,
+    name: t.name,
+    calories: t.calories,
+    protein: t.protein,
+    carbs: t.carbs,
+    fat: t.fat,
+    fiber: t.fiber,
+    sugar: 0,
+    serving_size: t.serving_size,
+    notes: t.notes,
+    created_at: now,
+    updated_at: now,
+  }))
+}
+
+export function getDemoPlannerInventory(
+  userId: string,
+  weekStart: string
+): MealInventory[] {
+  const now = new Date().toISOString()
+  const templates = getDemoPlannerTemplates(userId)
+  const [tpl1, tpl2, tpl3, tpl4, tpl5] = templates as [
+    MealTemplate,
+    MealTemplate,
+    MealTemplate,
+    MealTemplate,
+    MealTemplate,
+  ]
+  return [
+    {
+      id: 'dpi-1',
+      user_id: userId,
+      template_id: tpl1.id,
+      week_start: weekStart,
+      quantity: 4,
+      portions_used: 3,
+      created_at: now,
+      updated_at: now,
+      template: tpl1,
+    },
+    {
+      id: 'dpi-2',
+      user_id: userId,
+      template_id: tpl2.id,
+      week_start: weekStart,
+      quantity: 5,
+      portions_used: 2,
+      created_at: now,
+      updated_at: now,
+      template: tpl2,
+    },
+    {
+      id: 'dpi-3',
+      user_id: userId,
+      template_id: tpl3.id,
+      week_start: weekStart,
+      quantity: 3,
+      portions_used: 2,
+      created_at: now,
+      updated_at: now,
+      template: tpl3,
+    },
+    {
+      id: 'dpi-4',
+      user_id: userId,
+      template_id: tpl4.id,
+      week_start: weekStart,
+      quantity: 2,
+      portions_used: 1,
+      created_at: now,
+      updated_at: now,
+      template: tpl4,
+    },
+    {
+      id: 'dpi-5',
+      user_id: userId,
+      template_id: tpl5.id,
+      week_start: weekStart,
+      quantity: 4,
+      portions_used: 1,
+      created_at: now,
+      updated_at: now,
+      template: tpl5,
+    },
+  ]
+}
+
+export function getDemoPlannerSlots(
+  userId: string,
+  weekStart: string
+): MealPlanSlot[] {
+  const now = new Date().toISOString()
+  const inventory = getDemoPlannerInventory(userId, weekStart)
+  const [inv1, inv2, inv3, inv4, inv5] = inventory as [
+    MealInventory,
+    MealInventory,
+    MealInventory,
+    MealInventory,
+    MealInventory,
+  ]
+  return [
+    // Monday — confirmed
+    {
+      id: 'dps-1',
+      user_id: userId,
+      inventory_id: inv2.id,
+      planned_date: plannerAddDays(weekStart, 0),
+      meal_type: 'breakfast',
+      is_confirmed: true,
+      confirmed_at: now,
+      created_at: now,
+      updated_at: now,
+      inventory: inv2,
+    },
+    {
+      id: 'dps-2',
+      user_id: userId,
+      inventory_id: inv1.id,
+      planned_date: plannerAddDays(weekStart, 0),
+      meal_type: 'lunch',
+      is_confirmed: true,
+      confirmed_at: now,
+      created_at: now,
+      updated_at: now,
+      inventory: inv1,
+    },
+    // Tuesday — confirmed
+    {
+      id: 'dps-3',
+      user_id: userId,
+      inventory_id: inv3.id,
+      planned_date: plannerAddDays(weekStart, 1),
+      meal_type: 'breakfast',
+      is_confirmed: true,
+      confirmed_at: now,
+      created_at: now,
+      updated_at: now,
+      inventory: inv3,
+    },
+    {
+      id: 'dps-4',
+      user_id: userId,
+      inventory_id: inv4.id,
+      planned_date: plannerAddDays(weekStart, 1),
+      meal_type: 'dinner',
+      is_confirmed: true,
+      confirmed_at: now,
+      created_at: now,
+      updated_at: now,
+      inventory: inv4,
+    },
+    // Wednesday — confirmed
+    {
+      id: 'dps-5',
+      user_id: userId,
+      inventory_id: inv5.id,
+      planned_date: plannerAddDays(weekStart, 2),
+      meal_type: 'breakfast',
+      is_confirmed: true,
+      confirmed_at: now,
+      created_at: now,
+      updated_at: now,
+      inventory: inv5,
+    },
+    {
+      id: 'dps-6',
+      user_id: userId,
+      inventory_id: inv1.id,
+      planned_date: plannerAddDays(weekStart, 2),
+      meal_type: 'lunch',
+      is_confirmed: true,
+      confirmed_at: now,
+      created_at: now,
+      updated_at: now,
+      inventory: inv1,
+    },
+    // Thursday — unconfirmed
+    {
+      id: 'dps-7',
+      user_id: userId,
+      inventory_id: inv2.id,
+      planned_date: plannerAddDays(weekStart, 3),
+      meal_type: 'breakfast',
+      is_confirmed: false,
+      created_at: now,
+      updated_at: now,
+      inventory: inv2,
+    },
+    {
+      id: 'dps-8',
+      user_id: userId,
+      inventory_id: inv1.id,
+      planned_date: plannerAddDays(weekStart, 3),
+      meal_type: 'lunch',
+      is_confirmed: false,
+      created_at: now,
+      updated_at: now,
+      inventory: inv1,
+    },
+    // Friday — unconfirmed
+    {
+      id: 'dps-9',
+      user_id: userId,
+      inventory_id: inv3.id,
+      planned_date: plannerAddDays(weekStart, 4),
+      meal_type: 'breakfast',
+      is_confirmed: false,
+      created_at: now,
+      updated_at: now,
+      inventory: inv3,
+    },
+  ]
 }

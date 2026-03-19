@@ -1,11 +1,67 @@
 {
   "permissions": {
+    "defaultMode": "acceptEdits",
     "allow": [
-      "Bash(npx prettier --check components/landing/ composables/useAnalysisCache.ts composables/useImageOptimizer.ts composables/useOptimizedFoodAnalysis.ts composables/useDemoData.ts data/demo-meals.ts pages/index.vue)",
-      "Bash(npx prettier --write server/api/meals/history.get.ts server/api/progress/today.get.ts server/api/users/[id]/avatar.post.ts server/utils/demo-data.ts)",
-      "Bash(npx prettier --check server/)",
-      "Bash(npx prettier --check server/api/ server/utils/)",
-      "Bash(npm run lint)"
+      "Bash(npm run check)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint:fix)",
+      "Bash(npm run format)",
+      "Bash(npm run format:check)",
+      "Bash(npm run typecheck)",
+      "Bash(npm run build)",
+      "Bash(npm run dev)",
+      "Bash(npm run generate)",
+      "Bash(npm run preview)",
+      "Bash(npx prettier --check *)",
+      "Bash(npx prettier --write *)",
+      "Bash(npx eslint *)",
+      "Bash(npx nuxi *)",
+      "Bash(npm audit)",
+      "Bash(npm install *)",
+      "Bash(npm uninstall *)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add *)",
+      "Bash(git commit*)",
+      "Bash(git push)",
+      "Bash(git push -u origin *)",
+      "Bash(git checkout -b *)",
+      "Bash(git branch)",
+      "Bash(git branch -a)",
+      "Bash(git branch -d *)",
+      "Bash(git merge --no-ff *)",
+      "Bash(git stash)",
+      "Bash(git stash pop)",
+      "Bash(gh *)"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git reset --hard*)",
+      "Bash(git checkout -- *)",
+      "Bash(git restore *)",
+      "Bash(git clean *)",
+      "Bash(rm -rf *)",
+      "Bash(npx supabase db reset*)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /Users/mertaksehirlioglu/my-meal-tracker && npm run check 2>&1 | tail -20"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "PACKAGE_MANAGER": "npm",
+    "QUALITY_GATE": "npm run check",
+    "PROJECT_ROOT": "/Users/mertaksehirlioglu/my-meal-tracker"
   }
 }

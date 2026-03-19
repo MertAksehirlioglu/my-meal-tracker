@@ -141,7 +141,11 @@
                 </div>
                 <div
                   class="mx-auto rounded"
-                  style="width: 28px; background: rgb(var(--v-theme-surface-variant)); position: relative"
+                  style="
+                    width: 28px;
+                    background: rgb(var(--v-theme-surface-variant));
+                    position: relative;
+                  "
                   :style="{ height: '60px' }"
                 >
                   <div
@@ -438,7 +442,9 @@ const retryLoadData = async () => {
 
 // [Feature] Daily Water Intake Tracker
 const WATER_GOAL_ML = 2000
-const waterKey = computed(() => `water-${new Date().toISOString().split('T')[0]}`)
+const waterKey = computed(
+  () => `water-${new Date().toISOString().split('T')[0]}`
+)
 const waterIntakeMl = ref(0)
 
 const waterProgress = computed(() =>

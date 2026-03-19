@@ -42,6 +42,17 @@
             <v-icon>mdi-history</v-icon>
           </v-btn>
 
+          <!-- Planner Button -->
+          <v-btn
+            icon
+            :color="$route.path === '/planner' ? 'primary' : 'grey'"
+            class="mr-2"
+            title="Meal Planner"
+            @click="router.push('/planner')"
+          >
+            <v-icon>mdi-calendar-month</v-icon>
+          </v-btn>
+
           <!-- Dark Mode Toggle -->
           <v-btn icon class="mr-2" @click="toggleDarkMode">
             <v-icon>{{

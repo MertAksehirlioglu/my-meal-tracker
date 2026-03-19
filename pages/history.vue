@@ -64,9 +64,7 @@
                 cols="6"
                 sm="3"
               >
-                <div
-                  class="text-center pa-2 rounded bg-surface-variant"
-                >
+                <div class="text-center pa-2 rounded bg-surface-variant">
                   <div
                     class="text-h6 font-weight-bold"
                     :class="macro.colorClass"
@@ -87,7 +85,12 @@
             v-if="meals.length > 0 && !loadingMeals"
             class="d-flex justify-end pa-2 pb-0"
           >
-            <v-btn-toggle v-model="viewMode" mandatory density="compact" color="primary">
+            <v-btn-toggle
+              v-model="viewMode"
+              mandatory
+              density="compact"
+              color="primary"
+            >
               <v-btn value="list" icon size="small">
                 <v-icon size="18">mdi-format-list-bulleted</v-icon>
               </v-btn>
@@ -197,9 +200,17 @@
                     <div
                       v-else
                       class="meal-list-placeholder d-flex align-center justify-center"
-                      style="width:44px;height:44px;border-radius:8px;background:rgb(var(--v-theme-surface-variant))"
+                      style="
+                        width: 44px;
+                        height: 44px;
+                        border-radius: 8px;
+                        background: rgb(var(--v-theme-surface-variant));
+                      "
                     >
-                      <v-icon :color="getMealTypeColor(meal.meal_type)" size="22">
+                      <v-icon
+                        :color="getMealTypeColor(meal.meal_type)"
+                        size="22"
+                      >
                         {{ getMealTypeIcon(meal.meal_type) }}
                       </v-icon>
                     </div>
@@ -527,7 +538,9 @@ onMounted(loadMeals)
   overflow: hidden;
   background: rgb(var(--v-theme-surface));
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
   position: relative;
 }
 

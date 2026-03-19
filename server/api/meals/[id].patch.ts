@@ -104,5 +104,9 @@ export default defineWrappedEventHandler(async (event) => {
     })
   }
 
-  return { success: true, data: data as Meal, message: 'Meal updated successfully' }
+  return {
+    success: true,
+    data: data as Meal,
+    message: 'Meal updated successfully',
+  }
 })

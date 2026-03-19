@@ -10,14 +10,23 @@ import { readBody, createError } from 'h3'
 
 export default defineWrappedEventHandler(async (event) => {
   const user = requireAuth(event)
-  const body = await readBody(event) as { weight_kg?: unknown; date?: unknown }
+  const body = (await readBody(event)) as {
+    weight_kg?: unknown
+    date?: unknown
+  }
 
   const weight_kg = Number(body?.weight_kg)
   if (!weight_kg || weight_kg <= 0 || weight_kg > 500) {
-    throw createError({ statusCode: 400, statusMessage: 'Invalid weight value' })
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Invalid weight value',
+    })
   }
 
-  const date = typeof body?.date === 'string' ? body.date : new Date().toISOString().split('T')[0]
+  const date =
+    typeof body?.date === 'string'
+      ? body.date
+      : new Date().toISOString().split('T')[0]
 
   const supabase = getSupabaseClient()
 

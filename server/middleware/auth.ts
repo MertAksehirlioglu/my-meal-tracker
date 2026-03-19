@@ -18,7 +18,12 @@ export default defineEventHandler(async (event) => {
     event.node.req.socket?.remoteAddress ||
     'unknown'
 
-  const publicEndpoints = ['/api/health', '/api/public', '/api/auth/callback']
+  const publicEndpoints = [
+    '/api/health',
+    '/api/public',
+    '/api/auth/callback',
+    '/api/auth/demo-login',
+  ]
 
   const isPublicEndpoint = publicEndpoints.some((endpoint) =>
     url?.startsWith(endpoint)

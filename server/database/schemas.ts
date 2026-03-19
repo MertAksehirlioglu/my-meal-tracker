@@ -91,6 +91,51 @@ export interface UserProgress {
   created_at: string
 }
 
+export interface MealTemplate {
+  id: string
+  user_id: string
+  name: string
+  calories: number
+  protein: number
+  carbs: number
+  fat: number
+  fiber?: number
+  sugar?: number
+  serving_size?: string
+  notes?: string
+  image_url?: string
+  source_meal_id?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface MealInventory {
+  id: string
+  user_id: string
+  template_id: string
+  week_start: string // YYYY-MM-DD, always a Monday
+  quantity: number
+  created_at: string
+  updated_at: string
+  // Joined
+  template?: MealTemplate
+  portions_used?: number // derived: COUNT(meal_plan_slots)
+}
+
+export interface MealPlanSlot {
+  id: string
+  user_id: string
+  inventory_id: string
+  planned_date: string // YYYY-MM-DD
+  meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack'
+  is_confirmed: boolean
+  confirmed_at?: string
+  created_at: string
+  updated_at: string
+  // Joined
+  inventory?: MealInventory
+}
+
 // Database table names
 export const TABLES = {
   USERS: 'users',
@@ -99,6 +144,9 @@ export const TABLES = {
   FOOD_DATABASE: 'food_database',
   USER_GOALS: 'user_goals',
   USER_PROGRESS: 'user_progress',
+  MEAL_TEMPLATES: 'meal_templates',
+  MEAL_INVENTORY: 'meal_inventory',
+  MEAL_PLAN_SLOTS: 'meal_plan_slots',
 } as const
 
 // Row Level Security (RLS) policies
@@ -151,4 +199,26 @@ export type UpdateUserGoal = Partial<
 >
 export type UpdateUserProgress = Partial<
   Omit<UserProgress, 'id' | 'created_at'>
+>
+
+export type CreateMealTemplate = Omit<
+  MealTemplate,
+  'id' | 'created_at' | 'updated_at'
+>
+export type UpdateMealTemplate = Partial<
+  Omit<MealTemplate, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+>
+
+export type CreateMealInventory = Omit<
+  MealInventory,
+  'id' | 'created_at' | 'updated_at' | 'template' | 'portions_used'
+>
+export type UpdateMealInventory = Pick<MealInventory, 'quantity'>
+
+export type CreateMealPlanSlot = Omit<
+  MealPlanSlot,
+  'id' | 'created_at' | 'updated_at' | 'inventory'
+>
+export type UpdateMealPlanSlot = Partial<
+  Pick<MealPlanSlot, 'planned_date' | 'meal_type' | 'is_confirmed'>
 >

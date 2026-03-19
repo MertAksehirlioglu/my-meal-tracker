@@ -136,7 +136,7 @@ const props = defineProps<{
 
 defineEmits<{
   'update:modelValue': [value: boolean]
-  'edit': []
+  edit: []
 }>()
 
 const { authenticatedFetch } = useAuthenticatedFetch()

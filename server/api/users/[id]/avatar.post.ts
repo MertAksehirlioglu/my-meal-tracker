@@ -11,7 +11,12 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
  */
 function detectMimeType(buf: Buffer): string | null {
   // JPEG: FF D8 FF
-  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) {
+  if (
+    buf.length >= 3 &&
+    buf[0] === 0xff &&
+    buf[1] === 0xd8 &&
+    buf[2] === 0xff
+  ) {
     return 'image/jpeg'
   }
   // PNG: 89 50 4E 47 0D 0A 1A 0A

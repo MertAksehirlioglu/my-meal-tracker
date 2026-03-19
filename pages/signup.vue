@@ -122,7 +122,8 @@ const password = ref('')
 const formValid = ref(true)
 const success = ref(false)
 const router = useRouter()
-const { register, updateProfile, loginDemo, loading, error } = useAuth()
+const { register, updateProfile, loginDemo, loading, error, waitForUser } =
+  useAuth()
 
 const config = useRuntimeConfig()
 const signupDisabled = computed(() => config.public.signupDisabled)
@@ -140,6 +141,12 @@ async function onSubmit() {
 async function onDemoLogin() {
   const { error: loginError } = await loginDemo()
   if (!loginError) {
+    const ready = await waitForUser()
+    if (!ready) {
+      error.value = 'Login succeeded but session is still initializing'
+      return
+    }
+
     router.push('/home')
   }
 }
