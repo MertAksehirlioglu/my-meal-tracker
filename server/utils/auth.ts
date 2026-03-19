@@ -1,5 +1,6 @@
 import type { H3Event } from 'h3'
-import { ApiErrorCode, createErrorResponse } from './api-error'
+import { createError } from 'h3'
+import { ApiErrorCode } from './api-error'
 
 export interface AuthenticatedUser {
   id: string
@@ -16,11 +17,15 @@ export function requireAuth(event: H3Event): AuthenticatedUser {
   const user = event.context.user
 
   if (!user?.id) {
-    createErrorResponse(
-      ApiErrorCode.UNAUTHORIZED,
-      'Authentication required',
-      401
-    )
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'Authentication required',
+      data: {
+        success: false,
+        message: 'Authentication required',
+        error: { code: ApiErrorCode.UNAUTHORIZED },
+      },
+    })
   }
 
   return user as AuthenticatedUser
@@ -51,12 +56,18 @@ export function validateInput(
   }
 
   if (missingFields.length > 0) {
-    createErrorResponse(
-      ApiErrorCode.MISSING_REQUIRED_FIELDS,
-      `Missing required fields: ${missingFields.join(', ')}`,
-      400,
-      JSON.stringify({ fields: missingFields })
-    )
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Missing required fields: ${missingFields.join(', ')}`,
+      data: {
+        success: false,
+        message: `Missing required fields: ${missingFields.join(', ')}`,
+        error: {
+          code: ApiErrorCode.MISSING_REQUIRED_FIELDS,
+          details: JSON.stringify({ fields: missingFields }),
+        },
+      },
+    })
   }
 
   // Validate optional fields if provided
@@ -70,12 +81,18 @@ export function validateInput(
   }
 
   if (invalidFields.length > 0) {
-    createErrorResponse(
-      ApiErrorCode.INVALID_INPUT,
-      `Invalid values for fields: ${invalidFields.join(', ')}`,
-      400,
-      JSON.stringify({ fields: invalidFields })
-    )
+    throw createError({
+      statusCode: 400,
+      statusMessage: `Invalid values for fields: ${invalidFields.join(', ')}`,
+      data: {
+        success: false,
+        message: `Invalid values for fields: ${invalidFields.join(', ')}`,
+        error: {
+          code: ApiErrorCode.INVALID_INPUT,
+          details: JSON.stringify({ fields: invalidFields }),
+        },
+      },
+    })
   }
 }
 
