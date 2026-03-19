@@ -147,6 +147,32 @@
           @submit.prevent="saveGoal"
         >
           <v-card-text>
+            <!-- Auto-calculate section -->
+            <div class="mb-4">
+              <v-btn
+                variant="tonal"
+                color="primary"
+                size="small"
+                prepend-icon="mdi-calculator"
+                :loading="autoCalcLoading"
+                @click="autoCalculateGoals"
+              >
+                Auto-calculate from profile
+              </v-btn>
+              <v-alert
+                v-if="autoCalcError"
+                type="warning"
+                density="compact"
+                class="mt-2"
+                variant="tonal"
+              >
+                {{ autoCalcError }}
+              </v-alert>
+              <div v-if="!autoCalcError && !autoCalcLoading" class="text-caption text-grey mt-1">
+                Uses your height, weight, age &amp; activity level to suggest daily targets.
+              </div>
+            </div>
+
             <v-text-field
               v-model.number="goalForm.target_weight"
               label="Target Weight (kg)"
@@ -274,7 +300,7 @@ import { useAuth } from '~/composables/useAuth'
 import { formatDate } from '~/lib/date-utils'
 import { useFormValidation } from '~/composables/useFormValidation'
 import { useErrorHandling } from '~/composables/useErrorHandling'
-import type { UserGoal, CreateUserGoal } from '~/server/database/schemas'
+import type { UserGoal, CreateUserGoal, User } from '~/server/database/schemas'
 
 // Page meta
 definePageMeta({
@@ -305,6 +331,8 @@ const goalHistory = ref<UserGoal[]>([])
 const showGoalDialog = ref(false)
 const editingGoal = ref<UserGoal | null>(null)
 const loading = ref(false)
+const autoCalcLoading = ref(false)
+const autoCalcError = ref<string | null>(null)
 
 // Goal form
 const goalForm = ref<CreateUserGoal>({
@@ -411,6 +439,48 @@ const saveGoal = async () => {
     false // Don't use built-in loading state
   )
   loading.value = false
+}
+
+const autoCalculateGoals = async () => {
+  if (!user.value?.id) return
+  autoCalcLoading.value = true
+  autoCalcError.value = null
+  try {
+    const { authenticatedFetch } = useAuthenticatedFetch()
+    const res = await authenticatedFetch(`/api/users/${user.value.id}`)
+    if (!res.ok) throw new Error('Failed to fetch profile')
+    const json = (await res.json()) as { data?: User }
+    const profile = json.data
+
+    if (!profile?.height || !profile?.weight || !profile?.age) {
+      autoCalcError.value = 'Please complete your profile (height, weight, age) first.'
+      return
+    }
+
+    const activityMultipliers: Record<string, number> = {
+      sedentary: 1.2,
+      light: 1.375,
+      moderate: 1.55,
+      active: 1.725,
+      very_active: 1.9,
+    }
+    const multiplier = activityMultipliers[profile.activity_level ?? 'moderate'] ?? 1.55
+
+    // Mifflin-St Jeor (gender-neutral average)
+    const bmr = 10 * profile.weight + 6.25 * profile.height - 5 * profile.age - 78
+    const tdee = Math.round(bmr * multiplier)
+
+    goalForm.value.target_calories = tdee
+    goalForm.value.target_protein = Math.round((tdee * 0.30) / 4)
+    goalForm.value.target_carbs = Math.round((tdee * 0.40) / 4)
+    goalForm.value.target_fat = Math.round((tdee * 0.30) / 9)
+
+    autoCalcError.value = null
+  } catch {
+    autoCalcError.value = 'Could not fetch profile data. Please try again.'
+  } finally {
+    autoCalcLoading.value = false
+  }
 }
 
 const resetGoalForm = () => {
