@@ -258,6 +258,21 @@
                 </template>
               </v-list-item>
             </v-list>
+
+            <!-- Load more button -->
+            <div v-if="hasMore && !loadingMeals" class="text-center mt-4">
+              <v-btn
+                variant="outlined"
+                color="primary"
+                :loading="loadingMore"
+                @click="loadMore"
+              >
+                Load more
+              </v-btn>
+              <div class="text-caption text-grey mt-1">
+                Showing {{ meals.length }} of {{ totalMeals }} meals
+              </div>
+            </div>
           </v-card-text>
         </v-card>
       </v-col>
@@ -350,6 +365,10 @@ const snackbar = ref(false)
 const snackbarMessage = ref('')
 const snackbarColor = ref('success')
 
+const totalMeals = ref(0)
+const currentOffset = ref(0)
+const pageLimit = 20
+
 const isToday = computed(() => selectedDate.value === todayIso)
 
 const macroSummary = computed(() => {
@@ -385,19 +404,63 @@ const macroSummary = computed(() => {
 const formatDateForDisplay = (dateStr: string) =>
   formatDisplayDate(dateStr, todayIso)
 
-const loadMeals = async () => {
+const loadMeals = async (reset = true) => {
+  if (reset) {
+    currentOffset.value = 0
+    meals.value = []
+  }
   loadingMeals.value = true
   try {
-    const res = await authenticatedFetch(
-      `/api/meals/history?date=${selectedDate.value}`
-    )
+    const params = new URLSearchParams({
+      date: selectedDate.value,
+      limit: String(pageLimit),
+      offset: String(currentOffset.value),
+    })
+    const res = await authenticatedFetch(`/api/meals/history?${params}`)
     if (!res.ok) throw new Error('Failed to load meals')
-    const json = (await res.json()) as { data?: Meal[] }
-    meals.value = json.data ?? []
+    const json = (await res.json()) as {
+      success: boolean
+      data: { meals: Meal[]; total: number; limit: number; offset: number }
+    }
+    if (reset) {
+      meals.value = json.data.meals ?? []
+    } else {
+      meals.value = [...meals.value, ...(json.data.meals ?? [])]
+    }
+    totalMeals.value = json.data.total ?? 0
+    currentOffset.value =
+      (json.data.offset ?? 0) + (json.data.meals?.length ?? 0)
   } catch {
-    meals.value = []
+    if (reset) meals.value = []
   } finally {
     loadingMeals.value = false
+  }
+}
+
+const hasMore = computed(() => currentOffset.value < totalMeals.value)
+const loadingMore = ref(false)
+
+const loadMore = async () => {
+  loadingMore.value = true
+  try {
+    const params = new URLSearchParams({
+      date: selectedDate.value,
+      limit: String(pageLimit),
+      offset: String(currentOffset.value),
+    })
+    const res = await authenticatedFetch(`/api/meals/history?${params}`)
+    if (!res.ok) throw new Error('Failed to load meals')
+    const json = (await res.json()) as {
+      success: boolean
+      data: { meals: Meal[]; total: number; limit: number; offset: number }
+    }
+    meals.value = [...meals.value, ...(json.data.meals ?? [])]
+    totalMeals.value = json.data.total ?? 0
+    currentOffset.value += json.data.meals?.length ?? 0
+  } catch {
+    // silently fail load more
+  } finally {
+    loadingMore.value = false
   }
 }
 
@@ -507,7 +570,7 @@ const exportCsv = () => {
 
 watch(selectedDate, () => {
   pickerValue.value = selectedDate.value
-  loadMeals()
+  loadMeals(true)
 })
 
 onMounted(loadMeals)
