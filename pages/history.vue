@@ -392,8 +392,8 @@ const loadMeals = async () => {
       `/api/meals/history?date=${selectedDate.value}`
     )
     if (!res.ok) throw new Error('Failed to load meals')
-    const json = (await res.json()) as { data?: Meal[] }
-    meals.value = json.data ?? []
+    const json = (await res.json()) as { success: boolean; data: { meals: Meal[]; date: string } }
+    meals.value = json.data?.meals ?? []
   } catch {
     meals.value = []
   } finally {

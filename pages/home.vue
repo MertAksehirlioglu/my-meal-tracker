@@ -214,8 +214,8 @@ const onSelectDay = async (date: string) => {
     const { authenticatedFetch } = useAuthenticatedFetch()
     const res = await authenticatedFetch(`/api/meals?date=${date}`)
     if (res.ok) {
-      const json = (await res.json()) as { data?: Meal[] }
-      selectedDayMeals.value = json?.data || []
+      const json = (await res.json()) as { success: boolean; data: Meal[] }
+      selectedDayMeals.value = json.data || []
     }
   } catch {
     selectedDayMeals.value = []
@@ -320,8 +320,8 @@ const loadDashboardData = async () => {
     const mealsResponse = await authenticatedFetch('/api/meals/today')
     if (!mealsResponse.ok)
       throw new Error(`Failed to load meals: ${mealsResponse.statusText}`)
-    const mealsData = (await mealsResponse.json()) as { data?: Meal[] }
-    todayMeals.value = mealsData?.data || []
+    const mealsData = (await mealsResponse.json()) as { success: boolean; data: Meal[] }
+    todayMeals.value = mealsData.data || []
     if (selectedDay.value === todayIso.value) {
       selectedDayMeals.value = todayMeals.value
     }
@@ -329,24 +329,20 @@ const loadDashboardData = async () => {
     const goalsResponse = await authenticatedFetch('/api/goals/active')
     if (!goalsResponse.ok)
       throw new Error(`Failed to load goals: ${goalsResponse.statusText}`)
-    const goalsData = (await goalsResponse.json()) as { data?: UserGoal }
-    userGoals.value = goalsData?.data || null
+    const goalsData = (await goalsResponse.json()) as { success: boolean; data: UserGoal }
+    userGoals.value = goalsData.data || null
 
     const progressResponse = await authenticatedFetch('/api/progress/today')
     if (!progressResponse.ok)
       throw new Error(`Failed to load progress: ${progressResponse.statusText}`)
-    const progressData = (await progressResponse.json()) as {
-      data?: UserProgress
-    }
-    todayProgress.value = progressData?.data || null
+    const progressData = (await progressResponse.json()) as { success: boolean; data: UserProgress }
+    todayProgress.value = progressData.data || null
 
     try {
       const weeklyResponse = await authenticatedFetch('/api/progress/weekly')
       if (weeklyResponse.ok) {
-        const weeklyJson = (await weeklyResponse.json()) as {
-          data?: DailyTotal[]
-        }
-        weeklyData.value = weeklyJson?.data || []
+        const weeklyJson = (await weeklyResponse.json()) as { success: boolean; data: DailyTotal[] }
+        weeklyData.value = weeklyJson.data || []
       }
     } catch {
       // Weekly data is non-critical; ignore errors

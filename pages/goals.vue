@@ -363,10 +363,7 @@ const loadGoals = async () => {
     const { authenticatedFetch } = useAuthenticatedFetch()
     const response = (await authenticatedFetch('/api/goals').then((r) =>
       r.json()
-    )) as {
-      success: boolean
-      data?: UserGoal[]
-    }
+    )) as { success: boolean; data: UserGoal[] }
     if (response.success) {
       goalHistory.value = response.data || []
       activeGoal.value =
@@ -413,20 +410,12 @@ const saveGoal = async () => {
             method: 'PUT',
             body: JSON.stringify(payload),
           }
-        ).then((r) => r.json())) as {
-          success: boolean
-          data?: UserGoal
-          message?: string
-        }
+        ).then((r) => r.json())) as { success: boolean; data: UserGoal }
       } else {
         response = (await authenticatedFetch('/api/goals', {
           method: 'POST',
           body: JSON.stringify(payload),
-        }).then((r) => r.json())) as {
-          success: boolean
-          data?: UserGoal
-          message?: string
-        }
+        }).then((r) => r.json())) as { success: boolean; data: UserGoal }
       }
 
       if (response.success) {
@@ -440,7 +429,7 @@ const saveGoal = async () => {
         resetGoalForm()
         await loadGoals()
       } else {
-        throw new Error(response.message || 'Failed to save goal')
+        throw new Error('Failed to save goal')
       }
     },
     'saving goal',
@@ -457,7 +446,7 @@ const autoCalculateGoals = async () => {
     const { authenticatedFetch } = useAuthenticatedFetch()
     const res = await authenticatedFetch(`/api/users/${user.value.id}`)
     if (!res.ok) throw new Error('Failed to fetch profile')
-    const json = (await res.json()) as { data?: User }
+    const json = (await res.json()) as { success: boolean; data: User }
     const profile = json.data
 
     if (!profile?.height || !profile?.weight || !profile?.age) {

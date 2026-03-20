@@ -2,9 +2,8 @@ import { requireAuth } from '~/server/utils/auth'
 import { getSupabaseClient } from '~/server/utils/supabase'
 import {
   defineWrappedEventHandler,
-  createSuccessResponse,
-  createErrorResponse,
-  ApiErrorCode,
+  sendApiResponse,
+  sendApiError,
 } from '~/server/utils/api-error'
 import { readBody, createError } from 'h3'
 
@@ -41,13 +40,8 @@ export default defineWrappedEventHandler(async (event) => {
     .single()
 
   if (error) {
-    return createErrorResponse(
-      ApiErrorCode.DATABASE_ERROR,
-      'Failed to save weight log',
-      500,
-      error.message
-    )
+    return sendApiError('Failed to save weight log', 500)
   }
 
-  return createSuccessResponse(data, 'Weight logged successfully')
+  return sendApiResponse(data)
 })

@@ -1,7 +1,10 @@
 import { requireAuth } from '~/server/utils/auth'
 import { blockDemoUserWrite } from '~/server/utils/demo'
 import { getSupabaseClientWithAuth } from '~/server/utils/supabase'
-import { defineWrappedEventHandler } from '~/server/utils/api-error'
+import {
+  defineWrappedEventHandler,
+  sendApiResponse,
+} from '~/server/utils/api-error'
 import { getDemoSampleMealsAndGoals } from '~/server/utils/demo-data'
 
 export default defineWrappedEventHandler(async (event) => {
@@ -71,12 +74,8 @@ export default defineWrappedEventHandler(async (event) => {
     })
   }
 
-  return {
-    success: true,
-    message: 'Sample data created successfully',
-    data: {
-      meals: mealsData,
-      goals: goalsData,
-    },
-  }
+  return sendApiResponse({
+    meals: mealsData,
+    goals: goalsData,
+  })
 })

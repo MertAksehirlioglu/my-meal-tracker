@@ -2,7 +2,10 @@ import type { Meal } from '~/server/database/schemas'
 import { requireAuth } from '~/server/utils/auth'
 import { isDemoUser } from '~/server/utils/demo'
 import { getSupabaseClient } from '~/server/utils/supabase'
-import { defineWrappedEventHandler } from '~/server/utils/api-error'
+import {
+  defineWrappedEventHandler,
+  sendApiResponse,
+} from '~/server/utils/api-error'
 import { getDemoMealsByDate } from '~/server/utils/demo-data'
 
 export default defineWrappedEventHandler(async (event) => {
@@ -20,11 +23,10 @@ export default defineWrappedEventHandler(async (event) => {
   }
 
   if (isDemoUser(user)) {
-    return {
-      success: true,
-      data: await getDemoMealsByDate(user.id, targetDate),
+    return sendApiResponse({
+      meals: await getDemoMealsByDate(user.id, targetDate),
       date: targetDate.toISOString().split('T')[0],
-    }
+    })
   }
 
   const startOfDay = new Date(
@@ -63,9 +65,8 @@ export default defineWrappedEventHandler(async (event) => {
     })
   }
 
-  return {
-    success: true,
-    data: data as Meal[],
+  return sendApiResponse({
+    meals: data as Meal[],
     date: targetDate.toISOString().split('T')[0],
-  }
+  })
 })

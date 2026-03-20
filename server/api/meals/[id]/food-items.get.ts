@@ -2,7 +2,10 @@ import type { FoodItem } from '~/server/database/schemas'
 import { requireAuth } from '~/server/utils/auth'
 import { isDemoUser } from '~/server/utils/demo'
 import { getSupabaseClient } from '~/server/utils/supabase'
-import { defineWrappedEventHandler } from '~/server/utils/api-error'
+import {
+  defineWrappedEventHandler,
+  sendApiResponse,
+} from '~/server/utils/api-error'
 import { getDemoFoodItems } from '~/server/utils/demo-data'
 
 export default defineWrappedEventHandler(async (event) => {
@@ -17,7 +20,7 @@ export default defineWrappedEventHandler(async (event) => {
   }
 
   if (isDemoUser(user)) {
-    return { success: true, data: getDemoFoodItems(mealId) }
+    return sendApiResponse(getDemoFoodItems(mealId))
   }
 
   const supabase = getSupabaseClient()
@@ -46,5 +49,5 @@ export default defineWrappedEventHandler(async (event) => {
     })
   }
 
-  return { success: true, data: data as FoodItem[] }
+  return sendApiResponse(data as FoodItem[])
 })

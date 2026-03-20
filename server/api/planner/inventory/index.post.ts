@@ -2,7 +2,10 @@ import type { MealInventory } from '~/server/database/schemas'
 import { requireAuth, validateInput, validators } from '~/server/utils/auth'
 import { blockDemoUserWrite } from '~/server/utils/demo'
 import { getSupabaseClient } from '~/server/utils/supabase'
-import { defineWrappedEventHandler } from '~/server/utils/api-error'
+import {
+  defineWrappedEventHandler,
+  sendApiResponse,
+} from '~/server/utils/api-error'
 import { isMonday } from '~/lib/week-utils'
 
 export default defineWrappedEventHandler(async (event) => {
@@ -92,9 +95,5 @@ export default defineWrappedEventHandler(async (event) => {
     result = data
   }
 
-  return {
-    success: true,
-    data: { ...result, portions_used: 0 } as MealInventory,
-    message: 'Inventory updated successfully',
-  }
+  return sendApiResponse({ ...result, portions_used: 0 } as MealInventory)
 })

@@ -2,7 +2,10 @@ import type { Meal, UpdateMeal } from '~/server/database/schemas'
 import { requireAuth, validateInput, validators } from '~/server/utils/auth'
 import { blockDemoUserWrite } from '~/server/utils/demo'
 import { getSupabaseClient } from '~/server/utils/supabase'
-import { defineWrappedEventHandler } from '~/server/utils/api-error'
+import {
+  defineWrappedEventHandler,
+  sendApiResponse,
+} from '~/server/utils/api-error'
 
 export default defineWrappedEventHandler(async (event) => {
   const user = requireAuth(event)
@@ -104,9 +107,5 @@ export default defineWrappedEventHandler(async (event) => {
     })
   }
 
-  return {
-    success: true,
-    data: data as Meal,
-    message: 'Meal updated successfully',
-  }
+  return sendApiResponse(data as Meal)
 })

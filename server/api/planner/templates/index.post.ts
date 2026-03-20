@@ -2,7 +2,10 @@ import type { MealTemplate } from '~/server/database/schemas'
 import { requireAuth, validateInput, validators } from '~/server/utils/auth'
 import { blockDemoUserWrite } from '~/server/utils/demo'
 import { getSupabaseClient } from '~/server/utils/supabase'
-import { defineWrappedEventHandler } from '~/server/utils/api-error'
+import {
+  defineWrappedEventHandler,
+  sendApiResponse,
+} from '~/server/utils/api-error'
 
 const MAX_NAME_LENGTH = 255
 const MAX_NOTES_LENGTH = 1000
@@ -81,9 +84,5 @@ export default defineWrappedEventHandler(async (event) => {
     })
   }
 
-  return {
-    success: true,
-    data: data as MealTemplate,
-    message: 'Template created successfully',
-  }
+  return sendApiResponse(data as MealTemplate)
 })

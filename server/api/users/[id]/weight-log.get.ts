@@ -2,7 +2,7 @@ import { requireAuth } from '~/server/utils/auth'
 import { getSupabaseClient } from '~/server/utils/supabase'
 import {
   defineWrappedEventHandler,
-  createSuccessResponse,
+  sendApiResponse,
 } from '~/server/utils/api-error'
 
 export default defineWrappedEventHandler(async (event) => {
@@ -18,8 +18,8 @@ export default defineWrappedEventHandler(async (event) => {
 
   if (error) {
     // Table may not exist yet — return empty array gracefully
-    return createSuccessResponse([], 'Weight log fetched')
+    return sendApiResponse([])
   }
 
-  return createSuccessResponse(data ?? [], 'Weight log fetched successfully')
+  return sendApiResponse(data ?? [])
 })

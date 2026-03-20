@@ -199,7 +199,7 @@ import { useErrorHandling } from '@/composables/useErrorHandling'
 import { useCamera } from '@/composables/useCamera'
 import AnalyzedMealReview from '@/components/AnalyzedMealReview.vue'
 import ErrorNotification from '@/components/ErrorNotification.vue'
-import type { CreateMeal } from '~/server/database/schemas'
+import type { CreateMeal, Meal } from '~/server/database/schemas'
 
 // Page meta
 definePageMeta({
@@ -377,11 +377,11 @@ async function saveMeal(mealPayload: CreateMeal) {
 
       const data = (await response.json()) as {
         success: boolean
-        message?: string
+        data: Meal
       }
 
       if (!data.success) {
-        throw new Error(data.message || 'Failed to save meal')
+        throw new Error('Failed to save meal')
       }
 
       // Navigate back to home with success

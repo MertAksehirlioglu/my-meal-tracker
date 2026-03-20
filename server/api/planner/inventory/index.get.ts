@@ -3,7 +3,10 @@ import { requireAuth } from '~/server/utils/auth'
 import { isDemoUser } from '~/server/utils/demo'
 import { getDemoPlannerInventory } from '~/server/utils/demo-data'
 import { getSupabaseClient } from '~/server/utils/supabase'
-import { defineWrappedEventHandler } from '~/server/utils/api-error'
+import {
+  defineWrappedEventHandler,
+  sendApiResponse,
+} from '~/server/utils/api-error'
 import { isMonday } from '~/lib/week-utils'
 
 export default defineWrappedEventHandler(async (event) => {
@@ -20,7 +23,7 @@ export default defineWrappedEventHandler(async (event) => {
   }
 
   if (isDemoUser(user)) {
-    return { success: true, data: getDemoPlannerInventory(user.id, weekStart) }
+    return sendApiResponse(getDemoPlannerInventory(user.id, weekStart))
   }
 
   const supabase = getSupabaseClient()
@@ -58,5 +61,5 @@ export default defineWrappedEventHandler(async (event) => {
     }
   })
 
-  return { success: true, data: inventory }
+  return sendApiResponse(inventory)
 })

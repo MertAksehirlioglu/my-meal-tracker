@@ -1,6 +1,33 @@
 import type { H3Event } from 'h3'
 
 /**
+ * Standard API response envelope used by all endpoints.
+ */
+export interface ApiResponse<T = unknown> {
+  success: boolean
+  data: T
+  error?: string
+}
+
+/**
+ * Returns a standardized success response envelope.
+ */
+export function sendApiResponse<T>(data: T): ApiResponse<T> {
+  return { success: true, data }
+}
+
+/**
+ * Throws a standardized H3 error with a consistent error envelope.
+ */
+export function sendApiError(message: string, statusCode = 500): never {
+  throw createError({
+    statusCode,
+    statusMessage: message,
+    data: { success: false, error: message },
+  })
+}
+
+/**
  * Standard error codes used across API routes.
  */
 export enum ApiErrorCode {
