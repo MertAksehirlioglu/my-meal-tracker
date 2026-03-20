@@ -43,12 +43,11 @@
                 <v-icon>mdi-chevron-right</v-icon>
               </v-btn>
               <v-btn
-                v-if="meals.length > 0"
                 size="small"
                 variant="outlined"
                 color="primary"
                 prepend-icon="mdi-download"
-                @click="exportCsv"
+                @click="openExportDialog"
               >
                 Export CSV
               </v-btn>
@@ -316,6 +315,43 @@
       @meal-updated="onMealUpdated"
     />
 
+    <!-- Export CSV dialog -->
+    <v-dialog v-model="exportDialog" max-width="400">
+      <v-card rounded="lg">
+        <v-card-title class="text-h6">Export Meals as CSV</v-card-title>
+        <v-card-text>
+          <v-text-field
+            v-model="exportStartDate"
+            label="Start date"
+            type="date"
+            :max="exportEndDate"
+            density="compact"
+            class="mb-2"
+          />
+          <v-text-field
+            v-model="exportEndDate"
+            label="End date"
+            type="date"
+            :min="exportStartDate"
+            :max="todayIso"
+            density="compact"
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="exportDialog = false">Cancel</v-btn>
+          <v-btn
+            color="primary"
+            variant="flat"
+            :loading="exportLoading"
+            @click="exportCsv"
+          >
+            Download CSV
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- Snackbar for feedback -->
     <v-snackbar v-model="snackbar" :color="snackbarColor" timeout="3000">
       {{ snackbarMessage }}
@@ -529,43 +565,48 @@ const deleteMeal = async () => {
   }
 }
 
-const exportCsv = () => {
-  const headers = [
-    'Date',
-    'Time',
-    'Name',
-    'Type',
-    'Calories',
-    'Protein (g)',
-    'Carbs (g)',
-    'Fat (g)',
-    'Fiber (g)',
-    'Sugar (g)',
-    'Notes',
-  ]
-  const rows = meals.value.map((m) => [
-    selectedDate.value,
-    formatTime(m.consumed_at),
-    `"${(m.name ?? '').replace(/"/g, '""')}"`,
-    m.meal_type,
-    m.total_calories,
-    m.total_protein,
-    m.total_carbs,
-    m.total_fat,
-    m.total_fiber ?? '',
-    m.total_sugar ?? '',
-    `"${(m.notes ?? '').replace(/"/g, '""')}"`,
-  ])
-  const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join(
-    '\n'
-  )
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `meals-${selectedDate.value}.csv`
-  link.click()
-  URL.revokeObjectURL(url)
+const exportDialog = ref(false)
+const exportStartDate = ref(selectedDate.value)
+const exportEndDate = ref(selectedDate.value)
+const exportLoading = ref(false)
+
+const openExportDialog = () => {
+  exportStartDate.value = selectedDate.value
+  exportEndDate.value = selectedDate.value
+  exportDialog.value = true
+}
+
+const exportCsv = async () => {
+  exportLoading.value = true
+  try {
+    const params = new URLSearchParams({
+      startDate: exportStartDate.value,
+      endDate: exportEndDate.value,
+    })
+    const res = await authenticatedFetch(`/api/meals/export?${params}`)
+    if (res.status === 404) {
+      snackbarMessage.value = 'No meals found in the selected date range'
+      snackbarColor.value = 'warning'
+      snackbar.value = true
+      exportDialog.value = false
+      return
+    }
+    if (!res.ok) throw new Error('Export failed')
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `meals-${exportStartDate.value}-to-${exportEndDate.value}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
+    exportDialog.value = false
+  } catch {
+    snackbarMessage.value = 'Could not export meals'
+    snackbarColor.value = 'error'
+    snackbar.value = true
+  } finally {
+    exportLoading.value = false
+  }
 }
 
 watch(selectedDate, () => {
