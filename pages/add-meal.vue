@@ -162,6 +162,7 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import type { Meal } from '~/server/database/schemas'
 import { useAuth } from '~/composables/useAuth'
 import { useFormValidation } from '~/composables/useFormValidation'
 import { useErrorHandling } from '~/composables/useErrorHandling'

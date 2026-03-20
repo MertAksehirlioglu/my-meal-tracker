@@ -2,10 +2,8 @@ import type { Meal, UpdateMeal } from '~/server/database/schemas'
 import { requireAuth, validateInput, validators } from '~/server/utils/auth'
 import { blockDemoUserWrite } from '~/server/utils/demo'
 import { getSupabaseClient } from '~/server/utils/supabase'
-import {
-  defineWrappedEventHandler,
-  sendApiResponse,
-} from '~/server/utils/api-error'
+import { defineWrappedEventHandler } from '~/server/utils/api-error'
+import { sanitizeText } from '~/server/utils/sanitize'
 
 export default defineWrappedEventHandler(async (event) => {
   const user = requireAuth(event)
@@ -33,9 +31,13 @@ export default defineWrappedEventHandler(async (event) => {
     notes,
   } = body
 
+  const sanitizedName = typeof name === 'string' ? sanitizeText(name, 255) : name
+  const sanitizedNotes =
+    typeof notes === 'string' ? sanitizeText(notes, 2000) : notes
+
   validateInput(
     {
-      name,
+      name: sanitizedName,
       meal_type,
       consumed_at,
       total_calories,
@@ -80,7 +82,7 @@ export default defineWrappedEventHandler(async (event) => {
   }
 
   const updates: UpdateMeal = {
-    name,
+    name: sanitizedName,
     meal_type,
     consumed_at: new Date(consumed_at).toISOString(),
     total_calories,
@@ -89,7 +91,7 @@ export default defineWrappedEventHandler(async (event) => {
     total_fat,
     total_fiber: total_fiber ?? null,
     total_sugar: total_sugar ?? null,
-    notes: notes ?? null,
+    notes: sanitizedNotes ?? null,
   }
 
   const { data, error } = await supabase
@@ -107,5 +109,9 @@ export default defineWrappedEventHandler(async (event) => {
     })
   }
 
-  return sendApiResponse(data as Meal)
+  return {
+    success: true,
+    data: data as Meal,
+    message: 'Meal updated successfully',
+  }
 })
