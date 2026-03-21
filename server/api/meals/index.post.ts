@@ -6,6 +6,7 @@ import {
   defineWrappedEventHandler,
   sendApiResponse,
 } from '~/server/utils/api-error'
+import { sanitizeText } from '~/server/utils/sanitize'
 
 export default defineWrappedEventHandler(async (event) => {
   const user = requireAuth(event)
@@ -48,27 +49,13 @@ export default defineWrappedEventHandler(async (event) => {
     })
   }
 
-  // Enforce max length on string inputs to prevent oversized payloads
-  const MAX_NAME_LENGTH = 255
-  const MAX_NOTES_LENGTH = 1000
-  if (typeof name === 'string' && name.length > MAX_NAME_LENGTH) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: `Meal name must be ${MAX_NAME_LENGTH} characters or fewer`,
-      data: { code: 'INVALID_INPUT' },
-    })
-  }
-  if (typeof notes === 'string' && notes.length > MAX_NOTES_LENGTH) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: `Notes must be ${MAX_NOTES_LENGTH} characters or fewer`,
-      data: { code: 'INVALID_INPUT' },
-    })
-  }
+  const sanitizedName = typeof name === 'string' ? sanitizeText(name, 255) : name
+  const sanitizedNotes =
+    typeof notes === 'string' ? sanitizeText(notes, 2000) : notes
 
   validateInput(
     {
-      name,
+      name: sanitizedName,
       meal_type,
       consumed_at,
       total_calories,
@@ -104,7 +91,7 @@ export default defineWrappedEventHandler(async (event) => {
 
   const mealData = {
     user_id: user.id,
-    name,
+    name: sanitizedName,
     meal_type,
     consumed_at: new Date(consumed_at).toISOString(),
     total_calories,
@@ -113,7 +100,7 @@ export default defineWrappedEventHandler(async (event) => {
     total_fat,
     total_fiber: total_fiber || null,
     total_sugar: total_sugar || null,
-    notes: notes || null,
+    notes: sanitizedNotes || null,
     image_url: image_url || null,
   }
 
