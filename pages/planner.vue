@@ -42,6 +42,19 @@
             @search-templates="fetchTemplates"
             @remove-inventory="handleRemoveInventory"
           />
+          <!-- Generate Shopping List -->
+          <v-btn
+            v-if="inventory.length > 0"
+            block
+            variant="tonal"
+            color="secondary"
+            size="small"
+            prepend-icon="mdi-cart-outline"
+            class="mt-3"
+            @click="generateShoppingList"
+          >
+            Generate Shopping List
+          </v-btn>
         </v-card-text>
       </v-card>
 
@@ -97,7 +110,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import type { MealTemplate } from '~/server/database/schemas'
+import type { MealTemplate, MealInventory } from '~/server/database/schemas'
 import { useWeekNavigation } from '~/composables/useWeekNavigation'
 import { useMealPlanner } from '~/composables/useMealPlanner'
 import WeekSelector from '~/components/planner/WeekSelector.vue'
@@ -251,6 +264,45 @@ async function handleRemoveSlot(slotId: string) {
   } catch (e) {
     notify(e instanceof Error ? e.message : 'Failed to remove', 'error')
   }
+}
+
+// ── Shopping List Generator ─────────────────────────────────────────────────
+function generateShoppingList() {
+  if (inventory.value.length === 0) return
+
+  // Aggregate all inventory items with their template nutrition data
+  const lines: string[] = [
+    `Shopping List — Week of ${weekStart.value}`,
+    `Generated on ${new Date().toLocaleDateString()}`,
+    '',
+    'Meal,Portions,Serving Size,Calories (each),Protein g,Carbs g,Fat g,Notes',
+  ]
+
+  for (const inv of inventory.value as MealInventory[]) {
+    const tpl = inv.template
+    if (!tpl) continue
+    const row = [
+      `"${tpl.name}"`,
+      inv.quantity,
+      `"${tpl.serving_size || '1 serving'}"`,
+      tpl.calories,
+      tpl.protein,
+      tpl.carbs,
+      tpl.fat,
+      `"${tpl.notes || ''}"`,
+    ].join(',')
+    lines.push(row)
+  }
+
+  const csv = lines.join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `shopping-list-${weekStart.value}.csv`
+  link.click()
+  URL.revokeObjectURL(url)
+  notify('Shopping list downloaded')
 }
 
 // ── Init ───────────────────────────────────────────────────────────────────

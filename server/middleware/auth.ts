@@ -3,6 +3,23 @@ import type { User } from '@supabase/supabase-js'
 import { applyRateLimit } from '~/server/utils/rate-limit'
 import { createMockUser } from '~/server/utils/mock-user'
 
+/**
+ * Decode a JWT payload without verifying the signature.
+ * Used to fast-fail on invalid audience or issuer before making a network call.
+ */
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
+    // base64url → base64
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const json = Buffer.from(base64, 'base64').toString('utf-8')
+    return JSON.parse(json) as Record<string, unknown>
+  } catch {
+    return null
+  }
+}
+
 export default defineEventHandler(async (event) => {
   if (!event.node.req.url?.startsWith('/api/')) {
     return
@@ -85,6 +102,43 @@ export default defineEventHandler(async (event) => {
         statusCode: 500,
         statusMessage: 'Server configuration error',
       })
+    }
+
+    // Validate JWT audience and issuer claims in production before making a
+    // network call to Supabase. This catches tokens issued by a different
+    // project or intended for a different service early and cheaply.
+    if (isProduction) {
+      const payload = decodeJwtPayload(token)
+      if (!payload) {
+        throw createError({
+          statusCode: 401,
+          statusMessage: 'Invalid token structure',
+          data: { code: 'INVALID_TOKEN_STRUCTURE' },
+        })
+      }
+      if (payload.aud !== 'authenticated') {
+        console.warn(
+          `[SECURITY] Invalid token audience from ${clientIP} for ${method} ${url}: ${payload.aud}`
+        )
+        throw createError({
+          statusCode: 401,
+          statusMessage: 'Invalid token audience',
+          data: { code: 'INVALID_TOKEN_AUDIENCE' },
+        })
+      }
+      if (
+        typeof payload.iss !== 'string' ||
+        !payload.iss.startsWith(supabaseUrl)
+      ) {
+        console.warn(
+          `[SECURITY] Invalid token issuer from ${clientIP} for ${method} ${url}: ${payload.iss}`
+        )
+        throw createError({
+          statusCode: 401,
+          statusMessage: 'Invalid token issuer',
+          data: { code: 'INVALID_TOKEN_ISSUER' },
+        })
+      }
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey, {
