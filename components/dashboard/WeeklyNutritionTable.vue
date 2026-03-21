@@ -19,7 +19,7 @@
             <tr>
               <th class="label-col"></th>
               <th
-                v-for="day in weeklyData"
+                v-for="day in debouncedWeeklyData"
                 :key="day.date"
                 class="day-col"
                 :class="{
@@ -50,7 +50,7 @@
                 </div>
               </td>
               <td
-                v-for="day in weeklyData"
+                v-for="day in debouncedWeeklyData"
                 :key="day.date"
                 class="value-col"
                 :class="{
@@ -99,7 +99,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { UserGoal } from '~/server/database/schemas'
 import { formatShortWeekday, toDateIso } from '~/lib/date-utils'
 
@@ -131,6 +131,23 @@ const emit = defineEmits<{
 
 const todayIso = computed(() => toDateIso(new Date()))
 const hoveredDay = ref<string | null>(null)
+
+// Debounce weeklyData re-renders by 150ms to avoid thrashing on rapid prop
+// updates (e.g. multiple API responses arriving in quick succession)
+const debouncedWeeklyData = ref<DailyTotal[]>(props.weeklyData)
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+watch(
+  () => props.weeklyData,
+  (newData) => {
+    if (debounceTimer !== null) clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(() => {
+      debouncedWeeklyData.value = newData
+      debounceTimer = null
+    }, 150)
+  },
+  { immediate: true }
+)
 
 const rows: {
   key: NutrientKey

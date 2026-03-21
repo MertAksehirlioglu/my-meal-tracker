@@ -2,6 +2,8 @@
  * Optimized Food Analysis Composable
  *
  * Wraps useFoodAnalysis with caching, image resizing, and retry logic.
+ * Cache is backed by sessionStorage so it survives Vue router navigations
+ * within the same browser tab.
  */
 
 import { ref, computed, readonly } from 'vue'
@@ -13,11 +15,61 @@ const MAX_CACHE = 100
 const MAX_WIDTH = 1024
 const MAX_HEIGHT = 1024
 const IMAGE_QUALITY = 0.85
+const STORAGE_PREFIX = 'mealsnap-imgcache-'
 
-const imageCache = new Map<
-  string,
-  { result: FoodAnalysisResult; timestamp: number }
->()
+function getCacheKeys(): string[] {
+  const keys: string[] = []
+  try {
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const k = sessionStorage.key(i)
+      if (k?.startsWith(STORAGE_PREFIX)) keys.push(k)
+    }
+  } catch {
+    // sessionStorage unavailable (e.g. private mode restrictions)
+  }
+  return keys
+}
+
+function getCacheSize(): number {
+  return getCacheKeys().length
+}
+
+function getCached(key: string): FoodAnalysisResult | null {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_PREFIX + key)
+    if (!raw) return null
+    const entry = JSON.parse(raw) as {
+      result: FoodAnalysisResult
+      timestamp: number
+    }
+    if (Date.now() - entry.timestamp > CACHE_TTL) {
+      sessionStorage.removeItem(STORAGE_PREFIX + key)
+      return null
+    }
+    return entry.result
+  } catch {
+    return null
+  }
+}
+
+function setCached(key: string, result: FoodAnalysisResult) {
+  try {
+    const keys = getCacheKeys()
+    if (keys.length >= MAX_CACHE) {
+      sessionStorage.removeItem(keys[0])
+    }
+    sessionStorage.setItem(
+      STORAGE_PREFIX + key,
+      JSON.stringify({ result, timestamp: Date.now() })
+    )
+  } catch {
+    // sessionStorage may be full or unavailable; silently skip caching
+  }
+}
+
+function clearCache() {
+  getCacheKeys().forEach((k) => sessionStorage.removeItem(k))
+}
 
 function generateImageHash(file: File): Promise<string> {
   return new Promise((resolve) => {
@@ -33,24 +85,6 @@ function generateImageHash(file: File): Promise<string> {
     }
     reader.readAsDataURL(file)
   })
-}
-
-function getCached(key: string): FoodAnalysisResult | null {
-  const entry = imageCache.get(key)
-  if (!entry) return null
-  if (Date.now() - entry.timestamp > CACHE_TTL) {
-    imageCache.delete(key)
-    return null
-  }
-  return entry.result
-}
-
-function setCached(key: string, result: FoodAnalysisResult) {
-  if (imageCache.size >= MAX_CACHE) {
-    const oldest = imageCache.keys().next().value
-    if (oldest) imageCache.delete(oldest)
-  }
-  imageCache.set(key, { result, timestamp: Date.now() })
 }
 
 function optimizeImage(file: File): Promise<File> {
@@ -263,14 +297,14 @@ export const useOptimizedFoodAnalysis = () => {
     analysisResult: readonly(analysisResult),
     processingStage: readonly(processingStage),
     isProcessing,
-    cacheSize: computed(() => imageCache.size),
+    cacheSize: computed(getCacheSize),
     successRate,
     metrics: readonly(metrics),
 
     // Methods
     analyzeFood,
     resetAnalysis,
-    clearCache: () => imageCache.clear(),
+    clearCache,
 
     // Expose base composable for direct access if needed
     baseAnalyzing: baseFoodAnalysis.analyzing,

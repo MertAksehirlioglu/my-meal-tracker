@@ -110,6 +110,9 @@
 
     <!-- Demo Notifications -->
     <DemoNotification />
+
+    <!-- Onboarding Wizard (shown on first login for non-demo users) -->
+    <OnboardingWizard />
   </v-app>
 </template>
 
@@ -119,6 +122,7 @@ import { useRouter } from 'vue-router'
 import { useTheme } from 'vuetify'
 import { useAuth } from '~/composables/useAuth'
 import DemoNotification from '~/components/DemoNotification.vue'
+import OnboardingWizard from '~/components/OnboardingWizard.vue'
 
 const router = useRouter()
 const theme = useTheme()
