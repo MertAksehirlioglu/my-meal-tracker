@@ -4,7 +4,7 @@ import { isDemoUser } from '~/server/utils/demo'
 import { getSupabaseClient } from '~/server/utils/supabase'
 import {
   defineWrappedEventHandler,
-  createSuccessResponse,
+  sendApiResponse,
   createErrorResponse,
   ApiErrorCode,
 } from '~/server/utils/api-error'
@@ -16,7 +16,7 @@ export default defineWrappedEventHandler(async (event) => {
 
   if (isDemoUser(user)) {
     const data = await getDemoMealsForToday(user.id)
-    return createSuccessResponse(data, 'Demo meals fetched successfully')
+    return sendApiResponse(data)
   }
 
   const supabase = getSupabaseClient()
@@ -39,5 +39,5 @@ export default defineWrappedEventHandler(async (event) => {
     )
   }
 
-  return createSuccessResponse(data as Meal[], 'Meals fetched successfully')
+  return sendApiResponse(data as Meal[])
 })

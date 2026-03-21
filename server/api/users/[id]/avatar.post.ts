@@ -1,7 +1,10 @@
 import { requireAuth } from '~/server/utils/auth'
 import { blockDemoUserWrite } from '~/server/utils/demo'
 import { getSupabaseClient } from '~/server/utils/supabase'
-import { defineWrappedEventHandler } from '~/server/utils/api-error'
+import {
+  defineWrappedEventHandler,
+  sendApiResponse,
+} from '~/server/utils/api-error'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 
@@ -145,9 +148,5 @@ export default defineWrappedEventHandler(async (event) => {
     })
   }
 
-  return {
-    success: true,
-    data: { avatar_url: avatarUrl },
-    message: 'Avatar uploaded successfully',
-  }
+  return sendApiResponse({ avatar_url: avatarUrl })
 })

@@ -3,7 +3,10 @@ import { requireAuth } from '~/server/utils/auth'
 import { isDemoUser } from '~/server/utils/demo'
 import { getDemoPlannerSlots } from '~/server/utils/demo-data'
 import { getSupabaseClient } from '~/server/utils/supabase'
-import { defineWrappedEventHandler } from '~/server/utils/api-error'
+import {
+  defineWrappedEventHandler,
+  sendApiResponse,
+} from '~/server/utils/api-error'
 import { isMonday, shiftDate } from '~/lib/week-utils'
 
 export default defineWrappedEventHandler(async (event) => {
@@ -20,7 +23,7 @@ export default defineWrappedEventHandler(async (event) => {
   }
 
   if (isDemoUser(user)) {
-    return { success: true, data: getDemoPlannerSlots(user.id, weekStart) }
+    return sendApiResponse(getDemoPlannerSlots(user.id, weekStart))
   }
 
   const weekEnd = shiftDate(weekStart, 6)
@@ -50,5 +53,5 @@ export default defineWrappedEventHandler(async (event) => {
     })
   }
 
-  return { success: true, data: data as MealPlanSlot[] }
+  return sendApiResponse(data as MealPlanSlot[])
 })

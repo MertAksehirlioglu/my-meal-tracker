@@ -3,13 +3,16 @@ import { requireAuth } from '~/server/utils/auth'
 import { isDemoUser } from '~/server/utils/demo'
 import { getDemoPlannerTemplates } from '~/server/utils/demo-data'
 import { getSupabaseClient } from '~/server/utils/supabase'
-import { defineWrappedEventHandler } from '~/server/utils/api-error'
+import {
+  defineWrappedEventHandler,
+  sendApiResponse,
+} from '~/server/utils/api-error'
 
 export default defineWrappedEventHandler(async (event) => {
   const user = requireAuth(event)
 
   if (isDemoUser(user)) {
-    return { success: true, data: getDemoPlannerTemplates(user.id) }
+    return sendApiResponse(getDemoPlannerTemplates(user.id))
   }
 
   const query = getQuery(event)
@@ -36,5 +39,5 @@ export default defineWrappedEventHandler(async (event) => {
     })
   }
 
-  return { success: true, data: data as MealTemplate[] }
+  return sendApiResponse(data as MealTemplate[])
 })

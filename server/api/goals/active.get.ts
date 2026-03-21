@@ -2,18 +2,17 @@ import type { UserGoal } from '~/server/database/schemas'
 import { requireAuth } from '~/server/utils/auth'
 import { isDemoUser } from '~/server/utils/demo'
 import { getSupabaseClient } from '~/server/utils/supabase'
-import { defineWrappedEventHandler } from '~/server/utils/api-error'
+import {
+  defineWrappedEventHandler,
+  sendApiResponse,
+} from '~/server/utils/api-error'
 import { getDemoActiveGoals } from '~/server/utils/demo-data'
 
 export default defineWrappedEventHandler(async (event) => {
   const user = requireAuth(event)
 
   if (isDemoUser(user)) {
-    return {
-      success: true,
-      data: await getDemoActiveGoals(user.id),
-      message: 'Demo goals fetched successfully',
-    }
+    return sendApiResponse(await getDemoActiveGoals(user.id))
   }
 
   const supabase = getSupabaseClient()
@@ -33,9 +32,5 @@ export default defineWrappedEventHandler(async (event) => {
     })
   }
 
-  return {
-    success: true,
-    data: data as UserGoal | null,
-    message: 'Goals fetched successfully',
-  }
+  return sendApiResponse(data as UserGoal | null)
 })

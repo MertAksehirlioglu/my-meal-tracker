@@ -2,7 +2,10 @@ import type { Meal } from '~/server/database/schemas'
 import { requireAuth, validateInput, validators } from '~/server/utils/auth'
 import { blockDemoUserWrite } from '~/server/utils/demo'
 import { getSupabaseClient } from '~/server/utils/supabase'
-import { defineWrappedEventHandler } from '~/server/utils/api-error'
+import {
+  defineWrappedEventHandler,
+  sendApiResponse,
+} from '~/server/utils/api-error'
 import { sanitizeText } from '~/server/utils/sanitize'
 
 export default defineWrappedEventHandler(async (event) => {
@@ -123,9 +126,5 @@ export default defineWrappedEventHandler(async (event) => {
     })
   }
 
-  return {
-    success: true,
-    data: data as Meal,
-    message: 'Meal saved successfully',
-  }
+  return sendApiResponse(data as Meal)
 })

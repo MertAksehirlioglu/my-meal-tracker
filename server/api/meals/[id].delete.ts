@@ -1,7 +1,10 @@
 import { requireAuth } from '~/server/utils/auth'
 import { blockDemoUserWrite } from '~/server/utils/demo'
 import { getSupabaseClient } from '~/server/utils/supabase'
-import { defineWrappedEventHandler } from '~/server/utils/api-error'
+import {
+  defineWrappedEventHandler,
+  sendApiResponse,
+} from '~/server/utils/api-error'
 
 export default defineWrappedEventHandler(async (event) => {
   const user = requireAuth(event)
@@ -42,5 +45,5 @@ export default defineWrappedEventHandler(async (event) => {
     })
   }
 
-  return { success: true, message: 'Meal deleted successfully' }
+  return sendApiResponse(null)
 })

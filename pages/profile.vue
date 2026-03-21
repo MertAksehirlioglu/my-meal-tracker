@@ -366,7 +366,7 @@ const loadProfile = async () => {
     const { authenticatedFetch } = useAuthenticatedFetch()
     const response = (await authenticatedFetch(
       `/api/users/${user.value.id}`
-    ).then((r) => r.json())) as { success: boolean; data?: UpdateUser }
+    ).then((r) => r.json())) as { success: boolean; data: UpdateUser }
     if (response.success && response.data) {
       profile.value = { ...response.data }
     }
@@ -397,8 +397,7 @@ const saveProfile = async () => {
       body: JSON.stringify(profile.value),
     }).then((r) => r.json())) as {
       success: boolean
-      data?: UpdateUser
-      message?: string
+      data: UpdateUser
     }
 
     if (response.success) {
@@ -406,7 +405,7 @@ const saveProfile = async () => {
       // Update the user in auth store
       // You might want to refresh the user data here
     } else {
-      error.value = response.message || 'Failed to update profile'
+      error.value = 'Failed to update profile'
     }
   } catch (err) {
     console.error('Error saving profile:', err)
@@ -451,15 +450,14 @@ const handleAvatarUpload = async (event: Event) => {
       }
     ).then((r) => r.json())) as {
       success: boolean
-      data?: { avatar_url: string }
-      message?: string
+      data: { avatar_url: string }
     }
 
     if (response.success && response.data) {
       profile.value.avatar_url = response.data.avatar_url
       success.value = true
     } else {
-      error.value = response.message || 'Failed to upload avatar'
+      error.value = 'Failed to upload avatar'
     }
   } catch (err) {
     console.error('Error uploading avatar:', err)
@@ -493,7 +491,7 @@ const loadWeightLog = async () => {
       `/api/users/${user.value.id}/weight-log`
     )
     if (res.ok) {
-      const json = (await res.json()) as { data?: WeightEntry[] }
+      const json = (await res.json()) as { success: boolean; data: WeightEntry[] }
       weightLog.value = json.data ?? []
     }
   } catch {

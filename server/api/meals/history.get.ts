@@ -2,7 +2,10 @@ import type { Meal } from '~/server/database/schemas'
 import { requireAuth } from '~/server/utils/auth'
 import { isDemoUser } from '~/server/utils/demo'
 import { getSupabaseClient } from '~/server/utils/supabase'
-import { defineWrappedEventHandler } from '~/server/utils/api-error'
+import {
+  defineWrappedEventHandler,
+  sendApiResponse,
+} from '~/server/utils/api-error'
 import { getDemoMealsByDate } from '~/server/utils/demo-data'
 
 export interface PaginatedMealsResponse {
@@ -37,16 +40,13 @@ export default defineWrappedEventHandler(async (event) => {
       ? await getDemoMealsByDate(user.id, targetDate)
       : []
     const paginated = demoMeals.slice(offset, offset + limit)
-    return {
-      success: true,
-      data: {
-        meals: paginated,
-        total: demoMeals.length,
-        limit,
-        offset,
-        date: targetDate ? targetDate.toISOString().split('T')[0] : null,
-      } satisfies PaginatedMealsResponse,
-    }
+    return sendApiResponse({
+      meals: paginated,
+      total: demoMeals.length,
+      limit,
+      offset,
+      date: targetDate ? targetDate.toISOString().split('T')[0] : null,
+    } satisfies PaginatedMealsResponse)
   }
 
   const supabase = getSupabaseClient()
@@ -90,14 +90,11 @@ export default defineWrappedEventHandler(async (event) => {
     })
   }
 
-  return {
-    success: true,
-    data: {
-      meals: data as Meal[],
-      total: count ?? 0,
-      limit,
-      offset,
-      date: targetDate ? targetDate.toISOString().split('T')[0] : null,
-    } satisfies PaginatedMealsResponse,
-  }
+  return sendApiResponse({
+    meals: data as Meal[],
+    total: count ?? 0,
+    limit,
+    offset,
+    date: targetDate ? targetDate.toISOString().split('T')[0] : null,
+  } satisfies PaginatedMealsResponse)
 })

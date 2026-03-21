@@ -12,6 +12,7 @@ import {
   getRequestIP,
   setResponseHeader,
 } from 'h3'
+import { sendApiResponse } from '~/server/utils/api-error'
 
 // Stricter rate limit for demo login: 5 requests per minute per IP
 const DEMO_LIMIT = 5
@@ -127,17 +128,14 @@ export default defineEventHandler(async (_event) => {
     })
   }
 
-  return {
-    success: true,
-    data: {
-      access_token: data.session.access_token,
-      refresh_token: data.session.refresh_token,
-      expires_in: data.session.expires_in,
-      token_type: data.session.token_type,
-      user: {
-        id: data.session.user.id,
-        email: data.session.user.email,
-      },
+  return sendApiResponse({
+    access_token: data.session.access_token,
+    refresh_token: data.session.refresh_token,
+    expires_in: data.session.expires_in,
+    token_type: data.session.token_type,
+    user: {
+      id: data.session.user.id,
+      email: data.session.user.email,
     },
-  }
+  })
 })

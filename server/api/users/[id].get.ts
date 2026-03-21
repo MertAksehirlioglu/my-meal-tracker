@@ -2,7 +2,10 @@ import type { User } from '~/server/database/schemas'
 import { requireAuth } from '~/server/utils/auth'
 import { isDemoUser } from '~/server/utils/demo'
 import { getSupabaseClient } from '~/server/utils/supabase'
-import { defineWrappedEventHandler } from '~/server/utils/api-error'
+import {
+  defineWrappedEventHandler,
+  sendApiResponse,
+} from '~/server/utils/api-error'
 import { getDemoUserProfile } from '~/server/utils/demo-data'
 
 export default defineWrappedEventHandler(async (event) => {
@@ -17,11 +20,7 @@ export default defineWrappedEventHandler(async (event) => {
   }
 
   if (isDemoUser(user)) {
-    return {
-      success: true,
-      data: await getDemoUserProfile(user.id, user.email),
-      message: 'Demo profile fetched successfully',
-    }
+    return sendApiResponse(await getDemoUserProfile(user.id, user.email))
   }
 
   const supabase = getSupabaseClient()
@@ -40,9 +39,5 @@ export default defineWrappedEventHandler(async (event) => {
     })
   }
 
-  return {
-    success: true,
-    data: data as User | null,
-    message: 'Profile fetched successfully',
-  }
+  return sendApiResponse(data as User | null)
 })

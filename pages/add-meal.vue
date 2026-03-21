@@ -241,13 +241,13 @@ const saveMeal = async () => {
       const response = (await authenticatedFetch('/api/meals', {
         method: 'POST',
         body: JSON.stringify(mealPayload),
-      }).then((r) => r.json())) as { success: boolean; message?: string }
+      }).then((r) => r.json())) as { success: boolean; data: Meal }
 
       if (response.success) {
         addSuccess('Meal saved successfully!')
         router.push('/home')
       } else {
-        throw new Error(response.message || 'Failed to save meal')
+        throw new Error('Failed to save meal')
       }
     },
     'saving meal',
