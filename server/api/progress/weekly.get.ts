@@ -24,11 +24,13 @@ export default defineWrappedEventHandler(async (event) => {
   const supabase = getSupabaseClient()
   const { startDate, endDate } = getDateRangeForDays(7)
 
-  const { data: rows, error } = await supabase.rpc('get_weekly_nutrition', {
-    p_user_id: user.id,
-    p_start: startDate.toISOString(),
-    p_end: endDate.toISOString(),
-  })
+  const { data, error } = await supabase
+    .from('weekly_nutrition_summary')
+    .select('day, total_calories, total_protein, total_carbs, total_fat, meal_count')
+    .eq('user_id', user.id)
+    .gte('day', startDate.toISOString())
+    .lte('day', endDate.toISOString())
+    .order('day', { ascending: true })
 
   if (error) {
     createErrorResponse(
@@ -41,14 +43,15 @@ export default defineWrappedEventHandler(async (event) => {
 
   const dailyMap = buildWeeklyDateMap()
 
-  for (const row of rows ?? []) {
-    const existing = dailyMap.get(row.date as string)
+  for (const row of data ?? []) {
+    const key = new Date(row.day).toISOString().split('T')[0]
+    const existing = dailyMap.get(key)
     if (existing) {
-      existing.total_calories = Number(row.total_calories)
-      existing.total_protein = Number(row.total_protein)
-      existing.total_carbs = Number(row.total_carbs)
-      existing.total_fat = Number(row.total_fat)
-      existing.meal_count = Number(row.meal_count)
+      existing.total_calories = row.total_calories ?? 0
+      existing.total_protein = row.total_protein ?? 0
+      existing.total_carbs = row.total_carbs ?? 0
+      existing.total_fat = row.total_fat ?? 0
+      existing.meal_count = row.meal_count ?? 0
     }
   }
 
