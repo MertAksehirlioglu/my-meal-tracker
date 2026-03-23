@@ -5,11 +5,24 @@
     variant="tonal"
     color="primary"
     rounded="lg"
+    draggable="true"
   >
     <v-card-text class="pa-3">
       <div class="d-flex align-center justify-space-between">
         <div class="d-flex align-center gap-2 min-width-0">
-          <v-icon size="16" class="flex-shrink-0">mdi-drag</v-icon>
+          <v-tooltip
+            text="Drag to a calendar slot to plan"
+            location="top"
+            :open-delay="400"
+          >
+            <template #activator="{ props: tipProps }">
+              <span
+                v-bind="tipProps"
+                class="drag-handle flex-shrink-0"
+                aria-label="Drag handle"
+              >⠿</span>
+            </template>
+          </v-tooltip>
           <span class="text-body-2 font-weight-medium text-truncate">
             {{ inventory.template?.name ?? 'Meal' }}
           </span>
@@ -74,5 +87,18 @@ defineEmits<{
   opacity: 0.5;
   cursor: not-allowed;
   pointer-events: none;
+}
+.drag-handle {
+  font-size: 14px;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.38);
+  cursor: grab;
+  padding: 2px 1px;
+  border-radius: 3px;
+  transition: color 0.15s;
+}
+.drag-handle:hover {
+  color: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.06);
 }
 </style>
