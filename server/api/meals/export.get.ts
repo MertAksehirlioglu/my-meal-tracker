@@ -69,6 +69,15 @@ export default defineWrappedEventHandler(async (event) => {
     })
   }
 
+  const MS_PER_DAY = 24 * 60 * 60 * 1000
+  const daySpan = Math.round((end.getTime() - start.getTime()) / MS_PER_DAY)
+  if (daySpan > 365) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Date range must not exceed 366 days (one year)',
+    })
+  }
+
   let meals: Meal[] = []
 
   if (isDemoUser(user)) {
