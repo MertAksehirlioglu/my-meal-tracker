@@ -26,6 +26,7 @@ export interface Meal {
   updated_at: string
   image_url?: string
   notes?: string
+  tags?: string
   total_calories: number
   total_protein: number
   total_carbs: number

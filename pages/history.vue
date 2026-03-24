@@ -55,7 +55,7 @@
           </v-card-title>
 
           <!-- Daily Totals Summary -->
-          <v-card-text v-if="meals.length > 0">
+          <v-card-text v-if="filteredMeals.length > 0">
             <v-row class="mb-2">
               <v-col
                 v-for="macro in macroSummary"
@@ -77,11 +77,40 @@
           </v-card-text>
         </v-card>
 
+        <!-- Tag Filter Cloud -->
+        <v-card v-if="availableTags.length > 0" elevation="1" rounded="lg" class="mb-4">
+          <v-card-text class="pa-3">
+            <div class="d-flex align-center flex-wrap gap-2">
+              <v-icon size="16" color="grey" class="mr-1">mdi-tag-multiple</v-icon>
+              <v-chip
+                v-for="tag in availableTags"
+                :key="tag"
+                :color="activeTagFilter === tag ? 'primary' : undefined"
+                :variant="activeTagFilter === tag ? 'flat' : 'outlined'"
+                size="small"
+                style="cursor: pointer"
+                @click="toggleTagFilter(tag)"
+              >
+                {{ tag }}
+              </v-chip>
+              <v-btn
+                v-if="activeTagFilter"
+                size="x-small"
+                variant="text"
+                color="grey"
+                @click="activeTagFilter = null"
+              >
+                Clear
+              </v-btn>
+            </div>
+          </v-card-text>
+        </v-card>
+
         <!-- Meal List / Photo Grid -->
         <v-card elevation="2" rounded="lg">
           <!-- View toggle -->
           <v-card-title
-            v-if="meals.length > 0 && !loadingMeals"
+            v-if="filteredMeals.length > 0 && !loadingMeals"
             class="d-flex justify-end pa-2 pb-0"
           >
             <v-btn-toggle
@@ -127,7 +156,7 @@
             <!-- Photo grid view -->
             <div v-else-if="viewMode === 'grid'" class="meal-photo-grid">
               <div
-                v-for="meal in meals"
+                v-for="meal in filteredMeals"
                 :key="meal.id"
                 class="meal-photo-card"
                 @click="openMealDetail(meal)"
@@ -179,7 +208,7 @@
             <!-- List view -->
             <v-list v-else>
               <v-list-item
-                v-for="meal in meals"
+                v-for="meal in filteredMeals"
                 :key="meal.id"
                 class="mb-2 bg-surface-variant"
                 style="border-radius: 8px; cursor: pointer"
@@ -407,10 +436,40 @@ const totalMeals = ref(0)
 const currentOffset = ref(0)
 const pageLimit = 20
 
+const activeTagFilter = ref<string | null>(null)
+
+const availableTags = computed(() => {
+  const tags = new Set<string>()
+  for (const meal of meals.value) {
+    if (meal.tags) {
+      meal.tags.split(',').forEach((t) => {
+        const trimmed = t.trim()
+        if (trimmed) tags.add(trimmed)
+      })
+    }
+  }
+  return [...tags].sort()
+})
+
+const filteredMeals = computed(() =>
+  activeTagFilter.value
+    ? meals.value.filter((m) =>
+        m.tags
+          ?.split(',')
+          .map((t) => t.trim())
+          .includes(activeTagFilter.value!)
+      )
+    : meals.value
+)
+
+const toggleTagFilter = (tag: string) => {
+  activeTagFilter.value = activeTagFilter.value === tag ? null : tag
+}
+
 const isToday = computed(() => selectedDate.value === todayIso)
 
 const macroSummary = computed(() => {
-  const totals = meals.value.reduce(
+  const totals = filteredMeals.value.reduce(
     (acc, m) => ({
       calories: acc.calories + (m.total_calories ?? 0),
       protein: acc.protein + (m.total_protein ?? 0),
