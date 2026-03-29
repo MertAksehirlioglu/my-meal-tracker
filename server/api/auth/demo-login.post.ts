@@ -6,20 +6,18 @@
  * only the session tokens — identical to what Supabase would return directly.
  */
 import { createClient } from '@supabase/supabase-js'
+import { createError, getRequestIP, setResponseHeader } from 'h3'
 import {
-  defineEventHandler,
-  createError,
-  getRequestIP,
-  setResponseHeader,
-} from 'h3'
-import { sendApiResponse } from '~/server/utils/api-error'
+  defineWrappedEventHandler,
+  sendApiResponse,
+} from '~/server/utils/api-error'
 
 // Stricter rate limit for demo login: 5 requests per minute per IP
 const DEMO_LIMIT = 5
 const DEMO_WINDOW_MS = 60 * 1000
 const demoRateLimitStore = new Map<string, { count: number; resetAt: number }>()
 
-export default defineEventHandler(async (_event) => {
+export default defineWrappedEventHandler(async (_event) => {
   // Apply rate limiting before any auth logic
   const now = Date.now()
 

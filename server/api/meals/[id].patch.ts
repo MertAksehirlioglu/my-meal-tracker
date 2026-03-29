@@ -72,16 +72,22 @@ export default defineWrappedEventHandler(async (event) => {
 
   const supabase = getSupabaseClient()
 
-  // Verify the meal belongs to the authenticated user before updating
+  // Fetch without user_id filter so we can distinguish 404 vs 403
   const { data: existingMeal, error: fetchError } = await supabase
     .from('meals')
     .select('id, user_id')
     .eq('id', mealId)
-    .eq('user_id', user.id)
     .single()
 
   if (fetchError || !existingMeal) {
     throw createError({ statusCode: 404, statusMessage: 'Meal not found' })
+  }
+
+  if (existingMeal.user_id !== user.id) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Forbidden: meal does not belong to you',
+    })
   }
 
   const updates: UpdateMeal = {

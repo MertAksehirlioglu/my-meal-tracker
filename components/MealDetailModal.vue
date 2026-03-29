@@ -37,19 +37,64 @@
 
       <v-divider />
 
-      <!-- Macro totals -->
+      <!-- Macro totals with donut chart -->
       <div class="px-4 py-3 bg-surface-variant">
-        <v-row dense>
-          <v-col v-for="macro in macroTotals" :key="macro.label" cols="3">
-            <div class="text-center">
-              <div
-                class="text-subtitle-2 font-weight-bold"
-                :class="macro.colorClass"
-              >
-                {{ macro.value }}
-              </div>
-              <div class="text-caption text-grey">{{ macro.label }}</div>
-            </div>
+        <v-row dense align="center">
+          <v-col cols="auto" class="pr-3">
+            <svg
+              viewBox="0 0 100 100"
+              width="80"
+              height="80"
+              style="transform: rotate(-90deg); display: block"
+            >
+              <circle
+                cx="50"
+                cy="50"
+                r="35"
+                fill="none"
+                stroke="#e0e0e0"
+                stroke-width="12"
+              />
+              <circle
+                v-for="(seg, i) in donutSegments"
+                :key="i"
+                cx="50"
+                cy="50"
+                r="35"
+                fill="none"
+                :stroke="seg.color"
+                stroke-width="12"
+                :stroke-dasharray="`${seg.dash} ${CIRCUMFERENCE}`"
+                :stroke-dashoffset="-seg.offset"
+              />
+            </svg>
+          </v-col>
+          <v-col>
+            <v-row dense>
+              <v-col v-for="macro in macroTotals" :key="macro.label" cols="6">
+                <div class="d-flex align-center" style="gap: 6px">
+                  <span
+                    v-if="macro.dotColor"
+                    :style="{ background: macro.dotColor }"
+                    style="
+                      width: 8px;
+                      height: 8px;
+                      border-radius: 50%;
+                      flex-shrink: 0;
+                    "
+                  />
+                  <div>
+                    <div
+                      class="text-subtitle-2 font-weight-bold"
+                      :class="macro.colorClass"
+                    >
+                      {{ macro.value }}
+                    </div>
+                    <div class="text-caption text-grey">{{ macro.label }}</div>
+                  </div>
+                </div>
+              </v-col>
+            </v-row>
           </v-col>
         </v-row>
       </div>
@@ -155,6 +200,28 @@ const formattedTime = computed(() => {
   return formatTime(props.meal.consumed_at)
 })
 
+const CIRCUMFERENCE = 2 * Math.PI * 35
+
+const donutSegments = computed(() => {
+  if (!props.meal) return []
+  const proteinCal = (props.meal.total_protein || 0) * 4
+  const carbsCal = (props.meal.total_carbs || 0) * 4
+  const fatCal = (props.meal.total_fat || 0) * 9
+  const total = proteinCal + carbsCal + fatCal || 1
+  const segs = [
+    { color: '#4caf50', cal: proteinCal },
+    { color: '#ff9800', cal: carbsCal },
+    { color: '#2196f3', cal: fatCal },
+  ]
+  let offset = 0
+  return segs.map(({ color, cal }) => {
+    const dash = (cal / total) * CIRCUMFERENCE
+    const segment = { color, dash, offset }
+    offset += dash
+    return segment
+  })
+})
+
 const macroTotals = computed(() => {
   if (!props.meal) return []
   return [
@@ -162,21 +229,25 @@ const macroTotals = computed(() => {
       label: 'Calories',
       value: props.meal.total_calories,
       colorClass: 'text-primary',
+      dotColor: null as string | null,
     },
     {
       label: 'Protein',
       value: `${Math.round(props.meal.total_protein)}g`,
       colorClass: 'text-success',
+      dotColor: '#4caf50',
     },
     {
       label: 'Carbs',
       value: `${Math.round(props.meal.total_carbs)}g`,
       colorClass: 'text-warning',
+      dotColor: '#ff9800',
     },
     {
       label: 'Fat',
       value: `${Math.round(props.meal.total_fat)}g`,
       colorClass: 'text-info',
+      dotColor: '#2196f3',
     },
   ]
 })
