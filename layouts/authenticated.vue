@@ -117,35 +117,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useTheme } from 'vuetify'
 import { useAuth } from '~/composables/useAuth'
+import { useDark } from '~/composables/useDark'
 import DemoNotification from '~/components/DemoNotification.vue'
 import OnboardingWizard from '~/components/OnboardingWizard.vue'
 
 const router = useRouter()
-const theme = useTheme()
 const { logout: authLogout, loading, isAuthenticated, isDemoUser } = useAuth()
-
-const isDark = ref(false)
+const { isDark, toggleDark } = useDark()
 
 onMounted(() => {
   if (!isAuthenticated.value) {
     router.push('/login')
   }
-  const saved = localStorage.getItem('mealsnap-theme')
-  if (saved === 'dark') {
-    isDark.value = true
-    theme.global.name.value = 'dark'
-  }
 })
 
-const toggleDarkMode = () => {
-  isDark.value = !isDark.value
-  theme.global.name.value = isDark.value ? 'dark' : 'light'
-  localStorage.setItem('mealsnap-theme', isDark.value ? 'dark' : 'light')
-}
+const toggleDarkMode = () => toggleDark()
 
 const goToHome = () => {
   router.push('/home')

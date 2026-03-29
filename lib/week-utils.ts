@@ -1,41 +1,32 @@
 /**
  * ISO week utilities — weeks start on Monday.
- * All functions treat dates as local-timezone values (no UTC shifting).
+ * Built on date-fns for timezone-safe date arithmetic.
  */
+import { startOfWeek, endOfWeek, addDays, format, parseISO, getDay } from 'date-fns'
+
+const WEEK_OPTIONS = { weekStartsOn: 1 as const }
 
 /**
  * Returns the Monday of the ISO week containing `date`.
- * Input can be a Date object or an ISO date string (YYYY-MM-DD).
  */
 export function getWeekStart(date: Date | string): Date {
-  const d =
-    typeof date === 'string' ? new Date(date + 'T00:00:00') : new Date(date)
-  const day = d.getDay() // 0 Sun … 6 Sat
-  const diff = day === 0 ? -6 : 1 - day // shift to Monday
-  d.setDate(d.getDate() + diff)
-  d.setHours(0, 0, 0, 0)
-  return d
+  const d = typeof date === 'string' ? parseISO(date) : date
+  return startOfWeek(d, WEEK_OPTIONS)
 }
 
 /**
  * Returns the Sunday (end) of the ISO week containing `date`.
  */
 export function getWeekEnd(date: Date | string): Date {
-  const start = getWeekStart(date)
-  const end = new Date(start)
-  end.setDate(start.getDate() + 6)
-  end.setHours(23, 59, 59, 999)
-  return end
+  const d = typeof date === 'string' ? parseISO(date) : date
+  return endOfWeek(d, WEEK_OPTIONS)
 }
 
 /**
- * Formats a date as YYYY-MM-DD (no timezone conversion).
+ * Formats a date as YYYY-MM-DD.
  */
 export function toIsoDate(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
+  return format(date, 'yyyy-MM-dd')
 }
 
 /**
@@ -49,9 +40,7 @@ export function currentWeekStart(): string {
  * Adds `days` days to a YYYY-MM-DD string and returns the result as YYYY-MM-DD.
  */
 export function shiftDate(isoDate: string, days: number): string {
-  const d = new Date(isoDate + 'T00:00:00')
-  d.setDate(d.getDate() + days)
-  return toIsoDate(d)
+  return format(addDays(parseISO(isoDate), days), 'yyyy-MM-dd')
 }
 
 /**
@@ -65,19 +54,12 @@ export function weekDays(weekStart: string): string[] {
  * Human-readable week range, e.g. "Mar 18 – Mar 24, 2026".
  */
 export function formatWeekRange(weekStart: string): string {
-  const start = new Date(weekStart + 'T00:00:00')
-  const end = new Date(weekStart + 'T00:00:00')
-  end.setDate(end.getDate() + 6)
-
-  const fmt = (d: Date, includeYear: boolean) =>
-    d.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      ...(includeYear ? { year: 'numeric' } : {}),
-    })
-
+  const start = parseISO(weekStart)
+  const end = addDays(start, 6)
+  const startStr = format(start, 'MMM d')
   const sameYear = start.getFullYear() === end.getFullYear()
-  return `${fmt(start, false)} – ${fmt(end, sameYear)}`
+  const endStr = format(end, sameYear ? 'MMM d, yyyy' : 'MMM d')
+  return `${startStr} – ${endStr}`
 }
 
 /**
@@ -91,16 +73,12 @@ export function isCurrentWeek(weekStart: string): boolean {
  * Validates that a date string is a Monday (required for week_start values).
  */
 export function isMonday(isoDate: string): boolean {
-  const d = new Date(isoDate + 'T00:00:00')
-  return d.getDay() === 1
+  return getDay(parseISO(isoDate)) === 1
 }
 
 /**
  * Short day label for a YYYY-MM-DD string, e.g. "Mon 18".
  */
 export function shortDayLabel(isoDate: string): string {
-  const d = new Date(isoDate + 'T00:00:00')
-  const day = d.toLocaleDateString('en-US', { weekday: 'short' })
-  const num = d.getDate()
-  return `${day} ${num}`
+  return format(parseISO(isoDate), 'EEE d')
 }

@@ -147,6 +147,25 @@
                 </v-row>
               </template>
 
+              <!-- Tags -->
+              <v-row>
+                <v-col cols="12">
+                  <v-combobox
+                    v-model="selectedTags"
+                    :items="suggestedTags"
+                    label="Tags (optional)"
+                    placeholder="#pre-workout, #cheat-day, #restaurant…"
+                    variant="outlined"
+                    multiple
+                    chips
+                    closable-chips
+                    hide-no-data
+                    hint="Press Enter or comma to add a custom tag"
+                    persistent-hint
+                  />
+                </v-col>
+              </v-row>
+
               <!-- Notes -->
               <v-row class="mt-2">
                 <v-col cols="12">
@@ -164,17 +183,6 @@
               <!-- Action Buttons -->
               <v-row class="mt-2">
                 <v-col cols="12">
-                  <!-- Error/Success Notification -->
-                  <v-alert
-                    v-if="latestError"
-                    :type="latestError.type"
-                    closable
-                    class="mb-4"
-                    @click:close="clearError()"
-                  >
-                    {{ latestError.message }}
-                  </v-alert>
-
                   <v-btn
                     color="primary"
                     size="large"
@@ -199,10 +207,11 @@
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import type { Meal } from '~/server/database/schemas'
 import { useAuth } from '~/composables/useAuth'
 import { useFormValidation } from '~/composables/useFormValidation'
 import { useErrorHandling } from '~/composables/useErrorHandling'
-import type { Meal } from '~/server/database/schemas'
+import { usePendingMeals } from '~/composables/usePendingMeals'
 
 definePageMeta({
   middleware: 'auth' as never,
@@ -213,8 +222,7 @@ const router = useRouter()
 const { user } = useAuth()
 const { checkDemoRestriction } = useDemoNotification()
 const { requiredRule, positiveRule } = useFormValidation()
-const { withErrorHandling, latestError, clearError, addSuccess } =
-  useErrorHandling()
+const { addPending, confirmPending, rollbackPending } = usePendingMeals()
 
 const form = ref()
 const valid = ref(false)
@@ -242,6 +250,22 @@ const mealData = reactive({
   notes: '',
 })
 
+// Tags
+const selectedTags = ref<string[]>([])
+const suggestedTags = [
+  '#pre-workout',
+  '#post-workout',
+  '#cheat-day',
+  '#restaurant',
+  '#meal-prep',
+  '#high-protein',
+  '#low-carb',
+  '#vegetarian',
+  '#vegan',
+  '#comfort-food',
+]
+
+// Meal types
 const mealTypes = [
   { title: 'Breakfast', value: 'breakfast' },
   { title: 'Lunch', value: 'lunch' },
@@ -262,19 +286,17 @@ const saveMeal = async () => {
   if (!user.value?.id) return
   if (checkDemoRestriction('saving meals')) return
 
-  loading.value = true
-  await withErrorHandling(
-    async () => {
-      const { authenticatedFetch } = useAuthenticatedFetch()
-
-      let payload: Record<string, unknown>
-
-      if (recipeMode.value && recipeBuilderRef.value) {
-        const { ingredients, totals } = recipeBuilderRef.value
+  if (recipeMode.value && recipeBuilderRef.value) {
+    // Recipe mode: traditional loading approach
+    loading.value = true
+    await withErrorHandling(
+      async () => {
+        const { authenticatedFetch } = useAuthenticatedFetch()
+        const { ingredients, totals } = recipeBuilderRef.value!
         if (ingredients.length === 0) {
           throw new Error('Add at least one ingredient in Recipe mode')
         }
-        payload = {
+        const payload = {
           ...mealData,
           user_id: user.value?.id ?? '',
           serving_size: mealData.serving_size || null,
@@ -301,32 +323,46 @@ const saveMeal = async () => {
             body: JSON.stringify({ food_items: ingredients }),
           }
         )
+
+        addSuccess('Meal saved successfully!')
+        router.push('/home')
+      },
+      'saving meal',
+      false
+    )
+    loading.value = false
+  } else {
+    // Simple mode: optimistic UI — navigate immediately, persist in background
+    const mealPayload = {
+      ...mealData,
+      user_id: user.value!.id,
+      serving_size: mealData.serving_size || null,
+      fiber: mealData.fiber || null,
+      sugar: mealData.sugar || null,
+      sodium: mealData.sodium || null,
+      cholesterol: mealData.cholesterol || null,
+      notes: mealData.notes || null,
+      tags: selectedTags.value.length ? selectedTags.value.join(',') : null,
+    }
+
+    const tempId = addPending(mealPayload)
+    router.push('/home')
+
+    const { authenticatedFetch } = useAuthenticatedFetch()
+    try {
+      const response = (await authenticatedFetch('/api/meals', {
+        method: 'POST',
+        body: JSON.stringify(mealPayload),
+      }).then((r) => r.json())) as { success: boolean; data: Meal }
+
+      if (response.success) {
+        confirmPending(tempId, response.data)
       } else {
-        payload = {
-          ...mealData,
-          user_id: user.value?.id ?? '',
-          serving_size: mealData.serving_size || null,
-          fiber: mealData.fiber || null,
-          sugar: mealData.sugar || null,
-          sodium: mealData.sodium || null,
-          cholesterol: mealData.cholesterol || null,
-          notes: mealData.notes || null,
-        }
-
-        const response = (await authenticatedFetch('/api/meals', {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        }).then((r) => r.json())) as { success: boolean; data: Meal }
-
-        if (!response.success) throw new Error('Failed to save meal')
+        rollbackPending(tempId, 'Failed to save meal')
       }
-
-      addSuccess('Meal saved successfully!')
-      router.push('/home')
-    },
-    'saving meal',
-    false
-  )
-  loading.value = false
+    } catch (err) {
+      rollbackPending(tempId, err instanceof Error ? err.message : 'Failed to save meal')
+    }
+  }
 }
 </script>
