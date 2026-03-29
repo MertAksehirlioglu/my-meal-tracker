@@ -333,8 +333,10 @@
             label="End date"
             type="date"
             :min="exportStartDate"
-            :max="todayIso"
+            :max="exportMaxEndDate"
             density="compact"
+            :hint="exportRangeHint"
+            persistent-hint
           />
         </v-card-text>
         <v-card-actions>
@@ -569,6 +571,32 @@ const exportDialog = ref(false)
 const exportStartDate = ref(selectedDate.value)
 const exportEndDate = ref(selectedDate.value)
 const exportLoading = ref(false)
+
+const exportMaxEndDate = computed(() => {
+  if (!exportStartDate.value) return todayIso
+  const maxEnd = new Date(exportStartDate.value)
+  maxEnd.setDate(maxEnd.getDate() + 365)
+  const maxEndIso = toDateIso(maxEnd)
+  return maxEndIso < todayIso ? maxEndIso : todayIso
+})
+
+const exportRangeHint = computed(() => {
+  if (!exportStartDate.value || !exportEndDate.value) return ''
+  const msPerDay = 24 * 60 * 60 * 1000
+  const days =
+    Math.round(
+      (new Date(exportEndDate.value).getTime() -
+        new Date(exportStartDate.value).getTime()) /
+        msPerDay
+    ) + 1
+  return `${days} day${days === 1 ? '' : 's'} selected (max 366)`
+})
+
+watch(exportStartDate, () => {
+  if (exportEndDate.value > exportMaxEndDate.value) {
+    exportEndDate.value = exportMaxEndDate.value
+  }
+})
 
 const openExportDialog = () => {
   exportStartDate.value = selectedDate.value

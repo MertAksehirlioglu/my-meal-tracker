@@ -14,7 +14,7 @@ export interface AIProvider {
   ): Promise<Array<{ label: string; score: number }>>
 }
 
-export type ProviderType = 'tensorflow' | 'manual'
+export type ProviderType = 'tensorflow' | 'huggingface' | 'manual'
 
 export class UnifiedAIManager {
   private providers: Map<ProviderType, AIProvider> = new Map()
@@ -38,13 +38,35 @@ export class UnifiedAIManager {
     }
     this.providers.set('tensorflow', tfProvider)
 
+    // HuggingFace (Cloud, requires VITE_HUGGING_FACE_TOKEN)
+    // Registered as a second-priority fallback for foods the local model misses.
+    // The module is dynamically imported so it never loads when the token is absent.
+    if (import.meta.env.VITE_HUGGING_FACE_TOKEN) {
+      const hfProvider: AIProvider = {
+        name: 'HuggingFace (Cloud)',
+        classifyImage: async (file: File) => {
+          const { createFoodClassificationInference } = await import(
+            './huggingface'
+          )
+          return createFoodClassificationInference().classifyImage(file)
+        },
+      }
+      this.providers.set('huggingface', hfProvider)
+    }
+
     // Set provider priority order
     this.setProviderOrder()
   }
 
   private setProviderOrder() {
-    // Use TensorFlow.js for local, private processing
-    this.providerOrder = ['tensorflow']
+    const order: ProviderType[] = ['tensorflow']
+
+    // Include HuggingFace only when its token is present
+    if (this.providers.has('huggingface')) {
+      order.push('huggingface')
+    }
+
+    this.providerOrder = order
 
     console.log(
       '🤖 AI Provider order:',
@@ -101,7 +123,7 @@ export class UnifiedAIManager {
     name: string
     available: boolean
   }> {
-    const allProviders: ProviderType[] = ['tensorflow']
+    const allProviders: ProviderType[] = ['tensorflow', 'huggingface']
 
     return allProviders.map((type) => ({
       type,
