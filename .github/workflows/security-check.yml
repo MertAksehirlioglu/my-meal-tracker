@@ -1,0 +1,23 @@
+name: Security Check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  no-vite-service-key:
+    name: Ensure service role key is never VITE_-prefixed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail if VITE_SUPABASE_SERVICE_KEY found in source
+        run: |
+          if grep -r --include="*.ts" --include="*.vue" \
+               "VITE_SUPABASE_SERVICE_KEY" .; then
+            echo "ERROR: VITE_SUPABASE_SERVICE_KEY found in source files."
+            echo "Use runtimeConfig.supabaseServiceKey (server-only) instead."
+            exit 1
+          fi
+          echo "OK: No VITE_SUPABASE_SERVICE_KEY found."

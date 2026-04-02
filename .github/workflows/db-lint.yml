@@ -1,0 +1,30 @@
+name: Database Lint
+
+on:
+  pull_request:
+    paths:
+      - 'server/database/migrations/**'
+  push:
+    branches: [main]
+    paths:
+      - 'server/database/migrations/**'
+
+jobs:
+  db-lint:
+    name: supabase db lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase local stack
+        run: supabase start --ignore-health-check
+
+      - name: Apply migrations
+        run: supabase db push --local
+
+      - name: Run RLS lint
+        run: supabase db lint --level warning

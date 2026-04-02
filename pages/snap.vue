@@ -1,4 +1,15 @@
 <template>
+  <!-- Calorie budget banner -->
+  <div
+    v-if="remainingCalories !== null"
+    class="calorie-banner text-caption text-center py-1 px-3"
+    :class="bannerColorClass"
+  >
+    🔥 Remaining today:
+    <strong>{{ Math.abs(remainingCalories) }} kcal</strong>
+    <span v-if="remainingCalories < 0"> over budget</span>
+  </div>
+
   <v-container
     class="fill-height d-flex flex-column align-center justify-center"
   >
@@ -161,7 +172,10 @@
         />
         <h3 class="text-h6 mb-2">Analyzing your meal...</h3>
         <p class="text-grey-darken-1">
-          Our AI is identifying the food and estimating nutrition.
+          {{
+            processingStage ||
+            'Our AI is identifying the food and estimating nutrition.'
+          }}
         </p>
       </v-card>
     </v-overlay>
@@ -190,13 +204,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useOptimizedFoodAnalysis } from '@/composables/useOptimizedFoodAnalysis'
 import { useStorage } from '@/composables/useStorage'
 import { useAuth } from '@/composables/useAuth'
 import { useErrorHandling } from '@/composables/useErrorHandling'
 import { useCamera } from '@/composables/useCamera'
+import { useGoals } from '@/composables/useGoals'
 import AnalyzedMealReview from '@/components/AnalyzedMealReview.vue'
 import ErrorNotification from '@/components/ErrorNotification.vue'
 import type { CreateMeal, Meal } from '~/server/database/schemas'
@@ -209,6 +224,15 @@ definePageMeta({
 
 const router = useRouter()
 const { user } = useAuth()
+
+// Calorie budget banner
+const { remainingCalories, fetchGoalAndToday } = useGoals()
+const bannerColorClass = computed(() => {
+  if (remainingCalories.value === null) return ''
+  if (remainingCalories.value < 0) return 'banner-over'
+  if (remainingCalories.value <= 200) return 'banner-warn'
+  return 'banner-ok'
+})
 const {
   isLoading: errorHandlingLoading,
   latestError,
@@ -219,8 +243,10 @@ const {
   analyzing,
   analysisError,
   analysisResult,
+  processingStage,
   isProcessing: classificationLoading,
   analyzeFood,
+  analyzeFoodWithSSE,
   resetAnalysis,
   createManualAnalysis,
 } = useOptimizedFoodAnalysis()
@@ -255,7 +281,10 @@ const initCamera = async () => {
   }
 }
 
-onMounted(initCamera)
+onMounted(() => {
+  initCamera()
+  fetchGoalAndToday()
+})
 
 // Convert data URL to File
 function dataURLtoFile(dataURL: string, filename: string): File {
@@ -307,16 +336,21 @@ async function analyzePhoto() {
     error.value = null
     resetAnalysis()
 
-    // Convert photo data to File
     const photoFile = dataURLtoFile(photoData.value, 'meal-photo.jpg')
 
-    // Analyze the food
-    await analyzeFood(photoFile)
+    // Try SSE streaming first; fall back to direct analyzeFood on error
+    try {
+      const supabase = useSupabaseClient()
+      const getToken = async () => {
+        const { data } = await supabase.auth.getSession()
+        return data.session?.access_token ?? null
+      }
+      await analyzeFoodWithSSE(photoFile, getToken)
+    } catch {
+      await analyzeFood(photoFile)
+    }
 
-    // Show analysis results
     showAnalysis.value = true
-
-    // Stop camera stream since we're moving to analysis phase
     stopCamera()
   } catch (err) {
     console.error('Analysis failed:', err)
@@ -458,3 +492,27 @@ function onGalleryFileSelected(event: Event) {
   input.value = ''
 }
 </script>
+
+<style scoped>
+.calorie-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  font-size: 0.75rem;
+  opacity: 0.92;
+}
+.banner-ok {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.banner-warn {
+  background: #fff8e1;
+  color: #f57f17;
+}
+.banner-over {
+  background: #ffebee;
+  color: #c62828;
+}
+</style>

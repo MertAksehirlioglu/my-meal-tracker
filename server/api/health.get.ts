@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-syntax
 export default defineEventHandler(async () => {
   return {
     status: 'ok',
