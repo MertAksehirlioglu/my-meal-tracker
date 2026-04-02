@@ -8,8 +8,15 @@ export default defineNuxtConfig({
   },
   modules: ['@nuxtjs/supabase', '@nuxt/eslint'],
   runtimeConfig: {
-    // Server-only secrets (never exposed to the browser)
-    // DEMO_PASSWORD: used by /api/auth/demo-login so the credential stays server-side
+    // Server-only secrets (never exposed to the browser).
+    // SECURITY: Never prefix these with NUXT_PUBLIC_ or VITE_ — doing so would
+    // embed them in the client bundle.  The CI workflow .github/workflows/security-check.yml
+    // enforces this by grep-failing any VITE_SUPABASE_SERVICE_KEY occurrence.
+    //
+    // DEMO_PASSWORD: used by /api/auth/demo-login so the credential stays server-side.
+    // supabaseServiceKey: used for admin operations that must bypass RLS.
+    //   Set env var NUXT_SUPABASE_SERVICE_KEY in production.
+    supabaseServiceKey: process.env.NUXT_SUPABASE_SERVICE_KEY ?? '',
     public: {
       signupDisabled: process.env.NUXT_PUBLIC_SIGNUP_DISABLED === 'true',
       demoEmail: process.env.NUXT_PUBLIC_DEMO_EMAIL,

@@ -266,6 +266,121 @@ export const useOptimizedFoodAnalysis = () => {
   }
 
   /**
+   * Analyze food with SSE streaming progress.
+   * Runs TF.js classification locally, then enriches via the SSE endpoint
+   * so the overlay shows live step text rather than a single spinner.
+   * Falls back to analyzeFood() if streaming is unavailable.
+   */
+  const analyzeFoodWithSSE = async (
+    imageFile: File,
+    getToken: () => Promise<string | null>
+  ): Promise<FoodAnalysisResult> => {
+    const startTime = Date.now()
+    analyzing.value = true
+    analysisError.value = null
+    metrics.value.totalAnalyses++
+
+    try {
+      // Check cache first
+      const imageHash = await generateImageHash(imageFile)
+      const cached = getCached(imageHash)
+      if (cached) {
+        metrics.value.cacheHits++
+        processingStage.value = 'Using cached result'
+        analysisResult.value = cached
+        return cached
+      }
+
+      // Step 1 — TF.js classification (client-side)
+      processingStage.value = 'Identifying food...'
+      const optimizedImage = await optimizeImage(imageFile)
+      const baseResult = await retryWithBackoff(
+        () => baseFoodAnalysis.analyzeFood(optimizedImage),
+        3,
+        1000
+      )
+      if (!baseResult)
+        throw new Error('Could not identify any food in the image')
+
+      // Step 2 — SSE enrichment (server-side, with live progress events)
+      const token = await getToken()
+      if (!token || !window.ReadableStream) {
+        // Fallback: return the base result directly
+        setCached(imageHash, baseResult)
+        analysisResult.value = baseResult
+        return baseResult
+      }
+
+      const response = await fetch('/api/ai/analyze-stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          label: baseResult.foodName,
+          confidence: baseResult.confidence,
+        }),
+      })
+
+      if (!response.ok || !response.body) {
+        setCached(imageHash, baseResult)
+        analysisResult.value = baseResult
+        return baseResult
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let finalResult: FoodAnalysisResult = baseResult
+
+      outer: while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const text = decoder.decode(value, { stream: true })
+        for (const line of text.split('\n')) {
+          if (!line.startsWith('data: ')) continue
+          try {
+            const evt = JSON.parse(line.slice(6)) as {
+              step: string
+              result?: FoodAnalysisResult
+            }
+            if (evt.step === 'classifying')
+              processingStage.value = 'Identifying food...'
+            else if (evt.step === 'enriching')
+              processingStage.value = 'Looking up nutrition...'
+            else if (evt.step === 'done') {
+              if (evt.result) finalResult = evt.result
+              break outer
+            }
+          } catch {
+            // malformed line — skip
+          }
+        }
+      }
+
+      setCached(imageHash, finalResult)
+      const analysisTime = Date.now() - startTime
+      metrics.value.successfulAnalyses++
+      metrics.value.averageTime =
+        (metrics.value.averageTime * (metrics.value.successfulAnalyses - 1) +
+          analysisTime) /
+        metrics.value.successfulAnalyses
+      analysisResult.value = finalResult
+      return finalResult
+    } catch (err) {
+      console.error('SSE food analysis error:', err)
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to analyze food'
+      analysisError.value = getEnhancedErrorMessage(errorMessage)
+      throw err
+    } finally {
+      analyzing.value = false
+      processingStage.value = ''
+    }
+  }
+
+  /**
    * Reset analysis state
    */
   const resetAnalysis = () => {
@@ -303,6 +418,7 @@ export const useOptimizedFoodAnalysis = () => {
 
     // Methods
     analyzeFood,
+    analyzeFoodWithSSE,
     resetAnalysis,
     clearCache,
 
